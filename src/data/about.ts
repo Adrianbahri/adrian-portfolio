@@ -1,23 +1,22 @@
 export const aboutData = {
   principles: [
-    "Build with intent and empathy.",
-    "Performance is a core feature.",
-    "Aesthetics are not optional.",
-    "Documentation is for future-me.",
-    "Simplify until it’s unbreakable."
+    "Build with purpose, not just features.",
+    "Good design makes technology feel alive.",
+    "Build Something to genuinely helps people.",
+    "Turn complexity into clarity."
   ],
   focus: [
     {
-      title: "Web Engineering",
-      desc: "Building reactive, accessible interfaces that push the boundaries of what’s possible on the browser."
+      title: "Creative Development",
+      desc: "Building modern web experiences that blend performance, interaction, and visual storytelling."
     },
     {
-      title: "Media Production",
-      desc: "Cinematic video editing and motion design for digital products and brand storytelling."
+      title: "Visual & Media Production",
+      desc: "Creating visuals and digital content that feel engaging, meaningful, alive, and inspiring."
     },
     {
-      title: "Design Systems",
-      desc: "Creating scalable, consistent visual languages that bridge the gap between design and code."
+      title: "Automation & Digital Systems",
+      desc: "Designing smart systems and workflows that simplify processes and make technology more useful."
     }
   ]
 };

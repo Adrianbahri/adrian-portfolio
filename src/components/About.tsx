@@ -26,13 +26,9 @@ export default function About() {
                 Open for Collaboration
               </div>
               <p>
-                I am an Informatics Engineering student at Hasanuddin University with a deep passion for
-                creative technology. I believe that engineering is as much about aesthetics and
-                storytelling as it is about performance and logic.
-              </p>
+                I’m an Informatics Engineering student at Hasanuddin University passionate about creative technology, digital experiences, and building intelligent systems through code.</p>
               <p>
-                My work currently focuses on building high-performance web applications,
-                media production workflows, and digital design systems that feel alive.
+                I enjoy creating modern web applications, visual experiences, and automation that make technology feel more meaningful, efficient, and alive.
               </p>
 
               <div className="space-y-4 border-t border-border/60 pt-6">
