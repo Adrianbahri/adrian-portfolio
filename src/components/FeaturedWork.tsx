@@ -91,7 +91,7 @@ export default function FeaturedWork() {
                     <div className="absolute inset-0 bg-black/5 mix-blend-overlay pointer-events-none" />
                     
                     <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 rounded-sm bg-white/90 backdrop-blur-md text-[0.6rem] font-heading font-bold tracking-[0.16em] text-black uppercase shadow-sm">
+                      <span className="px-3 py-1 bg-surface-200/90 backdrop-blur-md text-[0.6rem] font-heading font-bold tracking-[0.16em] text-on-dark uppercase shadow-sm border border-border-strong">
                         {project.category}
                       </span>
                     </div>
@@ -99,10 +99,10 @@ export default function FeaturedWork() {
                   
                   <div className="photo-label flex flex-col items-start gap-1">
                     <div className="w-full flex justify-between items-center">
-                      <h3 className="text-sm font-medium text-black tracking-tight font-heading">{project.title}</h3>
-                      <span className="text-[8px] text-black/30">REF_{2026 + project.id}</span>
+                      <h3 className="text-sm font-medium text-on-dark tracking-tight font-heading">{project.title}</h3>
+                      <span className="text-[8px] text-on-dark/30">REF_{2026 + project.id}</span>
                     </div>
-                    <p className="text-[10px] text-black/60 line-clamp-1 font-sans">
+                    <p className="text-[10px] text-on-dark/60 line-clamp-1 font-sans">
                       {project.desc}
                     </p>
                   </div>
@@ -120,7 +120,7 @@ export default function FeaturedWork() {
         >
           <Link 
             href="/projects"
-            className="group flex items-center gap-3 px-8 py-4 border border-border-strong text-on-dark font-heading text-[0.65rem] font-bold uppercase tracking-[0.2em] bg-on-dark text-canvas hover:bg-transparent hover:text-on-dark transition-all duration-500 skew-x-[-12deg] hover:skew-x-0"
+            className="group flex items-center gap-3 px-10 py-4 border border-border-strong text-on-dark font-heading text-[0.65rem] font-bold uppercase tracking-[0.2em] bg-surface-100 hover:bg-primary hover:text-canvas hover:border-primary transition-all duration-500 skew-x-[-12deg] hover:skew-x-0"
           >
             <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-3">
               View All Projects

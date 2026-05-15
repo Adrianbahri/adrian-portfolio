@@ -41,10 +41,10 @@ export default function BentoTechStack() {
                 
                 <div className="photo-label flex flex-col gap-1">
                   <div className="w-full flex justify-between items-center">
-                    <h3 className="text-sm font-medium text-black tracking-tight font-heading">{item.title}</h3>
-                    <span className="text-[8px] text-black/30">MODULE_{i + 1}</span>
+                    <h3 className="text-sm font-medium text-on-dark tracking-tight font-heading">{item.title}</h3>
+                    <span className="text-[8px] text-on-dark/30">MODULE_{i + 1}</span>
                   </div>
-                  <p className="text-[10px] text-black/60 line-clamp-2 font-sans">
+                  <p className="text-[10px] text-on-dark/60 line-clamp-2 font-sans">
                     {item.desc}
                   </p>
                 </div>

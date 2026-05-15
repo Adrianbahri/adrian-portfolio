@@ -72,16 +72,16 @@
   }
 
   .photo-frame {
-    @apply relative p-4 bg-[#f8f8f8] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm border border-black/5;
+    @apply relative p-4 bg-surface-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] border border-border-strong;
   }
   
   .photo-frame::after {
     content: "";
-    @apply absolute inset-4 border border-black/5 pointer-events-none;
+    @apply absolute inset-4 border border-border-subtle pointer-events-none;
   }
 
   .photo-label {
-    @apply mt-4 px-2 flex justify-between items-center font-mono text-[9px] uppercase tracking-widest text-black/40;
+    @apply mt-4 px-2 flex justify-between items-center font-mono text-[9px] uppercase tracking-widest text-on-dark/40;
   }
 }
 

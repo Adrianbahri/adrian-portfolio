@@ -106,9 +106,9 @@ export default function Hero() {
             </div>
 
             {/* Floating badge over the photo */}
-            <div className="absolute bottom-12 left-8 p-3 bg-white border border-black/5 shadow-xl -rotate-3 transition-transform group-hover:rotate-0">
-              <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold mb-0.5">Focus</p>
-              <p className="text-xs text-black font-medium">Next.js + Motion</p>
+            <div className="absolute bottom-12 left-8 p-3 bg-surface-200 border border-border-strong shadow-xl -rotate-3 transition-transform group-hover:rotate-0">
+              <p className="text-[10px] uppercase tracking-widest text-on-dark/40 font-bold mb-0.5">Focus</p>
+              <p className="text-xs text-on-dark font-medium">Next.js + Motion</p>
             </div>
           </div>
         </motion.div>
