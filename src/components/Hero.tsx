@@ -35,7 +35,7 @@ export default function Hero() {
             <h1 className="text-[42px] lg:text-[58px] font-medium leading-[1.1] tracking-[-0.06em] text-on-dark font-heading">
               {/^[aeiou]/i.test(dynamicWords[index]) ? 'An' : 'A'}{" "}
               <span className="relative inline-block text-primary">
-                [
+                <
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={dynamicWords[index]}
@@ -48,7 +48,7 @@ export default function Hero() {
                     {dynamicWords[index]}
                   </motion.span>
                 </AnimatePresence>
-                ]
+                //>
               </span>
               <br />
               Guy
