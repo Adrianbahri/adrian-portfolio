@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ChevronRight, FileText, ArrowRight } from 'lucide-react';
 
-const dynamicWords = ['Creative', 'Humorist', 'Agile', 'Ordinary', 'Problem Solver', 'Cat Lover'];
+const dynamicWords = ['Creative', 'Humorist', 'Agile', 'Firefighter', 'Resourceful', 'Ordinary'];
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
@@ -32,7 +32,7 @@ export default function Hero() {
             transition={{ duration: 0.8 }}
           >
             <p className="eyebrow">Creative technologist</p>
-            <h1 className="text-[56px] lg:text-[72px] font-medium leading-[1] tracking-[-0.06em] text-on-dark font-heading">
+            <h1 className="text-[42px] lg:text-[58px] font-medium leading-[1.1] tracking-[-0.06em] text-on-dark font-heading">
               {/^[aeiou]/i.test(dynamicWords[index]) ? 'An' : 'A'}{" "}
               <span className="relative inline-block text-primary">
                 [
