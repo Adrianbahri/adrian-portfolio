@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ChevronRight, FileText, ArrowRight } from 'lucide-react';
 
-const dynamicWords = ['creative', 'Humorist', 'Agile', 'Ordinary'];
+const dynamicWords = ['Creative', 'Humorist', 'Agile', 'Ordinary', 'Cat Lover'];
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
@@ -23,7 +23,7 @@ export default function Hero() {
       <div className="grain" />
 
       <div className="section-container py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start z-10">
-        
+
         {/* Left Content */}
         <div className="space-y-10">
           <motion.div
@@ -35,7 +35,7 @@ export default function Hero() {
             <h1 className="text-[56px] lg:text-[72px] font-medium leading-[1] tracking-[-0.06em] text-on-dark font-heading">
               a{" "}
               <span className="relative inline-block text-primary">
-                [ 
+                [
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={dynamicWords[index]}
@@ -62,7 +62,7 @@ export default function Hero() {
             className="space-y-8"
           >
             <p className="text-xl lg:text-2xl text-on-dark/80 leading-relaxed max-w-xl font-sans">
-              I build high-performance digital experiences where code meets cinematic storytelling. 
+              I build high-performance digital experiences where code meets cinematic storytelling.
               Specializing in Next.js, Framer Motion, and creative visual engineering.
             </p>
 
@@ -88,14 +88,14 @@ export default function Hero() {
         >
           <div className="photo-frame w-full max-w-[450px] group">
             <div className="relative aspect-[4/5] overflow-hidden bg-canvas">
-              <img 
-                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80" 
+              <img
+                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80"
                 alt="Adrian Visual"
                 className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/10 mix-blend-overlay pointer-events-none" />
             </div>
-            
+
             <div className="photo-label">
               <span>IMG_2026_ADRN</span>
               <span>Visual Storyteller</span>
