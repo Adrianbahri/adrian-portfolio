@@ -5,7 +5,7 @@ import { PlayCircle } from 'lucide-react';
 
 export default function CreativeShowcase() {
   return (
-    <section id="creative" className="w-full py-32 bg-canvas border-t border-border-subtle relative overflow-hidden">
+    <section id="creative" className="w-full py-32 bg-transparent border-t border-border/60 relative overflow-hidden">
       <div className="section-container">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16 items-center">
           

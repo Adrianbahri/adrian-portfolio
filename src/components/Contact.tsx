@@ -12,7 +12,7 @@ const socials = [
 
 export default function Contact() {
   return (
-    <section id="contact" className="w-full py-40 bg-canvas border-t border-border-subtle overflow-hidden relative">
+    <section id="contact" className="w-full py-40 bg-transparent border-t border-border/60 overflow-hidden relative">
       <div className="section-container relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-12">
           <motion.div

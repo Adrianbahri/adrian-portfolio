@@ -56,7 +56,7 @@ export default function FeaturedWork() {
   const filteredProjects = projects.filter(p => p.mode === mode);
 
   return (
-    <section id="work" className="w-full py-24 bg-canvas border-t border-border-subtle">
+    <section id="work" className="w-full py-24 bg-transparent border-t border-border/60">
       <div className="section-container">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="space-y-4">

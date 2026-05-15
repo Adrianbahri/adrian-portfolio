@@ -25,7 +25,7 @@ const timeline = [
 
 export default function Experience() {
   return (
-    <section id="experience" className="section-anchor border-t border-border/60 py-12 sm:py-14 bg-canvas">
+    <section id="experience" className="section-anchor border-t border-border/60 py-12 sm:py-14 bg-transparent">
       <div className="section-container">
         <div className="max-w-2xl space-y-4 mb-12">
           <div className="space-y-3">
