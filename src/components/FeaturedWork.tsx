@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ExternalLink, Code2, Play, Layout, Camera, Brush } from 'lucide-react';
+import { ExternalLink, Code2, Play, Layout, Camera, Brush, ArrowRight } from 'lucide-react';
 
 type ProjectMode = 'developer' | 'creative';
 
@@ -109,6 +109,21 @@ export default function FeaturedWork() {
               </motion.div>
             ))}
           </AnimatePresence>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-20 flex justify-center"
+        >
+          <a 
+            href="/projects"
+            className="group flex items-center gap-3 px-8 py-4 rounded-full border border-border-strong text-on-dark font-heading text-[0.65rem] font-bold uppercase tracking-[0.2em] hover:bg-on-dark hover:text-canvas transition-all duration-500"
+          >
+            View All Projects
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          </a>
         </motion.div>
       </div>
     </section>
