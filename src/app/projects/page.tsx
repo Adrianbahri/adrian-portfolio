@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, ExternalLink, Code2, Globe, GitHub, Search, Filter } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Code2, Globe, Search, Filter } from 'lucide-react';
 import { projects } from '@/data/projects';
 import Link from 'next/link';
 
@@ -127,7 +127,7 @@ export default function ProjectsPage() {
                   <div className="mt-auto pt-6 border-t border-border-subtle flex items-center justify-between">
                     <div className="flex gap-4">
                       <button className="text-body-muted hover:text-primary transition-colors">
-                        <GitHub size={18} />
+                        <Code2 size={18} />
                       </button>
                       <button className="text-body-muted hover:text-primary transition-colors">
                         <Globe size={18} />
