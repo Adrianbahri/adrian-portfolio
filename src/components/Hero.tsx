@@ -86,7 +86,7 @@ export default function Hero() {
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           className="relative lg:h-[600px] flex items-center justify-center"
         >
-          <div className="photo-frame w-full max-w-[450px] group">
+          <div className="photo-frame w-full max-w-[380px] group">
             <div className="relative aspect-[4/5] overflow-hidden bg-canvas">
               <img
                 src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80"
