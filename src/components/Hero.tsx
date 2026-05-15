@@ -67,13 +67,17 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <button className="group bg-on-dark text-canvas px-8 py-4 rounded-md font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-on-dark/90 transition-all font-heading">
-                View Projects
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              <button className="group bg-on-dark text-canvas px-8 py-4 font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-on-dark/90 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
+                <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-2">
+                  View Projects
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </span>
               </button>
-              <button className="px-8 py-4 rounded-md border border-border-strong text-on-dark font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-surface-75 transition-all font-heading">
-                <FileText size={16} />
-                Resume
+              <button className="px-8 py-4 border border-border-strong text-on-dark font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-surface-75 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
+                <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-2">
+                  <FileText size={16} />
+                  Resume
+                </span>
               </button>
             </div>
           </motion.div>
@@ -102,7 +106,7 @@ export default function Hero() {
             </div>
 
             {/* Floating badge over the photo */}
-            <div className="absolute bottom-12 left-8 p-3 bg-white border border-black/5 shadow-xl rounded-sm -rotate-3 transition-transform group-hover:rotate-0">
+            <div className="absolute bottom-12 left-8 p-3 bg-white border border-black/5 shadow-xl -rotate-3 transition-transform group-hover:rotate-0">
               <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold mb-0.5">Focus</p>
               <p className="text-xs text-black font-medium">Next.js + Motion</p>
             </div>

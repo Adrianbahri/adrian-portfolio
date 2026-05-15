@@ -30,7 +30,7 @@ export default function Experience() {
                 
                 <div className="space-y-4 border-l border-border/40 pl-8 group-hover:border-primary transition-colors">
                   <div className="flex items-center gap-5">
-                    <div className="p-3 bg-surface-100 rounded-xl border border-border/60 text-primary group-hover:scale-110 transition-transform">
+                    <div className="p-3 bg-surface-100 border border-border/60 text-primary group-hover:scale-110 transition-transform">
                       <item.icon size={24} />
                     </div>
                     <div className="space-y-1">
@@ -64,7 +64,7 @@ export default function Experience() {
               {organizationData.map((item, i) => (
                 <article key={i} className="group flex gap-5">
                   <div className="pt-1">
-                    <div className="p-2 bg-surface-100 rounded-md border border-border/60 text-body-muted group-hover:text-primary transition-colors">
+                    <div className="p-2 bg-surface-100 border border-border/60 text-body-muted group-hover:text-primary transition-colors">
                       <item.icon size={16} />
                     </div>
                   </div>
@@ -98,7 +98,7 @@ export default function Experience() {
               {volunteerData.map((item, i) => (
                 <article key={i} className="group flex gap-5">
                   <div className="pt-1">
-                    <div className="p-2 bg-surface-100 rounded-md border border-border/60 text-body-muted group-hover:text-on-dark transition-colors">
+                    <div className="p-2 bg-surface-100 border border-border/60 text-body-muted group-hover:text-on-dark transition-colors">
                       <item.icon size={16} />
                     </div>
                   </div>

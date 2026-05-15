@@ -34,7 +34,7 @@ export default function BentoTechStack() {
                 className="photo-frame h-full transition-all duration-500 hover:rotate-0"
                 style={{ transform: `rotate(${i % 2 === 0 ? -0.8 : 0.8}deg)` }}
               >
-                <div className="relative h-48 md:h-64 overflow-hidden bg-canvas rounded-sm flex items-center justify-center">
+                <div className="relative h-48 md:h-64 overflow-hidden bg-canvas flex items-center justify-center">
                   <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
                   <item.icon size={48} className="text-primary/40 group-hover:text-primary transition-all duration-500 scale-90 group-hover:scale-110" />
                 </div>

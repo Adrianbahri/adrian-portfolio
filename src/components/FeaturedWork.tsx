@@ -30,7 +30,7 @@ export default function FeaturedWork() {
           </div>
 
           {/* Mode Switcher */}
-          <div className="flex p-1 bg-surface-75 border border-border-strong rounded-full relative">
+          <div className="flex p-1 bg-surface-75 border border-border-strong relative">
             <button 
               onClick={() => setMode('developer')}
               className={cn(
@@ -55,7 +55,7 @@ export default function FeaturedWork() {
               initial={false}
               animate={{ x: mode === 'developer' ? 0 : '100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-on-dark rounded-full z-0"
+              className="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-on-dark z-0"
             />
           </div>
         </div>
@@ -120,10 +120,12 @@ export default function FeaturedWork() {
         >
           <Link 
             href="/projects"
-            className="group flex items-center gap-3 px-8 py-4 rounded-full border border-border-strong text-on-dark font-heading text-[0.65rem] font-bold uppercase tracking-[0.2em] hover:bg-on-dark hover:text-canvas transition-all duration-500"
+            className="group flex items-center gap-3 px-8 py-4 border border-border-strong text-on-dark font-heading text-[0.65rem] font-bold uppercase tracking-[0.2em] bg-on-dark text-canvas hover:bg-transparent hover:text-on-dark transition-all duration-500 skew-x-[-12deg] hover:skew-x-0"
           >
-            View All Projects
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-3">
+              View All Projects
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </span>
           </Link>
         </motion.div>
       </div>

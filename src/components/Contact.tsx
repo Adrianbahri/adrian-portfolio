@@ -39,10 +39,12 @@ export default function Contact() {
           >
             <a 
               href="mailto:adrian@example.com"
-              className="inline-flex items-center gap-3 bg-on-dark text-black px-10 py-5 rounded-full text-xl font-bold hover:bg-primary transition-all group"
+              className="inline-flex items-center gap-3 bg-on-dark text-canvas px-10 py-5 text-xl font-bold hover:bg-primary transition-all group skew-x-[-12deg] hover:skew-x-0"
             >
-              Get In Touch
-              <ArrowUpRight size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-3">
+                Get In Touch
+                <ArrowUpRight size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </span>
             </a>
           </motion.div>
           
@@ -59,7 +61,7 @@ export default function Contact() {
                 href={item.href}
                 className="flex flex-col items-center gap-3 text-body-muted hover:text-primary transition-colors group"
               >
-                <div className="p-4 rounded-2xl bg-surface-75 border border-border-subtle group-hover:border-primary/30 transition-all">
+                <div className="p-4 bg-surface-75 border border-border-subtle group-hover:border-primary/30 transition-all">
                   <item.icon size={24} />
                 </div>
                 <span className="text-xs uppercase tracking-[0.2em] font-bold">{item.name}</span>

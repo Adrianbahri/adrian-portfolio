@@ -38,7 +38,7 @@ export default function GlobalNav() {
     >
       <nav className="max-w-5xl mx-auto px-4">
         <div className={cn(
-          "pointer-events-auto flex items-center justify-between px-6 py-3 rounded-full border border-border-strong bg-canvas/80 backdrop-blur-md transition-all duration-500",
+          "pointer-events-auto flex items-center justify-between px-6 py-3 border border-border-strong bg-canvas/80 backdrop-blur-md transition-all duration-500",
           isScrolled ? "shadow-2xl shadow-black/40" : ""
         )}>
           <a href="/" className="inline-flex items-center gap-2">
@@ -52,7 +52,7 @@ export default function GlobalNav() {
               <a
                 key={link.name}
                 href={link.href}
-                className="px-4 py-2 text-[0.7rem] font-heading uppercase tracking-[0.16em] text-body-muted hover:text-on-dark transition-all rounded-full hover:bg-surface-100"
+                className="px-4 py-2 text-[0.7rem] font-heading uppercase tracking-[0.16em] text-body-muted hover:text-on-dark transition-all hover:bg-surface-100"
               >
                 {link.name}
               </a>
@@ -60,7 +60,7 @@ export default function GlobalNav() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="hidden sm:block bg-on-dark text-canvas px-5 py-2 rounded-full text-[0.65rem] font-heading font-bold uppercase tracking-[0.16em] hover:bg-on-dark/90 transition-all">
+            <button className="hidden sm:block bg-on-dark text-canvas px-5 py-2 text-[0.65rem] font-heading font-bold uppercase tracking-[0.16em] hover:bg-on-dark/90 transition-all">
               Contact
             </button>
             {/* Mobile Toggle */}

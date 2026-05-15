@@ -53,7 +53,7 @@ export default function ProjectsPage() {
         </div>
 
         {/* Filters & Search */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 p-4 bg-surface-50 border border-border-subtle rounded-2xl backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 p-4 bg-surface-50 border border-border-subtle backdrop-blur-sm">
           <div className="flex items-center gap-4 p-2 bg-transparent w-full md:w-auto">
             {['developer', 'creative'].map((f) => (
               <button
@@ -81,7 +81,7 @@ export default function ProjectsPage() {
               placeholder="Search projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-surface-100 border border-border-strong rounded-full text-sm text-on-dark placeholder:text-body-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full pl-11 pr-4 py-3 bg-surface-100 border border-border-strong text-sm text-on-dark placeholder:text-body-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function ProjectsPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="group flex flex-col h-full bg-surface-50 border border-border-subtle rounded-3xl overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-sm hover:shadow-2xl"
+                className="group flex flex-col h-full bg-surface-50 border border-border-subtle overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-sm hover:shadow-2xl"
               >
                 {/* Visual Header */}
                 <div className="relative aspect-video overflow-hidden">
@@ -109,7 +109,7 @@ export default function ProjectsPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-canvas/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
                   <div className="absolute top-4 right-4">
-                    <span className="px-3 py-1 bg-on-dark text-canvas text-[0.55rem] font-bold uppercase tracking-widest rounded-md shadow-lg">
+                    <span className="px-3 py-1 bg-on-dark text-canvas text-[0.55rem] font-bold uppercase tracking-widest shadow-lg">
                       {project.category}
                     </span>
                   </div>

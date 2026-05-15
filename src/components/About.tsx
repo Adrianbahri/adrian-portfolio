@@ -22,7 +22,7 @@ export default function About() {
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
             <div className="space-y-5 text-[1rem] leading-8 text-on-dark/84 font-sans">
               <div className="inline-flex items-center gap-2 border border-emerald-500/35 bg-emerald-500/8 px-3 py-1.5 font-mono text-xs text-emerald-500">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="size-2 bg-emerald-500 animate-pulse"></span>
                 Open for Collaboration
               </div>
               <p>
