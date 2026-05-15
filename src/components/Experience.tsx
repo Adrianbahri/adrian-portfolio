@@ -25,44 +25,46 @@ const timeline = [
 
 export default function Experience() {
   return (
-    <section id="experience" className="w-full py-24 bg-canvas border-t border-border-subtle">
+    <section id="experience" className="section-anchor border-t border-border/60 py-12 sm:py-14 bg-canvas">
       <div className="section-container">
-        <div className="mb-16">
-          <h2 className="text-[34px] font-bold text-on-dark mb-4 tracking-tight">Experience</h2>
-          <p className="text-lg text-body-muted font-light max-w-2xl">
-            A history of blending leadership, media, and technology.
-          </p>
+        <div className="max-w-2xl space-y-4 mb-12">
+          <div className="space-y-3">
+            <h2 className="font-heading text-3xl font-medium tracking-[-0.05em] text-on-dark sm:text-[2.2rem]">Work Experience</h2>
+            <p className="max-w-2xl text-[0.98rem] leading-8 text-body-muted sm:text-[1.02rem]">
+              A journey of blending leadership, media production, and creative technology.
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-0">
-          {timeline.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="group relative grid grid-cols-1 md:grid-cols-[120px_1fr] gap-8 py-12 border-b border-border-subtle last:border-b-0"
-            >
-              <div className="text-[20px] font-bold text-primary tracking-tighter pt-1">
-                {item.year}
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <h3 className="text-2xl font-bold text-on-dark">{item.role}</h3>
-                  <span className="text-body-muted opacity-40">/</span>
-                  <p className="text-lg text-body-muted font-medium">{item.company}</p>
+        <div className="mt-10">
+          <div className="space-y-8">
+            {timeline.map((item, i) => (
+              <article 
+                key={i} 
+                className="grid gap-4 border-t border-border/60 pt-6 md:grid-cols-[150px_minmax(0,1fr)] group"
+              >
+                <div className="space-y-2 md:pt-1">
+                  <p className="eyebrow">{item.year}</p>
                 </div>
-                <p className="text-[17px] leading-relaxed text-body-muted/80 max-w-3xl">
-                  {item.desc}
-                </p>
-              </div>
-
-              {/* Hover highlight */}
-              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -mx-12 px-12" />
-            </motion.div>
-          ))}
+                
+                <div className="space-y-4 border-l border-border/50 pl-5 group-hover:border-primary transition-colors">
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px]">
+                    <div className="space-y-2">
+                      <h3 className="font-heading text-[1.45rem] font-medium tracking-[-0.04em] text-on-dark group-hover:text-primary transition-colors">
+                        {item.role}
+                      </h3>
+                      <p className="text-sm font-mono text-body-muted/70 uppercase tracking-widest">
+                        {item.company}
+                      </p>
+                      <p className="text-[0.95rem] leading-7 text-body-muted max-w-2xl mt-4">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
     </section>
