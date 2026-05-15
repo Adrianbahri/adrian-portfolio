@@ -1,6 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+
+import { aboutData } from '@/data/about';
 
 export default function About() {
   return (
@@ -35,11 +38,9 @@ export default function About() {
               <div className="space-y-4 border-t border-border/60 pt-6">
                 <p className="eyebrow">Working principles</p>
                 <ul className="space-y-3 text-body-muted">
-                  <li>— Build with intent and empathy.</li>
-                  <li>— Performance is a core feature.</li>
-                  <li>— Aesthetics are not optional.</li>
-                  <li>— Documentation is for future-me.</li>
-                  <li>— Simplify until it’s unbreakable.</li>
+                  {aboutData.principles.map((principle, i) => (
+                    <li key={i}>— {principle}</li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -47,26 +48,14 @@ export default function About() {
             <div className="space-y-4 border-t border-border/60 pt-6 lg:border-t-0 lg:border-l lg:pl-8">
               <p className="eyebrow">Creative Focus</p>
               
-              <article className="space-y-2">
-                <h3 className="font-heading text-lg font-medium tracking-[-0.04em] text-on-dark">Web Engineering</h3>
-                <p className="text-sm leading-7 text-body-muted">
-                  Building reactive, accessible interfaces that push the boundaries of what’s possible on the browser.
-                </p>
-              </article>
-
-              <article className="space-y-2 border-t border-border/60 pt-4">
-                <h3 className="font-heading text-lg font-medium tracking-[-0.04em] text-on-dark">Media Production</h3>
-                <p className="text-sm leading-7 text-body-muted">
-                  Cinematic video editing and motion design for digital products and brand storytelling.
-                </p>
-              </article>
-
-              <article className="space-y-2 border-t border-border/60 pt-4">
-                <h3 className="font-heading text-lg font-medium tracking-[-0.04em] text-on-dark">Design Systems</h3>
-                <p className="text-sm leading-7 text-body-muted">
-                  Creating scalable, consistent visual languages that bridge the gap between design and code.
-                </p>
-              </article>
+              {aboutData.focus.map((item, i) => (
+                <article key={i} className={cn("space-y-2", i > 0 && "border-t border-border/60 pt-4")}>
+                  <h3 className="font-heading text-lg font-medium tracking-[-0.04em] text-on-dark">{item.title}</h3>
+                  <p className="text-sm leading-7 text-body-muted">
+                    {item.desc}
+                  </p>
+                </article>
+              ))}
             </div>
           </div>
         </div>
