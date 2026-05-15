@@ -21,7 +21,6 @@ export default function RootLayout({
         {/* Global Background Layer */}
         <div className="fixed inset-0 z-[-1] pointer-events-none">
           <div className="absolute inset-0 blueprint-grid" />
-          <div className="absolute inset-0 blueprint-dots" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--color-canvas)]/50 to-[var(--color-canvas)]" />
         </div>
 
