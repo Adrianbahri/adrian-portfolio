@@ -9,7 +9,7 @@ export default function Achievements() {
   return (
     <section id="achievements" className="section-anchor py-8 sm:py-12 bg-transparent">
       <div className="section-container">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-t border-border/20 pt-12">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 border-t border-border/20 pt-12">
           <div className="max-w-[180px] space-y-1">
             <h2 className="font-heading text-lg font-medium text-on-dark leading-tight">Achievements</h2>
             <p className="text-[0.7rem] text-body-muted leading-relaxed">
