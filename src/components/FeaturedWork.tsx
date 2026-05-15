@@ -8,6 +8,7 @@ import { ExternalLink, Code2, Play, Layout, Camera, Brush, ArrowRight } from 'lu
 type ProjectMode = 'developer' | 'creative';
 
 import { projects } from '@/data/projects';
+import Link from 'next/link';
 
 export default function FeaturedWork() {
   const [mode, setMode] = useState<ProjectMode>('developer');
@@ -117,13 +118,13 @@ export default function FeaturedWork() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-20 flex justify-center"
         >
-          <a 
+          <Link 
             href="/projects"
             className="group flex items-center gap-3 px-8 py-4 rounded-full border border-border-strong text-on-dark font-heading text-[0.65rem] font-bold uppercase tracking-[0.2em] hover:bg-on-dark hover:text-canvas transition-all duration-500"
           >
             View All Projects
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>
