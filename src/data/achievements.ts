@@ -12,7 +12,7 @@ export const achievementsData = [
     icon: Award,
   },
   {
-    title: 'Finalist FIND IT UGM',
+    title: '2nd Bakti Champions Movement 2025',
     event: 'National Competition',
     icon: Star,
   },
