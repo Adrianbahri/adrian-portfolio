@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ChevronRight, FileText, ArrowRight } from 'lucide-react';
 
-const dynamicWords = ['visuals', 'interfaces', 'stories', 'motion', 'web experiences'];
+const dynamicWords = ['creative', 'Humorist', 'Agile', 'Ordinary'];
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
@@ -33,7 +33,7 @@ export default function Hero() {
           >
             <p className="eyebrow">Creative technologist</p>
             <h1 className="text-[56px] lg:text-[72px] font-medium leading-[1] tracking-[-0.06em] text-on-dark font-heading">
-              Designing <br />
+              a <br />
               <span className="relative inline-block text-primary">
                 [ 
                 <AnimatePresence mode="wait">
@@ -50,6 +50,8 @@ export default function Hero() {
                 </AnimatePresence>
                 ]
               </span>
+              <br />
+              guy
             </h1>
           </motion.div>
 
