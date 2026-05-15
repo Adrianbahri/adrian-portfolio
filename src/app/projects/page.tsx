@@ -8,11 +8,11 @@ import { projects } from '@/data/projects';
 import Link from 'next/link';
 
 export default function ProjectsPage() {
-  const [filter, setFilter] = useState<'all' | 'developer' | 'creative'>('all');
+  const [filter, setFilter] = useState<'developer' | 'creative'>('developer');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredProjects = projects.filter(project => {
-    const matchesFilter = filter === 'all' || project.mode === filter;
+    const matchesFilter = project.mode === filter;
     const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          project.category.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -55,7 +55,7 @@ export default function ProjectsPage() {
         {/* Filters & Search */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 p-4 bg-surface-50 border border-border-subtle rounded-2xl backdrop-blur-sm">
           <div className="flex items-center gap-2 p-1 bg-surface-100 rounded-full border border-border-strong w-full md:w-auto">
-            {['all', 'developer', 'creative'].map((f) => (
+            {['developer', 'creative'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f as any)}
