@@ -10,10 +10,10 @@ export default function Achievements() {
     <section id="achievements" className="section-anchor py-8 sm:py-12 bg-transparent">
       <div className="section-container">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-t border-border/20 pt-12">
-          <div className="max-w-xs space-y-2">
-            <h2 className="font-heading text-xl font-medium text-on-dark">Key Achievements</h2>
-            <p className="text-[0.85rem] text-body-muted leading-relaxed">
-              Technical and creative awards from national competitions.
+          <div className="max-w-[180px] space-y-1">
+            <h2 className="font-heading text-lg font-medium text-on-dark leading-tight">Achievements</h2>
+            <p className="text-[0.7rem] text-body-muted leading-relaxed">
+              National awards & recognitions.
             </p>
           </div>
 
@@ -32,10 +32,13 @@ export default function Achievements() {
                     <item.icon size={14} />
                   </div>
                   <div className="space-y-0.5">
-                    <h3 className="text-[0.8rem] font-medium text-on-dark leading-tight">
-                      {item.title}
-                    </h3>
-                    <p className="text-[0.65rem] font-mono text-body-muted uppercase tracking-wider">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-[0.8rem] font-medium text-on-dark leading-tight line-clamp-1">
+                        {item.title}
+                      </h3>
+                      <span className="text-[0.65rem] font-mono text-primary/60">{item.year}</span>
+                    </div>
+                    <p className="text-[0.65rem] font-mono text-body-muted uppercase tracking-wider truncate">
                       {item.event}
                     </p>
                   </div>
