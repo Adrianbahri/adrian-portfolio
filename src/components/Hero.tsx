@@ -14,7 +14,7 @@ export default function Hero() {
       setIndex((prev) => (prev + 1) % dynamicWords.length);
     }, 2500);
     return () => clearInterval(interval);
-  }, [dynamicWords.length]);
+  }, []);
 
   return (
     <section className="relative pt-24 overflow-hidden bg-transparent">
