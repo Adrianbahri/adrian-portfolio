@@ -17,7 +17,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative pt-24 overflow-hidden border-b border-border/60 bg-transparent">
+    <section className="relative pt-24 overflow-hidden bg-transparent">
       {/* Background Elements */}
       <div className="paper-dots h-32 w-full border-b border-border-subtle opacity-50" />
       <div className="grain" />

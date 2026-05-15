@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 export default function About() {
   return (
-    <section id="about" className="section-anchor border-t border-border/60 py-12 sm:py-14 bg-transparent">
+    <section id="about" className="section-anchor py-12 sm:py-14 bg-transparent">
       <div className="section-container">
         <div className="max-w-2xl space-y-4">
           <div className="space-y-3">

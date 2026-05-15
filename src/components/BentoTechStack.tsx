@@ -46,7 +46,7 @@ const techItems = [
 
 export default function BentoTechStack() {
   return (
-    <section className="w-full py-24 bg-transparent border-t border-border/60">
+    <section className="w-full py-24 bg-transparent">
       <div className="section-container">
         <div className="mb-16">
           <p className="eyebrow">The Stack</p>

@@ -32,7 +32,7 @@ const achievements = [
 
 export default function Achievements() {
   return (
-    <section id="achievements" className="section-anchor border-t border-border/60 py-12 sm:py-14 bg-transparent">
+    <section id="achievements" className="section-anchor py-12 sm:py-14 bg-transparent">
       <div className="section-container">
         <div className="max-w-2xl space-y-4 mb-12">
           <div className="space-y-3">
