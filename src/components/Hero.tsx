@@ -33,7 +33,7 @@ export default function Hero() {
           >
             <p className="eyebrow">Creative technologist</p>
             <h1 className="text-[56px] lg:text-[72px] font-medium leading-[1] tracking-[-0.06em] text-on-dark font-heading">
-              a{" "}
+              {/^[aeiou]/i.test(dynamicWords[index]) ? 'an' : 'a'}{" "}
               <span className="relative inline-block text-primary">
                 [
                 <AnimatePresence mode="wait">
