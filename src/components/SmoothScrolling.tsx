@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 export default function SmoothScrolling({ children }: { children: ReactNode }) {
   return (
-    <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
+    <ReactLenis root options={{ lerp: 0.12, duration: 1.2, smoothWheel: true }}>
       {children}
     </ReactLenis>
   );

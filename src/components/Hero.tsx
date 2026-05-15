@@ -17,23 +17,23 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+    <section className="relative pt-24 overflow-hidden border-b border-border-subtle">
       {/* Background Elements */}
-      <div className="glow-subtle bg-primary/20 w-[500px] h-[500px] -top-20 -left-20" />
-      <div className="glow-subtle bg-blue-500/10 w-[400px] h-[400px] bottom-20 right-20 animate-float" />
+      <div className="paper-dots h-32 w-full border-b border-border-subtle opacity-50" />
       <div className="grain" />
 
-      <div className="section-container grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
+      <div className="section-container py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start z-10">
         
         {/* Left Content */}
-        <div className="space-y-8">
+        <div className="space-y-10">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-[64px] lg:text-[88px] font-bold leading-[0.9] tracking-tighter text-on-dark">
-              Crafting <br />
+            <p className="eyebrow">Creative technologist</p>
+            <h1 className="text-[56px] lg:text-[72px] font-medium leading-[1] tracking-[-0.06em] text-on-dark font-heading">
+              Designing <br />
               <span className="relative inline-block text-primary">
                 [ 
                 <AnimatePresence mode="wait">
@@ -43,7 +43,7 @@ export default function Hero() {
                     animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
                     exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="inline-block px-4"
+                    className="inline-block px-2"
                   >
                     {dynamicWords[index]}
                   </motion.span>
@@ -57,21 +57,21 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="space-y-6"
+            className="space-y-8"
           >
-            <p className="text-lg lg:text-xl text-body-muted leading-relaxed max-w-lg">
-              Creative developer, video editor, and visual storyteller based in Indonesia. 
-              Informatics Engineering student passionate about technology, design, and digital storytelling.
+            <p className="text-xl lg:text-2xl text-on-dark/80 leading-relaxed max-w-xl font-sans">
+              I build high-performance digital experiences where code meets cinematic storytelling. 
+              Specializing in Next.js, Framer Motion, and creative visual engineering.
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <button className="group bg-primary text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-primary-focus transition-all">
+              <button className="group bg-on-dark text-canvas px-8 py-4 rounded-md font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-on-dark/90 transition-all font-heading">
                 View Projects
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="px-6 py-3 rounded-full border border-border-strong text-on-dark font-semibold flex items-center gap-2 hover:bg-surface-75 transition-all">
-                <FileText size={18} />
-                Download Resume
+              <button className="px-8 py-4 rounded-md border border-border-strong text-on-dark font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-surface-75 transition-all font-heading">
+                <FileText size={16} />
+                Resume
               </button>
             </div>
           </motion.div>
@@ -79,22 +79,31 @@ export default function Hero() {
 
         {/* Right Content - Visual */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
-          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, rotate: 0, scale: 0.95 }}
+          animate={{ opacity: 1, rotate: 2, scale: 1 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative aspect-square lg:aspect-auto lg:h-[600px] rounded-3xl overflow-hidden border border-border-strong bg-surface-75 group"
+          className="relative lg:h-[600px] flex items-center justify-center"
         >
-          <img 
-            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80" 
-            alt="Adrian Visual"
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          
-          {/* Floating badge */}
-          <div className="absolute bottom-8 left-8 p-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl">
-            <p className="text-xs uppercase tracking-widest text-primary font-bold mb-1">Current Stack</p>
-            <p className="text-sm text-on-dark">Next.js + Framer Motion</p>
+          <div className="photo-frame w-full max-w-[450px] group">
+            <div className="relative aspect-[4/5] overflow-hidden bg-canvas">
+              <img 
+                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80" 
+                alt="Adrian Visual"
+                className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/10 mix-blend-overlay pointer-events-none" />
+            </div>
+            
+            <div className="photo-label">
+              <span>IMG_2026_ADRN</span>
+              <span>Visual Storyteller</span>
+            </div>
+
+            {/* Floating badge over the photo */}
+            <div className="absolute bottom-12 left-8 p-3 bg-white border border-black/5 shadow-xl rounded-sm -rotate-3 transition-transform group-hover:rotate-0">
+              <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold mb-0.5">Focus</p>
+              <p className="text-xs text-black font-medium">Next.js + Motion</p>
+            </div>
           </div>
         </motion.div>
 

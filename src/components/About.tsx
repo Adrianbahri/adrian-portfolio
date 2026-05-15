@@ -4,59 +4,65 @@ import { motion } from 'framer-motion';
 
 export default function About() {
   return (
-    <section id="about" className="w-full py-32 bg-canvas">
+    <section id="about" className="w-full py-24 bg-canvas border-t border-border-subtle">
       <div className="section-container">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-16 items-start">
           
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="relative aspect-[3/4] md:aspect-square rounded-3xl overflow-hidden border border-border-strong grayscale hover:grayscale-0 transition-all duration-700 group"
+            className="space-y-6"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80" 
-              alt="Adrian Bahri"
-              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="relative aspect-square rounded-2xl overflow-hidden border border-border-strong grayscale hover:grayscale-0 transition-all duration-700 group">
+              <img 
+                src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80" 
+                alt="Adrian Bahri"
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            </div>
+            <div className="h-px w-full bg-border-subtle" />
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="space-y-8"
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="space-y-10"
           >
-            <div className="space-y-4">
-              <h2 className="text-[34px] font-bold text-on-dark tracking-tight">About Me</h2>
-              <p className="text-[20px] md:text-[24px] font-medium leading-tight text-on-dark">
+            <div className="space-y-6">
+              <p className="eyebrow">The Story</p>
+              <h2 className="text-4xl lg:text-5xl font-medium text-on-dark tracking-[-0.05em] font-heading leading-[1.1]">
+                Bridging technical <br /> complexity with visual clarity.
+              </h2>
+              <p className="text-xl text-on-dark/90 leading-relaxed font-sans">
                 I’m an Informatics Engineering student who enjoys combining technology, visual storytelling, and design to create engaging digital experiences.
               </p>
-              <p className="text-lg text-body-muted leading-relaxed">
+              <p className="text-lg text-body-muted leading-relaxed font-sans">
                 Based in Indonesia, I bridge the gap between creative storytelling and technical implementation. 
-                Whether it's writing clean code, editing cinematic videos, or designing intuitive interfaces, I strive for excellence in every pixel.
+                I strive for excellence in every pixel, from clean code to cinematic motion.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border-subtle">
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest text-primary font-bold">Experience</p>
-                <p className="text-on-dark font-medium">3+ Years of Creative Work</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12 pt-10 border-t border-border-subtle">
+              <div className="space-y-3">
+                <p className="eyebrow text-primary">Experience</p>
+                <p className="text-on-dark font-medium font-sans">3+ Years of Creative Work</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest text-primary font-bold">Achievements</p>
-                <p className="text-on-dark font-medium">1st Place Programming UNITY#12</p>
+              <div className="space-y-3">
+                <p className="eyebrow text-primary">Achievements</p>
+                <p className="text-on-dark font-medium font-sans">1st Place Programming UNITY#12</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest text-primary font-bold">Role</p>
-                <p className="text-on-dark font-medium">Design Coordinator @ Identitas</p>
+              <div className="space-y-3">
+                <p className="eyebrow text-primary">Role</p>
+                <p className="text-on-dark font-medium font-sans">Design Coordinator @ Identitas</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest text-primary font-bold">Focus</p>
-                <p className="text-on-dark font-medium">Creative Technologist</p>
+              <div className="space-y-3">
+                <p className="eyebrow text-primary">Focus</p>
+                <p className="text-on-dark font-medium font-sans">Creative Technologist</p>
               </div>
             </div>
           </motion.div>

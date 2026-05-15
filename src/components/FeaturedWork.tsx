@@ -1,13 +1,17 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ExternalLink, Code2, Play, Layout, Camera } from 'lucide-react';
+import { ExternalLink, Code2, Play, Layout, Camera, Brush } from 'lucide-react';
+
+type ProjectMode = 'developer' | 'creative';
 
 const projects = [
   { 
     id: 1, 
     title: 'Tunify', 
+    mode: 'developer',
     category: 'Web Development', 
     desc: 'Music streaming platform focused on seamless UI/UX and process thinking.',
     img: 'https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=1200&q=80',
@@ -17,6 +21,7 @@ const projects = [
   { 
     id: 2, 
     title: 'Ke-Rent', 
+    mode: 'developer',
     category: 'UI/UX Design', 
     desc: 'Rental application showcase with comprehensive design system.',
     img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
@@ -26,71 +31,126 @@ const projects = [
   { 
     id: 3, 
     title: 'Cinematic Reel', 
+    mode: 'creative',
     category: 'Video Editing', 
     desc: 'A collection of visual storytelling and professional editing works.',
     img: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=800&q=80',
-    span: 'md:col-span-4',
+    span: 'md:col-span-6',
     icon: Camera
   },
   { 
     id: 4, 
     title: 'Identity Unhas', 
+    mode: 'creative',
     category: 'Creative Media', 
     desc: 'Branding and layout coordination for campus media organization.',
     img: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80',
-    span: 'md:col-span-8',
-    icon: Code2
+    span: 'md:col-span-6',
+    icon: Brush
   },
 ];
 
 export default function FeaturedWork() {
-  return (
-    <section className="w-full py-24 bg-canvas">
-      <div className="section-container">
-        <div className="mb-16">
-          <h2 className="text-[34px] font-bold text-on-dark mb-4 tracking-tight">Featured Work</h2>
-          <p className="text-[20px] text-body-muted font-light max-w-2xl">
-            Selected projects that showcase my skills in development, design, and storytelling.
-          </p>
-        </div>
+  const [mode, setMode] = useState<ProjectMode>('developer');
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {projects.map((project, i) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
+  const filteredProjects = projects.filter(p => p.mode === mode);
+
+  return (
+    <section id="work" className="w-full py-24 bg-canvas border-t border-border-subtle">
+      <div className="section-container">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+          <div className="space-y-4">
+            <p className="eyebrow">Portfolio</p>
+            <h2 className="text-4xl lg:text-5xl font-medium text-on-dark tracking-[-0.05em] font-heading">
+              Selected Works
+            </h2>
+            <p className="text-lg text-body-muted max-w-xl font-sans">
+              Exploring the intersection of code and creativity through diverse professional projects.
+            </p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="flex p-1 bg-surface-75 border border-border-strong rounded-full relative">
+            <button 
+              onClick={() => setMode('developer')}
               className={cn(
-                "group relative h-[450px] rounded-3xl overflow-hidden border border-border-subtle bg-surface-75",
-                project.span
+                "relative z-10 px-6 py-2 text-[0.65rem] font-heading font-bold uppercase tracking-[0.16em] transition-colors duration-300",
+                mode === 'developer' ? "text-canvas" : "text-body-muted hover:text-on-dark"
               )}
             >
-              <img 
-                src={project.img} 
-                alt={project.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-              
-              <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-md">
-                    <project.icon size={16} className="text-primary" />
-                  </div>
-                  <span className="text-xs font-bold tracking-widest text-primary uppercase">
-                    {project.category}
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-on-dark mb-2">{project.title}</h3>
-                <p className="text-sm text-body-muted max-w-sm line-clamp-2">
-                  {project.desc}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+              Developer
+            </button>
+            <button 
+              onClick={() => setMode('creative')}
+              className={cn(
+                "relative z-10 px-6 py-2 text-[0.65rem] font-heading font-bold uppercase tracking-[0.16em] transition-colors duration-300",
+                mode === 'creative' ? "text-canvas" : "text-body-muted hover:text-on-dark"
+              )}
+            >
+              Creative
+            </button>
+            
+            {/* Active background pill */}
+            <motion.div
+              initial={false}
+              animate={{ x: mode === 'developer' ? 0 : '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-on-dark rounded-full z-0"
+            />
+          </div>
         </div>
+
+        <motion.div 
+          layout
+          className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredProjects.map((project, i) => (
+              <motion.div
+                key={project.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className={cn(
+                  "group relative",
+                  project.span
+                )}
+              >
+                <div 
+                  className="photo-frame w-full h-full transition-transform duration-500 group-hover:rotate-0"
+                  style={{ transform: `rotate(${i % 2 === 0 ? -1 : 1.5}deg)` }}
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-canvas">
+                    <img 
+                      src={project.img} 
+                      alt={project.title}
+                      className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/5 mix-blend-overlay pointer-events-none" />
+                    
+                    <div className="absolute top-4 right-4">
+                      <span className="px-3 py-1 rounded-sm bg-white/90 backdrop-blur-md text-[0.6rem] font-heading font-bold tracking-[0.16em] text-black uppercase shadow-sm">
+                        {project.category}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="photo-label flex flex-col items-start gap-1">
+                    <div className="w-full flex justify-between items-center">
+                      <h3 className="text-sm font-medium text-black tracking-tight font-heading">{project.title}</h3>
+                      <span className="text-[8px] text-black/30">REF_{2026 + project.id}</span>
+                    </div>
+                    <p className="text-[10px] text-black/60 line-clamp-1 font-sans">
+                      {project.desc}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </section>
   );

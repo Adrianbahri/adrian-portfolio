@@ -11,8 +11,10 @@
   --color-on-dark: #ededed;
   --color-body-muted: #888888;
   
-  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-heading: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 
   --animate-float: float 6s ease-in-out infinite;
   --animate-grain: grain 8s steps(10) infinite;
@@ -46,16 +48,39 @@
 
 @layer components {
   .section-container {
-    @apply max-w-7xl mx-auto px-6 lg:px-12;
+    @apply max-w-5xl mx-auto px-6 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply text-[0.65rem] font-mono uppercase tracking-[0.2em] text-body-muted mb-3 block;
+  }
+
+  .paper-dots {
+    background-image: radial-gradient(circle, var(--color-border-strong) 1px, transparent 1px);
+    background-size: 20px 20px;
+    mask-image: linear-gradient(to bottom, black, transparent);
   }
   
   .grain {
-    @apply pointer-events-none fixed inset-0 z-50 opacity-[0.03];
+    @apply pointer-events-none fixed inset-0 z-50 opacity-[0.02];
     background-image: url("https://grainy-gradients.vercel.app/noise.svg");
   }
 
   .glow-subtle {
     @apply absolute blur-[120px] rounded-full opacity-20 pointer-events-none;
+  }
+
+  .photo-frame {
+    @apply relative p-4 bg-[#f8f8f8] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm border border-black/5;
+  }
+  
+  .photo-frame::after {
+    content: "";
+    @apply absolute inset-4 border border-black/5 pointer-events-none;
+  }
+
+  .photo-label {
+    @apply mt-4 px-2 flex justify-between items-center font-mono text-[9px] uppercase tracking-widest text-black/40;
   }
 }
 
