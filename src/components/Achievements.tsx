@@ -23,24 +23,34 @@ export default function Achievements() {
                 key={i}
                 initial={{ opacity: 0, y: 5 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -5, scale: 1.02 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group p-4 bg-surface-100/50 rounded-xl border border-border/40 hover:border-primary transition-all"
+                className="group relative p-4 bg-surface-100/50 rounded-xl border border-border/40 hover:border-primary/50 hover:bg-surface-200 transition-all cursor-default overflow-hidden h-fit"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-canvas rounded text-primary group-hover:scale-110 transition-transform">
-                    <item.icon size={14} />
-                  </div>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-[0.8rem] font-medium text-on-dark leading-tight line-clamp-1">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 bg-canvas rounded text-primary group-hover:bg-primary group-hover:text-canvas transition-colors">
+                        <item.icon size={14} />
+                      </div>
+                      <h3 className="text-[0.8rem] font-medium text-on-dark leading-tight">
                         {item.title}
                       </h3>
-                      <span className="text-[0.65rem] font-mono text-primary/60">{item.year}</span>
                     </div>
-                    <p className="text-[0.65rem] font-mono text-body-muted uppercase tracking-wider truncate">
-                      {item.event}
-                    </p>
+                    <span className="text-[0.65rem] font-mono text-primary/60">{item.year}</span>
+                  </div>
+                  
+                  {/* Expandable Description */}
+                  <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 ease-in-out">
+                    <div className="overflow-hidden">
+                      <p className="text-[0.7rem] leading-5 text-body-muted border-t border-border/20 pt-2 mt-2">
+                        {item.desc}
+                      </p>
+                      <p className="text-[0.6rem] font-mono text-primary/40 uppercase tracking-widest mt-2">
+                        {item.event}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </motion.div>
