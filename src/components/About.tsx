@@ -13,7 +13,7 @@ export default function About() {
           <div className="space-y-3">
             <h2 className="font-heading text-3xl font-medium tracking-[-0.05em] text-on-dark sm:text-[2.2rem]">About</h2>
             <p className="max-w-2xl text-[0.98rem] leading-8 text-body-muted sm:text-[1.02rem]">
-              The intersection of code, media, and human-centric design.
+              Where technology and creativity become experiences.
             </p>
           </div>
         </div>
@@ -26,15 +26,15 @@ export default function About() {
                 Open for Collaboration
               </div>
               <p>
-                I am an Informatics Engineering student at Hasanuddin University with a deep passion for 
-                creative technology. I believe that engineering is as much about aesthetics and 
+                I am an Informatics Engineering student at Hasanuddin University with a deep passion for
+                creative technology. I believe that engineering is as much about aesthetics and
                 storytelling as it is about performance and logic.
               </p>
               <p>
-                My work currently focuses on building high-performance web applications, 
+                My work currently focuses on building high-performance web applications,
                 media production workflows, and digital design systems that feel alive.
               </p>
-              
+
               <div className="space-y-4 border-t border-border/60 pt-6">
                 <p className="eyebrow">Working principles</p>
                 <ul className="space-y-3 text-body-muted">
@@ -47,7 +47,7 @@ export default function About() {
 
             <div className="space-y-4 border-t border-border/60 pt-6 lg:border-t-0 lg:border-l lg:pl-8">
               <p className="eyebrow">Creative Focus</p>
-              
+
               {aboutData.focus.map((item, i) => (
                 <article key={i} className={cn("space-y-2", i > 0 && "border-t border-border/60 pt-4")}>
                   <h3 className="font-heading text-lg font-medium tracking-[-0.04em] text-on-dark">{item.title}</h3>

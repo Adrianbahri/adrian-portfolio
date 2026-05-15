@@ -62,18 +62,17 @@ export default function Hero() {
             className="space-y-8"
           >
             <p className="text-xl lg:text-2xl text-on-dark/80 leading-relaxed max-w-xl font-sans">
-              I build high-performance digital experiences where code meets cinematic storytelling.
-              Specializing in Next.js, Framer Motion, and creative visual engineering.
+              Transforming ideas into meaningful digital experiences through design, motion, and code.
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <button className="group bg-on-dark text-canvas px-8 py-4 font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-on-dark/90 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
+              <button className="group bg-on-dark text-canvas w-48 py-4 font-medium text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-on-dark/90 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
                 <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-2">
                   View Projects
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </span>
               </button>
-              <button className="px-8 py-4 border border-border-strong text-on-dark font-medium text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-surface-75 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
+              <button className="w-48 py-4 border border-border-strong text-on-dark font-medium text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-surface-75 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
                 <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-2">
                   <FileText size={16} />
                   Resume
