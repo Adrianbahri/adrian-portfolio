@@ -54,19 +54,22 @@ export default function ProjectsPage() {
 
         {/* Filters & Search */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 p-4 bg-surface-50 border border-border-subtle rounded-2xl backdrop-blur-sm">
-          <div className="flex items-center gap-2 p-1 bg-surface-100 rounded-full border border-border-strong w-full md:w-auto">
+          <div className="flex items-center gap-4 p-2 bg-transparent w-full md:w-auto">
             {['developer', 'creative'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f as any)}
                 className={cn(
-                  "px-6 py-2 rounded-full text-[0.6rem] font-bold uppercase tracking-[0.16em] transition-all duration-300",
+                  "px-8 py-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] transition-all duration-500 relative overflow-hidden",
+                  "skew-x-[-15deg] hover:skew-x-0",
                   filter === f 
-                    ? "bg-on-dark text-canvas shadow-lg" 
-                    : "text-body-muted hover:text-on-dark hover:bg-surface-200"
+                    ? "bg-primary text-canvas shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]" 
+                    : "bg-surface-100 text-body-muted border border-border-subtle hover:bg-surface-200 hover:text-on-dark"
                 )}
               >
-                {f}
+                <span className="inline-block skew-x-[15deg] group-hover:skew-x-0 transition-all duration-500">
+                  {f}
+                </span>
               </button>
             ))}
           </div>
