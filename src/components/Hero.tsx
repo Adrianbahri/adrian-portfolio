@@ -84,7 +84,7 @@ export default function Hero() {
           initial={{ opacity: 0, rotate: 0, scale: 0.95 }}
           animate={{ opacity: 1, rotate: 2, scale: 1 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative lg:h-[600px] flex items-center justify-center lg:justify-end lg:pr-12"
+          className="relative flex items-start justify-center lg:justify-end"
         >
           <div className="photo-frame w-full max-w-[380px] group">
             <div className="relative aspect-[4/5] overflow-hidden bg-canvas">
