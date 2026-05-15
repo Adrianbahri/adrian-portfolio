@@ -22,7 +22,7 @@ export default function Hero() {
       <div className="paper-dots h-32 w-full border-b border-border-subtle opacity-50" />
       <div className="grain" />
 
-      <div className="section-container py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start z-10">
+      <div className="section-container py-16 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-20 items-start z-10">
 
         {/* Left Content */}
         <div className="space-y-10">
@@ -35,7 +35,7 @@ export default function Hero() {
             <h1 className="text-[42px] lg:text-[58px] font-medium leading-[1.1] tracking-[-0.06em] text-on-dark font-heading">
               {/^[aeiou]/i.test(dynamicWords[index]) ? 'An' : 'A'}{" "}
               <span className="relative inline-block text-primary">
-                {"<"}
+                {"</"}
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={dynamicWords[index]}
@@ -48,7 +48,7 @@ export default function Hero() {
                     {dynamicWords[index]}
                   </motion.span>
                 </AnimatePresence>
-                {"//>"}
+                {"/>"}
               </span>
               <br />
               Guy
@@ -84,7 +84,7 @@ export default function Hero() {
           initial={{ opacity: 0, rotate: 0, scale: 0.95 }}
           animate={{ opacity: 1, rotate: 2, scale: 1 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative flex items-start justify-center lg:justify-end"
+          className="relative flex items-start justify-center lg:justify-end lg:translate-x-10"
         >
           <div className="photo-frame w-full max-w-[380px] group">
             <div className="relative aspect-[4/5] overflow-hidden bg-canvas">
