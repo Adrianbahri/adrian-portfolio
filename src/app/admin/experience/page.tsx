@@ -92,6 +92,24 @@ export default function AdminExperience() {
         onBack={() => setView('list')}
         isSaving={isSaving}
         modeLabel="EXPERIENCE EDITOR"
+        onImageUpload={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = async (e: any) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+               const fileExt = file.name.split('.').pop();
+               const fileName = `${Math.random()}.${fileExt}`;
+               const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+               if (error) throw error;
+               const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
+               setFormData(prev => ({ ...prev, description: prev.description + `<img src="${publicUrl}" alt="Experience Image" />` }));
+            } catch (err: any) { alert(err.message); }
+          };
+          input.click();
+        }}
         topContent={
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="space-y-1.5">

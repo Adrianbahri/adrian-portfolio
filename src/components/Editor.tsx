@@ -228,12 +228,12 @@ export default function Editor({ content, onChange, onImageUpload }: EditorProps
     if (!editor || content === undefined) return;
 
     const currentHTML = editor.getHTML();
-    const currentMarkdown = editor.storage.markdown?.getMarkdown();
+    const currentMarkdown = (editor.storage as any).markdown?.getMarkdown();
     
     // Check if the incoming content is different from both HTML and Markdown versions
     // This handles cases where the parent might be storing either format
     if (content !== currentHTML && content !== currentMarkdown) {
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content, { emitUpdate: false });
     }
   }, [content, editor]);
 

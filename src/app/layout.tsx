@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import SmoothScrolling from "@/components/SmoothScrolling";
@@ -36,7 +37,9 @@ export default function RootLayout({
         <div className="fixed top-0 inset-x-0 h-32 bg-gradient-to-b from-[var(--color-canvas)] to-transparent z-[80] pointer-events-none" />
 
         <SmoothScrolling>
-          <GlobalNav />
+          <Suspense fallback={null}>
+            <GlobalNav />
+          </Suspense>
           {children}
         </SmoothScrolling>
       </body>

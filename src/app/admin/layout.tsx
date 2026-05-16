@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -23,6 +23,14 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="h-screen bg-[#1c1c1c] flex items-center justify-center text-[#707070]">Loading Admin...</div>}>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </Suspense>
+  );
+}
+
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();

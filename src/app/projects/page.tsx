@@ -11,7 +11,17 @@ import PhotoGallery from '@/components/PhotoGallery';
 import VideoShowcase from '@/components/VideoShowcase';
 import DesignShowcase from '@/components/DesignShowcase';
 
+import { Suspense } from 'react';
+
 export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-transparent flex items-center justify-center text-white/20"><Loader2 size={40} className="animate-spin" /></div>}>
+      <ProjectsPageContent />
+    </Suspense>
+  );
+}
+
+function ProjectsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

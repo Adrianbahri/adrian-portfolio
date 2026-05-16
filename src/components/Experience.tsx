@@ -165,7 +165,7 @@ export default function Experience() {
 
                   {item.points && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 pt-2">
-                      {item.points.map((point, idx) => (
+                      {item.points.map((point: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-2 shrink-0" />
                           <p className="text-sm leading-relaxed text-body-muted/80 font-sans">
