@@ -107,33 +107,24 @@ export default async function ProjectDetailPage({ params }: Props) {
             )}
 
             {/* Markdown Content Section */}
-            <div className="content-prose pt-12 border-t border-border-subtle/30">
+            <div className="pt-12 border-t border-border-subtle/30">
               {markdown ? (
                 <div className="space-y-12">
                   <div className="flex items-center gap-4 mb-12">
                     <ScrollText className="text-primary/40" size={18} />
                     <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/40">Project Narrative</h3>
                   </div>
-                  {markdown.split('\n').map((line: string, i: number) => {
-                    if (line.startsWith('## ')) {
-                      return (
-                        <div key={i} className="flex items-center gap-4 mt-20 mb-8">
-                          <div className="w-12 h-[1px] bg-primary/30" />
-                          <h2 className="text-2xl font-heading font-medium text-on-dark tracking-tight m-0">{line.replace('## ', '')}</h2>
-                        </div>
-                      );
-                    }
-                    if (line.startsWith('![Image]')) {
-                      const url = line.match(/\((.*?)\)/)?.[1];
-                      return (
-                        <div key={i} className="my-16 aspect-[16/10] bg-surface-100 border border-border-strong overflow-hidden rounded-sm shadow-2xl">
-                          <img src={url} alt="Project Step" className="w-full h-full object-cover" />
-                        </div>
-                      );
-                    }
-                    if (line.trim() === '') return <div key={i} className="h-4" />;
-                    return <p key={i} className="text-lg text-body-muted leading-relaxed font-sans">{line}</p>;
-                  })}
+                  <div className="content-prose pt-12 border-t border-border-subtle/30">
+                    <div dangerouslySetInnerHTML={{ 
+                      __html: markdown
+                        .replace(/##\s+(.*?)(?=\s+##|\n|$)/g, '<h2>$1</h2>')
+                        .replace(/!\[Image\]\((.*?)\)/gim, '<img src="$1" alt="Project Insight" />')
+                        .split('\n')
+                        .filter((p: string) => p.trim() !== '')
+                        .map((p: string) => p.startsWith('<h') || p.startsWith('<img') ? p : `<p>${p}</p>`)
+                        .join('')
+                    }} />
+                  </div>
                 </div>
               ) : project.mode !== 'creative' && (
                 <div className="py-20 text-center border border-dashed border-border-subtle rounded-sm">

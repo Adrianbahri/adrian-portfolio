@@ -66,30 +66,17 @@ export default async function BlogPostPage({ params }: Props) {
              <img src={article.img || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=2000&q=80'} alt={article.title} className="w-full h-full object-cover" />
           </div>
 
-          <div className="content-prose mx-auto">
+          <div className="mx-auto content-prose">
             {content ? (
-              <div className="space-y-8">
-                {content.split('\n').map((line: string, i: number) => {
-                  if (line.startsWith('## ')) {
-                    return (
-                      <div key={i} className="flex items-center gap-4 mt-16 mb-6">
-                        <div className="w-8 h-[1px] bg-primary/40" />
-                        <h2 className="text-2xl font-heading font-medium text-on-dark tracking-tight m-0">{line.replace('## ', '')}</h2>
-                      </div>
-                    );
-                  }
-                  if (line.startsWith('![Image]')) {
-                    const url = line.match(/\((.*?)\)/)?.[1];
-                    return (
-                      <div key={i} className="my-12 aspect-video bg-surface-100 border border-border-subtle rounded-sm overflow-hidden shadow-xl">
-                        <img src={url} alt="Article Insight" className="w-full h-full object-cover" />
-                      </div>
-                    );
-                  }
-                  if (line.trim() === '') return <div key={i} className="h-4" />;
-                  return <p key={i} className="text-lg text-body-muted leading-relaxed font-sans">{line}</p>;
-                })}
-              </div>
+              <div dangerouslySetInnerHTML={{ 
+                __html: content
+                  .replace(/##\s+(.*?)(?=\s+##|\n|$)/g, '<h2>$1</h2>')
+                  .replace(/!\[Image\]\((.*?)\)/gim, '<img src="$1" alt="Blog Insight" />')
+                  .split('\n')
+                  .filter((p: string) => p.trim() !== '')
+                  .map((p: string) => p.startsWith('<h') || p.startsWith('<img') ? p : `<p>${p}</p>`)
+                  .join('')
+              }} />
             ) : (
               <p className="text-body-muted italic text-center py-20 border border-dashed border-border-subtle">Article content is currently empty.</p>
             )}

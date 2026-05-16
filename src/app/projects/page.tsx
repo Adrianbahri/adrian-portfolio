@@ -108,7 +108,7 @@ export default function ProjectsPage() {
         {loading ? (
           <div className="py-24 flex flex-col items-center justify-center gap-4 text-white/20">
             <Loader2 size={40} className="animate-spin" />
-            <p className="text-[0.6rem] font-bold uppercase tracking-[0.3em]">Syncing Showcase...</p>
+            <p className="text-[0.6rem] font-bold uppercase tracking-[0.3em]">Loaded =, ambil nafas dan lihat beda terjauh di sekitarmu</p>
           </div>
         ) : (
           <div className="space-y-4">

@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #000000;
-  --color-surface-75: #0a0a0a;
-  --color-surface-100: #111111;
-  --color-surface-200: #171717;
-  --color-border-subtle: #1f1f1f;
-  --color-border-strong: #2e2e2e;
-  --color-primary: #3ecf8e;
-  --color-on-dark: #ededed;
-  --color-body-muted: #888888;
+  --color-canvas: var(--canvas);
+  --color-surface-75: var(--surface-75);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-dark: var(--on-dark);
+  --color-body-muted: var(--body-muted);
   
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
@@ -18,6 +19,9 @@
 
   --animate-float: float 6s ease-in-out infinite;
   --animate-grain: grain 8s steps(10) infinite;
+
+  /* Force dark mode to use the .dark class instead of system preference */
+  --variant-dark: (&:where(.dark, .dark *));
 
   @keyframes float {
     0%, 100% { transform: translateY(0); }
@@ -39,9 +43,44 @@
 }
 
 @layer base {
+  :root {
+    --canvas: #ffffff;
+    --studio: #f9fafb;
+    --surface-75: #f9fafb;
+    --surface-100: #f3f4f6;
+    --surface-200: #e5e7eb;
+    --border-subtle: #e5e7eb;
+    --border-strong: #d1d5db;
+    --on-dark: #171717;
+    --body-muted: #71717a;
+    --grid-line: rgba(0, 0, 0, 0.03);
+    --grid-line-strong: rgba(0, 0, 0, 0.06);
+    --shadow-main: rgba(0, 0, 0, 0.03);
+    --primary: #24b47e;
+    --primary-hover: #1e8a60;
+  }
+
+  .dark {
+    --canvas: #000000;
+    --studio: #1c1c1c;
+    --surface-75: #0a0a0a;
+    --surface-100: #111111;
+    --surface-200: #171717;
+    --border-subtle: #1f1f1f;
+    --border-strong: #2e2e2e;
+    --on-dark: #ededed;
+    --body-muted: #a1a1aa;
+    --grid-line: rgba(255, 255, 255, 0.03);
+    --grid-line-strong: rgba(255, 255, 255, 0.08);
+    --shadow-main: rgba(0, 0, 0, 0.8);
+    --primary: #3ecf8e;
+    --primary-hover: #34b27b;
+  }
+
   * { @apply border-border-subtle; }
   body {
     @apply bg-canvas text-on-dark antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
     font-feature-settings: "ss01", "ss02", "cv01", "cv11";
   }
 }
@@ -57,10 +96,10 @@
 
   .blueprint-grid {
     background-image: 
-      linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      linear-gradient(to right, var(--grid-line-strong) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line-strong) 1px, transparent 1px),
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
     background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
   }
   
@@ -74,7 +113,8 @@
   }
 
   .photo-frame {
-    @apply relative p-4 bg-surface-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] border border-border-strong;
+    @apply relative p-4 bg-surface-100 border border-border-strong;
+    box-shadow: 0 30px 60px -15px var(--shadow-main);
   }
   
   .photo-frame::after {
@@ -91,7 +131,7 @@
   }
 
   .content-prose h2 {
-    @apply text-xl font-medium text-on-dark font-heading mt-12 mb-6 flex items-center gap-3;
+    @apply text-2xl font-medium text-on-dark font-heading mt-12 mb-6 flex items-center gap-3;
   }
 
   .content-prose h2::before {
@@ -137,9 +177,19 @@ html.lenis, html.lenis body { height: auto; }
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #2e2e2e;
+  @apply bg-border-strong;
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3e3e3e;
+  @apply bg-body-muted;
+}
+/* Fix for browser autofill transparency */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--on-dark) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px transparent !important;
 }

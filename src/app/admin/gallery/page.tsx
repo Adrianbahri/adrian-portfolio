@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Trash2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminGallery() {
   const [photos, setPhotos] = useState<any[]>([]);
@@ -29,26 +28,23 @@ export default function AdminGallery() {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `gallery/${fileName}`;
 
-        // 1. Upload to Storage
         const { error: uploadError } = await supabase.storage
           .from('portfolio-assets')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
-        // 2. Get Public URL
         const { data: { publicUrl } } = supabase.storage
           .from('portfolio-assets')
           .getPublicUrl(filePath);
 
-        // 3. Save to Database
         return supabase.from('gallery').insert([{ image_url: publicUrl }]);
       });
 
       await Promise.all(uploadPromises);
       fetchPhotos();
     } catch (err: any) {
-      alert('Error uploading some files: ' + err.message);
+      alert('Error: ' + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -58,12 +54,10 @@ export default function AdminGallery() {
     if (!confirm('Hapus foto ini dari galeri?')) return;
 
     try {
-      // Extract filename from URL
       const path = url.split('/').pop();
       if (path) {
         await supabase.storage.from('portfolio-assets').remove([`gallery/${path}`]);
       }
-      
       await supabase.from('gallery').delete().eq('id', id);
       fetchPhotos();
     } catch (err: any) {
@@ -72,10 +66,10 @@ export default function AdminGallery() {
   };
 
   return (
-    <div className="space-y-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-medium text-[#ededed]">Photo Gallery</h1>
+    <div className="space-y-8 pb-20 text-[#ededed]">
+      <header className="flex items-center justify-between py-4 border-b border-[#2e2e2e]">
+        <div className="space-y-1">
+          <h1 className="text-xl font-medium text-[#ededed]">Photo Gallery</h1>
           <p className="text-[13px] text-[#707070]">Manage your visual exhibition.</p>
         </div>
         
@@ -87,36 +81,31 @@ export default function AdminGallery() {
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <AnimatePresence>
-          {photos.map((photo) => (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="group relative aspect-square bg-[#1c1c1c] border border-[#2e2e2e] rounded-lg overflow-hidden"
-            >
-              <img 
-                src={photo.image_url} 
-                alt="Gallery" 
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <button 
-                  onClick={() => handleDelete(photo.id, photo.image_url)}
-                  className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {photos.map((photo: any) => (
+          <div
+            key={photo.id}
+            className="group relative aspect-square bg-[#1c1c1c] border border-[#2e2e2e] rounded-md overflow-hidden"
+          >
+            <img 
+              src={photo.image_url} 
+              alt="Gallery" 
+              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+            />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button 
+                onClick={() => handleDelete(photo.id, photo.image_url)}
+                className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
         
         {photos.length === 0 && !isUploading && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center border-2 border-dashed border-[#2e2e2e] rounded-xl text-[#707070]">
-            <ImageIcon size={40} className="mb-4 opacity-20" />
-            <p className="text-sm">Belum ada foto. Upload karya pertamamu!</p>
+          <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-[#2e2e2e] rounded-md text-[#707070]">
+            <ImageIcon size={32} className="mb-4 opacity-20" />
+            <p className="text-[13px] font-medium uppercase tracking-widest opacity-40">Gallery is empty</p>
           </div>
         )}
       </div>

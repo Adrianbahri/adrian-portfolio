@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Trash2, Plus, Video, Loader2, Youtube, Globe } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const RemoteIcon = ({ url, className }: { url: string, className?: string }) => (
-  <img 
-    src={url} 
-    alt="icon" 
-    className={className || "w-5 h-5 brightness-0 invert"}
-  />
-);
+import { Trash2, Plus, Video, Loader2, Globe } from 'lucide-react';
 
 export default function AdminVideos() {
   const [videos, setVideos] = useState<any[]>([]);
@@ -42,42 +33,25 @@ export default function AdminVideos() {
     setIsSaving(true);
     try {
       let thumbnailUrl = '';
-
-      // Upload thumbnail if exists
       if (thumbnailFile) {
         const fileExt = thumbnailFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `video-thumbnails/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('portfolio-assets')
-          .upload(filePath, thumbnailFile);
-
+        const { error: uploadError } = await supabase.storage.from('portfolio-assets').upload(filePath, thumbnailFile);
         if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('portfolio-assets')
-          .getPublicUrl(filePath);
-        
+        const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(filePath);
         thumbnailUrl = publicUrl;
       }
 
       const platform = getPlatform(formData.url);
       const { error } = await supabase.from('video_works').insert([
-        { 
-          title: formData.title, 
-          video_url: formData.url,
-          platform: platform,
-          thumbnail_url: thumbnailUrl
-        }
+        { title: formData.title, video_url: formData.url, platform, thumbnail_url: thumbnailUrl }
       ]);
 
       if (error) throw error;
-      
       setFormData({ title: '', url: '' });
       setThumbnailFile(null);
       fetchVideos();
-      alert('Video link and thumbnail added!');
     } catch (err: any) {
       alert('Error: ' + err.message);
     } finally {
@@ -92,44 +66,46 @@ export default function AdminVideos() {
   };
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-medium text-[#ededed]">Video Showcase</h1>
-        <p className="text-[13px] text-[#707070]">Paste your YouTube or Instagram links here.</p>
+    <div className="space-y-8 pb-20 text-[#ededed]">
+      <header className="flex items-center justify-between py-4 border-b border-[#2e2e2e]">
+        <div className="space-y-1">
+          <h1 className="text-xl font-medium text-[#ededed]">Video Showcase</h1>
+          <p className="text-[13px] text-[#707070]">Manage your video productions and social reels.</p>
+        </div>
       </header>
 
       {/* Add Video Form */}
-      <form onSubmit={handleAddVideo} className="p-6 bg-[#1c1c1c] border border-[#2e2e2e] rounded-xl space-y-4">
+      <form onSubmit={handleAddVideo} className="p-6 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Video Title</label>
             <input 
               type="text" 
-              placeholder="e.g. Cinematic Travel Reel 2024"
+              placeholder="e.g. Cinematic Reel 2024"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full bg-[#252525] border border-[#2e2e2e] rounded-md px-3 py-2 text-sm text-[#ededed] focus:outline-none focus:ring-1 focus:ring-[#3ecf8e]"
+              className="w-full bg-[#171717] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Video Link (YT / IG)</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Video URL (YT / IG)</label>
             <input 
               type="text" 
-              placeholder="https://www.youtube.com/watch?v=..."
+              placeholder="https://..."
               value={formData.url}
               onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              className="w-full bg-[#252525] border border-[#2e2e2e] rounded-md px-3 py-2 text-sm text-[#ededed] focus:outline-none focus:ring-1 focus:ring-[#3ecf8e]"
+              className="w-full bg-[#171717] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
             />
           </div>
         </div>
         
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Custom Thumbnail (Optional)</label>
+          <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Thumbnail (Optional)</label>
           <input 
             type="file" 
             accept="image/*"
             onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-            className="w-full text-xs text-[#707070] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#2e2e2e] file:text-[#ededed] hover:file:bg-[#3e3e3e]"
+            className="w-full text-[12px] text-[#707070] file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[11px] file:font-bold file:bg-[#2e2e2e] file:text-[#ededed] hover:file:bg-[#3e3e3e] cursor-pointer"
           />
         </div>
 
@@ -137,42 +113,32 @@ export default function AdminVideos() {
           disabled={isSaving}
           className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
         >
-          {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+          {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
           Add Video Link
         </button>
       </form>
 
       {/* Video List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <AnimatePresence>
-          {videos.map((video) => (
-            <motion.div
-              key={video.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex items-center justify-between p-4 bg-[#1c1c1c] border border-[#2e2e2e] rounded-lg group"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-lg bg-[#252525] flex items-center justify-center">
-                  {video.platform === 'youtube' && <RemoteIcon url="https://cdn.simpleicons.org/youtube" />}
-                  {video.platform === 'instagram' && <RemoteIcon url="https://cdn.simpleicons.org/instagram" />}
-                  {video.platform === 'other' && <Globe size={20} className="text-[#707070]" />}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-medium text-[#ededed] truncate">{video.title}</h3>
-                  <p className="text-[11px] text-[#707070] truncate">{video.video_url}</p>
-                </div>
+        {videos.map((video: any) => (
+          <div key={video.id} className="flex items-center justify-between p-4 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md group hover:border-[#3e3e3e] transition-all">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-10 h-10 rounded bg-[#252525] border border-[#2e2e2e] flex items-center justify-center text-[#3ecf8e]">
+                <Video size={18} />
               </div>
-              <button 
-                onClick={() => handleDelete(video.id)}
-                className="p-2 text-[#707070] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-              >
-                <Trash2 size={16} />
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              <div className="min-w-0">
+                <h3 className="text-[14px] font-medium text-[#ededed] truncate">{video.title}</h3>
+                <p className="text-[11px] text-[#707070] truncate font-mono">{video.video_url}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => handleDelete(video.id)}
+              className="p-2 text-[#707070] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

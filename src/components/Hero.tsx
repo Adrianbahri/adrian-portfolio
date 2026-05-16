@@ -2,12 +2,14 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { ChevronRight, FileText, ArrowRight } from 'lucide-react';
+import { FileText, ArrowRight } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const dynamicWords = ['Creative', 'Humorist', 'Firefighter', 'Resourceful', 'Ordinary', 'Agile'];
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,10 +33,9 @@ export default function Hero() {
             transition={{ duration: 0.8 }}
           >
             <p className="eyebrow">Creative Technologist & also known as</p>
-            <h1 className="text-[42px] lg:text-[58px] font-medium leading-[1.1] tracking-[-0.06em] text-on-dark font-heading">
+            <h1 className="text-[32px] sm:text-[42px] lg:text-[58px] font-medium leading-[1.1] tracking-[-0.06em] text-on-dark font-heading">
               {/^[aeiou]/i.test(dynamicWords[index]) ? 'An' : 'A'}{" "}
               <span className="relative inline-block text-primary">
-                {/* {"</"} */}
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={dynamicWords[index]}
@@ -47,9 +48,8 @@ export default function Hero() {
                     {dynamicWords[index]}
                   </motion.span>
                 </AnimatePresence>
-                {/* {"/>"} */}
               </span>
-              <br />
+              <br className="hidden sm:block" />
               Guy
             </h1>
           </motion.div>
@@ -64,19 +64,20 @@ export default function Hero() {
               Transforming ideas into meaningful digital experiences through design, motion, and code.
             </p>
 
-            <div className="flex flex-wrap gap-4">
-              <button className="group bg-on-dark text-canvas w-48 py-4 font-medium text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-on-dark/90 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
-                <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-2">
-                  View Projects
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </span>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button className="group bg-on-dark text-canvas w-full sm:w-48 py-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary transition-all font-heading rounded-[3px]">
+                View Projects
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="w-48 py-4 border border-border-strong text-on-dark font-medium text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-surface-75 transition-all font-heading skew-x-[-12deg] hover:skew-x-0">
-                <span className="skew-x-[12deg] group-hover:skew-x-0 transition-all duration-500 flex items-center gap-2">
-                  <FileText size={16} />
-                  Resume
-                </span>
-              </button>
+              <a 
+                href={settings.resume_url || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full sm:w-48 py-4 border border-border-strong text-on-dark font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-surface-75 transition-all font-heading rounded-[3px]"
+              >
+                <FileText size={14} />
+                Resume
+              </a>
             </div>
           </motion.div>
         </div>
@@ -86,12 +87,12 @@ export default function Hero() {
           initial={{ opacity: 0, rotate: 0, scale: 0.95 }}
           animate={{ opacity: 1, rotate: 2, scale: 1 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative flex items-start justify-center lg:justify-end lg:translate-x-10"
+          className="relative flex items-start justify-center lg:justify-end lg:translate-x-10 mt-8 lg:mt-0"
         >
-          <div className="photo-frame w-full max-w-[380px] group">
-            <div className="relative aspect-[4/5] overflow-hidden bg-canvas">
+          <div className="photo-frame w-full max-w-[340px] sm:max-w-[380px] group rounded-[5px]">
+            <div className="relative aspect-[4/5] overflow-hidden bg-canvas rounded-[2px]">
               <img
-                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80"
+                src={settings.hero_image || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80"}
                 alt="Adrian Visual"
                 className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
               />
@@ -104,7 +105,7 @@ export default function Hero() {
             </div>
 
             {/* Floating badge over the photo */}
-            <div className="absolute bottom-12 left-8 p-3 bg-surface-200 border border-border-strong shadow-xl -rotate-3 transition-transform group-hover:rotate-0">
+            <div className="absolute bottom-12 left-8 p-3 bg-surface-200 border border-border-strong shadow-xl rounded-[3px] transition-transform group-hover:-translate-y-1">
               <p className="text-[10px] uppercase tracking-widest text-on-dark/40 font-bold mb-0.5">Focus</p>
               <p className="text-xs text-on-dark font-medium">Next.js + Motion</p>
             </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutGrid,
   FolderKanban,
@@ -16,7 +16,8 @@ import {
   Search,
   Users,
   Image as ImageIcon,
-  Video
+  Video,
+  Inbox
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +25,7 @@ import { supabase } from '@/lib/supabase';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = async () => {
@@ -31,19 +33,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     window.location.href = '/';
   };
 
-  const [isProjectsOpen, setIsProjectsOpen] = useState(pathname.startsWith('/admin/projects'));
+  const [isProjectsOpen, setIsProjectsOpen] = useState(
+    pathname.startsWith('/admin/projects') || 
+    ['/admin/gallery', '/admin/videos', '/admin/designs'].some(path => pathname.startsWith(path))
+  );
   const [isActivitiesOpen, setIsActivitiesOpen] = useState(pathname.startsWith('/admin/activities'));
 
   const links = [
-    { name: 'Overview', href: '/admin', icon: LayoutGrid },
+    { name: 'Universal CMS', href: '/admin', icon: User },
     {
       name: 'Projects',
       href: '/admin/projects',
       icon: FolderKanban,
       submenu: [
-        { name: 'All Projects', href: '/admin/projects' },
         { name: 'Technical', href: '/admin/projects?type=developer' },
-        { name: 'Creative', href: '/admin/projects?type=creative' },
+        { name: 'Gallery', href: '/admin/gallery' },
+        { name: 'Videos', href: '/admin/videos' },
+        { name: 'Designs', href: '/admin/designs' },
       ]
     },
     { name: 'Articles', href: '/admin/articles', icon: ScrollText },
@@ -57,14 +63,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Volunteering', href: '/admin/activities?type=volunteering' },
       ]
     },
-    { name: 'Gallery', href: '/admin/gallery', icon: ImageIcon },
-    { name: 'Videos', href: '/admin/videos', icon: Video },
-    { name: 'Designs', href: '/admin/designs', icon: ImageIcon },
+    { name: 'Messages', href: '/admin/messages', icon: Inbox },
     { name: 'Sync Database', href: '/admin/sync', icon: RefreshCw },
   ];
 
   return (
-    <div className="flex h-screen bg-[#1c1c1c] text-white overflow-hidden font-sans selection:bg-[#3ecf8e]/30 selection:text-[#3ecf8e]">
+    <div className="dark flex h-screen bg-[#1c1c1c] text-white overflow-hidden font-sans selection:bg-[#3ecf8e]/30 selection:text-[#3ecf8e]">
       {/* Sidebar - Supabase Canvas Night */}
       <aside className="w-64 flex-shrink-0 bg-[#1c1c1c] border-r border-[#2e2e2e] flex flex-col">
         <div className="p-4">
@@ -80,12 +84,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar">
           <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#707070]">Project</p>
-          {links.map((link) => {
+          {links.map((link: any) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href || (link.submenu && pathname.startsWith(link.href));
             const hasSubmenu = !!link.submenu;
-            const isOpen = link.name === 'Projects' ? isProjectsOpen : isActivitiesOpen;
-            const setIsOpen = link.name === 'Projects' ? setIsProjectsOpen : setIsActivitiesOpen;
+            const isActive = hasSubmenu 
+              ? (link.name === 'Projects' ? isProjectsOpen : isActivitiesOpen)
+              : (link.href === '/admin' ? pathname === '/admin' : pathname.startsWith(link.href));
+            const isOpen = link.name === 'Projects' ? isProjectsOpen : (link.name === 'Activities' ? isActivitiesOpen : false);
+            const setIsOpen = link.name === 'Projects' ? setIsProjectsOpen : (link.name === 'Activities' ? setIsActivitiesOpen : () => {});
 
             return (
               <div key={link.href} className="flex flex-col">
@@ -119,19 +125,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 {hasSubmenu && isOpen && (
                   <div className="ml-6 mt-0.5 mb-1 pl-3 border-l border-[#2e2e2e] space-y-0.5 animate-in slide-in-from-left-2 duration-300">
-                    {link.submenu.map((sub) => {
-                      const isSubActive = pathname === sub.href;
+                    {link.submenu.map((sub: any) => {
+                      const currentFullUrl = `${pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+                      const isSubActive = currentFullUrl === sub.href;
                       return (
                         <Link
                           key={sub.href}
                           href={sub.href}
                           className={cn(
-                            "block px-3 py-1.5 text-[12px] transition-all rounded-md",
+                            "flex items-center gap-2 px-3 py-1.5 text-[12px] transition-all rounded-md group/sub",
                             isSubActive
-                              ? "text-[#3ecf8e] font-medium"
+                              ? "text-[#3ecf8e] font-medium bg-[#3ecf8e]/5"
                               : "text-[#707070] hover:text-[#ededed] hover:bg-[#252525]"
                           )}
                         >
+                          {isSubActive && <div className="w-1 h-1 rounded-full bg-[#3ecf8e] animate-pulse" />}
+                          {!isSubActive && <div className="w-1 h-1 rounded-full bg-transparent group-hover/sub:bg-[#707070]" />}
                           {sub.name}
                         </Link>
                       );
@@ -164,11 +173,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#171717]">
         <header className="h-10 border-b border-[#2e2e2e] flex items-center px-6 bg-[#1c1c1c] justify-between">
-          <div className="flex items-center gap-2 text-[11px] font-medium">
-            <span className="text-[#707070]">Projects</span>
-            <span className="text-[#2e2e2e]">/</span>
-            <span className="text-[#ededed]">Dashboard</span>
-          </div>
+          <div />
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-2 py-0.5 rounded border border-[#2e2e2e] text-[10px] text-[#707070] bg-[#252525]/30">
               <div className="w-1 h-1 rounded-full bg-[#3ecf8e]" />
@@ -177,7 +182,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="w-6 h-6 rounded-full bg-[#2e2e2e] border border-[#3e3e3e] flex items-center justify-center text-[9px] font-bold text-[#707070]">AB</div>
           </div>
         </header>
-        <main className="flex-1 overflow-hidden flex flex-col p-6">
+        <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-6">
           <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0">
             {children}
           </div>

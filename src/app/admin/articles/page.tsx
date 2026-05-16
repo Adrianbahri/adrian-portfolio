@@ -158,7 +158,7 @@ export default function AdminArticles() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2e2e2e]">
-              {allArticles.map((article, i) => (
+              {allArticles.map((article: any, i: number) => (
                 <tr key={article.id || i} className="group hover:bg-[#232323] transition-colors">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">

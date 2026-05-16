@@ -6,10 +6,18 @@ import { motion } from 'framer-motion';
 import { Youtube, Play, ExternalLink } from 'lucide-react';
 
 const RemoteIcon = ({ url, className }: { url: string, className?: string }) => (
-  <img 
-    src={url} 
-    alt="icon" 
-    className={className || "w-4 h-4 brightness-0 invert"}
+  <div 
+    style={{ 
+      maskImage: `url(${url})`, 
+      WebkitMaskImage: `url(${url})`,
+      maskSize: 'contain',
+      WebkitMaskSize: 'contain',
+      maskRepeat: 'no-repeat',
+      WebkitMaskRepeat: 'no-repeat',
+      maskPosition: 'center',
+      WebkitMaskPosition: 'center'
+    }}
+    className={className || "w-4 h-4 bg-current"}
   />
 );
 
@@ -80,7 +88,7 @@ export default function VideoShowcase() {
                     >
                       <div className="flex items-center justify-center group-hover/ig:scale-110 group-hover/ig:text-primary transition-all">
                         {video.platform === 'instagram' ? (
-                          <RemoteIcon url="https://cdn.simpleicons.org/instagram" className="w-10 h-10 brightness-0 invert group-hover/ig:invert-0" />
+                          <RemoteIcon url="https://cdn.simpleicons.org/instagram" className="w-10 h-10 bg-current group-hover/ig:text-primary transition-colors" />
                         ) : (
                           <Play size={40} strokeWidth={1.5} />
                         )}
@@ -96,9 +104,9 @@ export default function VideoShowcase() {
                   <h3 className="text-xl font-medium text-on-dark mb-2">{video.title}</h3>
                   <div className="flex items-center gap-2">
                     {video.platform === 'youtube' ? (
-                      <RemoteIcon url="https://cdn.simpleicons.org/youtube" className="w-4 h-4 brightness-0 invert" />
+                      <RemoteIcon url="https://cdn.simpleicons.org/youtube" className="w-4 h-4 bg-current opacity-60" />
                     ) : (
-                      <RemoteIcon url="https://cdn.simpleicons.org/instagram" className="w-4 h-4 brightness-0 invert" />
+                      <RemoteIcon url="https://cdn.simpleicons.org/instagram" className="w-4 h-4 bg-current opacity-60" />
                     )}
                     <span className="text-[0.6rem] font-bold uppercase tracking-widest text-body-muted">{video.platform} Work</span>
                   </div>

@@ -38,7 +38,7 @@ export default function AdminProjects() {
 function AdminProjectsContent() {
   const searchParams = useSearchParams();
   const [view, setView] = useState<'list' | 'metadata' | 'case-study'>('list');
-  const [listFilter, setListFilter] = useState<'all' | 'developer' | 'creative'>('all');
+  const [listFilter, setListFilter] = useState<string>('all');
   
   // Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -46,7 +46,7 @@ function AdminProjectsContent() {
 
   useEffect(() => {
     const type = searchParams.get('type');
-    if (type === 'developer' || type === 'creative') {
+    if (type) {
       setListFilter(type);
     } else {
       setListFilter('all');
@@ -234,7 +234,10 @@ function AdminProjectsContent() {
   };
 
   const rawProjects = dbProjects;
-  const filteredProjects = rawProjects.filter(p => listFilter === 'all' || p.mode === listFilter);
+  const filteredProjects = rawProjects.filter((p: any) => {
+    if (listFilter === 'all') return true;
+    return p.mode === listFilter || p.category?.toLowerCase() === listFilter.toLowerCase();
+  });
 
   if (view === 'list') {
     return (
@@ -252,28 +255,6 @@ function AdminProjectsContent() {
           </button>
         </header>
 
-        {/* Tab System - Separating Modes */}
-        <div className="flex items-center gap-1 p-1 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md w-fit">
-           {[
-             { id: 'all', label: 'All Projects', icon: FolderKanban },
-             { id: 'developer', label: 'Technical', icon: ScrollText },
-             { id: 'creative', label: 'Creative', icon: LayoutGrid }
-           ].map((tab) => (
-             <button
-               key={tab.id}
-               onClick={() => setListFilter(tab.id as any)}
-               className={cn(
-                 "flex items-center gap-2 px-3 py-1 rounded text-[12px] font-medium transition-all",
-                 listFilter === tab.id 
-                  ? "bg-[#2e2e2e] text-[#3ecf8e] shadow-sm" 
-                  : "text-[#707070] hover:text-[#ededed] hover:bg-[#252525]"
-               )}
-             >
-               <tab.icon size={14} />
-               {tab.label}
-             </button>
-           ))}
-        </div>
 
         <div className="bg-[#1c1c1c] border border-[#2e2e2e] rounded-md overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse">

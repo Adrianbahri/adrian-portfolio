@@ -34,9 +34,9 @@ function AdminActivitiesContent() {
   const [activeTab, setActiveTab] = useState<'organizations' | 'volunteering'>('organizations');
   
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'organizations' || tab === 'volunteering') {
-      setActiveTab(tab);
+    const type = searchParams.get('type');
+    if (type === 'organizations' || type === 'volunteering') {
+      setActiveTab(type);
     }
   }, [searchParams]);
 
@@ -244,37 +244,9 @@ function AdminActivitiesContent() {
         </button>
       </header>
 
-      <div className="flex items-center gap-1 p-1 bg-[#1c1c1c] border border-[#2e2e2e] rounded-lg w-fit">
-        <button 
-          onClick={() => {
-            setActiveTab('organizations');
-            setEditingId(null);
-            setFormData({ title: '', company: '', timeline: '', description: '', location: '' });
-          }}
-          className={cn(
-            "px-4 py-1.5 rounded-md text-[12px] font-medium transition-all flex items-center gap-2",
-            activeTab === 'organizations' ? "bg-[#2e2e2e] text-[#ededed]" : "text-[#707070] hover:text-[#ededed]"
-          )}
-        >
-          <Users size={14} /> Organizations
-        </button>
-        <button 
-          onClick={() => {
-            setActiveTab('volunteering');
-            setEditingId(null);
-            setFormData({ title: '', company: '', timeline: '', description: '', location: '' });
-          }}
-          className={cn(
-            "px-4 py-1.5 rounded-md text-[12px] font-medium transition-all flex items-center gap-2",
-            activeTab === 'volunteering' ? "bg-[#2e2e2e] text-[#ededed]" : "text-[#707070] hover:text-[#ededed]"
-          )}
-        >
-          <Heart size={14} /> Volunteering
-        </button>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {displayData.map((item, i) => (
+        {displayData.map((item: any, i: number) => (
           <div key={item.id || i} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-5 hover:border-[#3e3e3e] transition-all">
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 bg-[#252525] rounded-md flex items-center justify-center text-[#3ecf8e] border border-[#2e2e2e]">

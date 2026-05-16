@@ -3,17 +3,16 @@
 import { useState, useEffect } from 'react';
 import {
   Plus,
-  Search,
   Edit2,
   Trash2,
   Briefcase,
   MapPin,
-  X,
+  ChevronLeft,
   Save,
-  ChevronLeft
+  Clock,
+  Loader2
 } from 'lucide-react';
-import Editor from '@/components/Editor';
-import { workData as staticWork } from '@/wdata/experience';
+import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import DeleteModal from '@/components/Admin/DeleteModal';
@@ -34,6 +33,7 @@ export default function AdminExperience() {
   });
 
   const fetchExperiences = async () => {
+    setLoading(true);
     const { data } = await supabase.from('experiences').select('*').order('created_at', { ascending: false });
     if (data) setExperiences(data);
     setLoading(false);
@@ -53,8 +53,7 @@ export default function AdminExperience() {
     setView('edit');
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     setIsSaving(true);
     try {
       if (editingId) { await supabase.from('experiences').update(formData).eq('id', editingId); }
@@ -82,154 +81,126 @@ export default function AdminExperience() {
     } catch (err: any) { alert('Error: ' + err.message); }
   };
 
-  const allExperiences = experiences;
-
-  if (view === 'list') {
+  if (view === 'edit') {
     return (
-      <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
-        <header className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <h1 className="text-xl font-medium text-[#ededed]">Experience</h1>
-            <p className="text-[13px] text-[#707070]">Professional career history and roles.</p>
-          </div>
-          <button
-            onClick={() => { setEditingId(null); setFormData({ title: '', company: '', timeline: '', location: '', description: '' }); setView('edit'); }}
-            className="bg-[#3ecf8e] text-[#171717] px-3 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all"
-          >
-            New Experience
-          </button>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {allExperiences.map((exp, i) => (
-            <div key={exp.id || i} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-5 hover:border-[#3e3e3e] transition-all shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-8 h-8 bg-[#252525] rounded-md flex items-center justify-center text-[#3ecf8e] border border-[#2e2e2e]">
-                  <Briefcase size={14} />
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleEdit(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-white border border-[#2e2e2e] transition-all"><Edit2 size={12} /></button>
-                  <button onClick={() => confirmDelete(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#ff2201] border border-[#2e2e2e] transition-all"><Trash2 size={12} /></button>
-                </div>
-              </div>
-              <h3 className="text-[15px] font-medium text-[#ededed] leading-snug">{exp.title}</h3>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#707070] mb-3">{exp.company}</p>
-              <div className="flex flex-wrap gap-2 text-[10px] text-[#707070] mb-4">
-                <span className="px-1.5 py-0.5 rounded bg-[#252525] border border-[#2e2e2e]">{exp.timeline}</span>
-                <span className="px-1.5 py-0.5 rounded bg-[#252525] border border-[#2e2e2e]">{exp.location}</span>
-              </div>
-              <p className="text-[13px] text-[#9a9a9a] line-clamp-2 leading-relaxed">{exp.description}</p>
+      <UnifiedEditorLayout 
+        title={`${editingId ? 'Edit' : 'Create'} Experience`}
+        subtitle={formData.company}
+        content={formData.description}
+        onContentChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+        onSave={handleSave}
+        onBack={() => setView('list')}
+        isSaving={isSaving}
+        modeLabel="EXPERIENCE EDITOR"
+        topContent={
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Role Title</label>
+              <input 
+                type="text" 
+                value={formData.title} 
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
+                placeholder="e.g. Senior Software Engineer"
+              />
             </div>
-          ))}
-        </div>
-
-        <DeleteModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={handleDelete}
-          title="Delete Experience"
-          itemName={itemToDelete?.title || 'this experience'}
-        />
-      </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Company / Organization</label>
+              <input 
+                type="text" 
+                value={formData.company} 
+                onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
+                placeholder="e.g. Supabase"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Timeline</label>
+              <input 
+                type="text" 
+                value={formData.timeline} 
+                onChange={(e) => setFormData(prev => ({ ...prev, timeline: e.target.value }))}
+                className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
+                placeholder="e.g. Jan 2024 — Present"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Location</label>
+              <input 
+                type="text" 
+                value={formData.location} 
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
+                placeholder="e.g. Remote"
+              />
+            </div>
+          </div>
+        }
+      />
     );
   }
 
   return (
-    <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
-      <header className="flex items-center justify-between border-b border-[#2e2e2e] pb-6">
-        <div className="flex items-center gap-4">
-          <button onClick={() => setView('list')} className="w-8 h-8 bg-[#252525] rounded-md border border-[#2e2e2e] flex items-center justify-center text-[#707070] hover:text-[#ededed] transition-all"><ChevronLeft size={16} /></button>
-          <h2 className="text-xl font-medium text-[#ededed]">{editingId ? 'Edit' : 'Create'} Experience</h2>
+    <div data-lenis-prevent className="flex-1 space-y-8 pb-20 text-[#ededed]">
+      <header className="flex items-center justify-between py-4 border-b border-[#2e2e2e]">
+        <div className="space-y-1">
+          <h1 className="text-xl font-medium text-[#ededed]">Experience</h1>
+          <p className="text-[13px] text-[#707070]">Manage your professional career history.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setView('list')} className="px-4 py-1.5 text-[13px] font-medium text-[#707070] hover:text-[#ededed]">Cancel</button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-[#3ecf8e] text-[#171717] px-5 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
-          >
-            {isSaving ? 'Saving...' : <><Save size={14} /> Save Experience</>}
-          </button>
-        </div>
+        <button
+          onClick={() => { setEditingId(null); setFormData({ title: '', company: '', timeline: '', location: '', description: '' }); setView('edit'); }}
+          className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
+        >
+          <Plus size={14} /> New Experience
+        </button>
       </header>
 
-      <form onSubmit={handleSave} className="max-w-3xl space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Role Title</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
-              placeholder="e.g. Senior Software Engineer"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Company / Organization</label>
-            <input
-              type="text"
-              value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
-              placeholder="e.g. Supabase"
-            />
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {experiences.map((exp, i) => (
+          <div key={exp.id || i} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-5 hover:border-[#3e3e3e] transition-all">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-10 h-10 bg-[#252525] rounded-md flex items-center justify-center text-[#3ecf8e] border border-[#2e2e2e]">
+                <Briefcase size={18} />
+              </div>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => handleEdit(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-white border border-[#2e2e2e] transition-all"><Edit2 size={12} /></button>
+                <button onClick={() => confirmDelete(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#ff2201] border border-[#2e2e2e] transition-all"><Trash2 size={12} /></button>
+              </div>
+            </div>
+            
+            <div className="space-y-1 mb-4">
+              <h3 className="text-[15px] font-medium text-[#ededed]">{exp.title}</h3>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#3ecf8e]">{exp.company}</p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Timeline</label>
-            <input
-              type="text"
-              value={formData.timeline}
-              onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-              className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
-              placeholder="e.g. Jan 2024 — Present"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Location</label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
-              placeholder="e.g. Remote"
-            />
-          </div>
-        </div>
+            <div className="flex flex-wrap gap-4 text-[11px] text-[#707070] mb-4">
+              <div className="flex items-center gap-1.5">
+                <Clock size={12} />
+                <span>{exp.timeline}</span>
+              </div>
+              {exp.location && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin size={12} />
+                  <span>{exp.location}</span>
+                </div>
+              )}
+            </div>
 
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Job Description</label>
-          <div className="min-h-[300px] flex flex-col">
-            <Editor
-              content={formData.description}
-              onChange={(content) => setFormData({ ...formData, description: content })}
-              onImageUpload={() => {
-                // For experience, image upload might not be as common but let's keep the option
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = async (e: any) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Math.random()}.${fileExt}`;
-                    const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
-                    if (error) throw error;
-                    const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-                    setFormData(prev => ({ ...prev, description: prev.description + `<img src="${publicUrl}" alt="Exp image" />` }));
-                  } catch (err: any) { alert('Upload failed: ' + err.message); }
-                };
-                input.click();
-              }}
+            <div 
+              className="text-[13px] text-[#9a9a9a] line-clamp-2 leading-relaxed prose prose-invert prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: exp.description }}
             />
           </div>
-          <p className="text-[10px] text-[#707070] mt-1 italic">Professional rich-text editor enabled.</p>
-        </div>
-      </form>
+        ))}
+      </div>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Experience"
+        itemName={itemToDelete?.title || 'this experience'}
+      />
     </div>
   );
 }

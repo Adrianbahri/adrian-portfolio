@@ -45,7 +45,7 @@ export default function SelectedProjects() {
   const developerProjects = projects.filter(p => (p.mode?.toLowerCase() || 'developer') === 'developer').slice(0, 3);
 
   return (
-    <section id="work" className="section-anchor w-full py-32 px-6 lg:px-12 bg-transparent">
+    <section id="work" className="section-anchor w-full py-20 px-6 lg:px-12 bg-transparent">
       <div className="max-w-[1440px] mx-auto">
 
         {/* HEADER SECTION */}
@@ -126,7 +126,7 @@ function BentoCard({ project, index, isCategory }: { project: any, index: number
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className={cn(
-        "group relative flex flex-col overflow-hidden bg-transparent border border-white/5 transition-all duration-500 hover:border-primary/20",
+        "group relative flex flex-col overflow-hidden bg-transparent border border-border-subtle transition-all duration-500 hover:border-primary/20",
         "min-h-[480px]"
       )}
     >
@@ -149,7 +149,7 @@ function BentoCard({ project, index, isCategory }: { project: any, index: number
           )}
         </div>
 
-        <div className="mt-auto relative overflow-hidden aspect-[16/10] border border-white/5 group-hover:border-primary/20 transition-all duration-700 shadow-2xl">
+        <div className="mt-auto relative overflow-hidden aspect-[16/10] border border-border-subtle group-hover:border-primary/20 transition-all duration-700 shadow-2xl">
           <img
             src={project.img || project.image_url}
             alt={project.title}
