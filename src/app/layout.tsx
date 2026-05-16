@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import SmoothScrolling from "@/components/SmoothScrolling";
+import GlobalNav from "@/components/GlobalNav";
 
 export const metadata: Metadata = {
   title: "Portfolio | Dark Minimalist",
@@ -25,6 +26,7 @@ export default function RootLayout({
         </div>
 
         <SmoothScrolling>
+          <GlobalNav />
           {children}
         </SmoothScrolling>
       </body>

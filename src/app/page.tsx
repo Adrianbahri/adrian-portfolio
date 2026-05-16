@@ -1,4 +1,3 @@
-import GlobalNav from '@/components/GlobalNav';
 import LoadingScreen from '@/components/LoadingScreen';
 import Hero from '@/components/Hero';
 import FeaturedWork from '@/components/FeaturedWork';
@@ -14,7 +13,6 @@ export default function Home() {
     <SmoothScrolling>
       <main className="min-h-screen">
         <LoadingScreen />
-        <GlobalNav />
         <Hero />
         <FeaturedWork />
         <About />

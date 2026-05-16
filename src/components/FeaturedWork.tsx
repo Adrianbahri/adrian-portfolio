@@ -3,17 +3,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ExternalLink, Code2, Play, Layout, Camera, Brush, ArrowRight } from 'lucide-react';
-
-type ProjectMode = 'developer' | 'creative';
+import { ExternalLink, GitBranch, ArrowRight } from 'lucide-react';
 
 import { projects } from '@/data/projects';
 import Link from 'next/link';
 
+type ProjectMode = 'developer' | 'creative';
+
 export default function FeaturedWork() {
   const [mode, setMode] = useState<ProjectMode>('developer');
 
-  const filteredProjects = projects.filter(p => p.mode === mode);
+  const filteredProjects = projects.filter(p => p.mode === mode).slice(0, 2);
 
   return (
     <section id="work" className="w-full py-24 bg-transparent">
@@ -74,43 +74,75 @@ export default function FeaturedWork() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1 }}
                 className={cn(
-                  "group relative",
+                  "relative block",
                   project.span
                 )}
               >
-                <div 
-                  className="photo-frame w-full h-full transition-transform duration-500 group-hover:rotate-0"
-                  style={{ transform: `rotate(${i % 2 === 0 ? -1 : 1.5}deg)` }}
+                <Link 
+                  href={`/projects/${project.slug}`}
+                  className="group block"
                 >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-canvas">
-                    <img 
-                      src={project.img} 
-                      alt={project.title}
-                      className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/5 mix-blend-overlay pointer-events-none" />
+                  <div 
+                    className="photo-frame w-full h-full transition-transform duration-500 group-hover:rotate-0"
+                    style={{ transform: `rotate(${i % 2 === 0 ? -1 : 1.5}deg)` }}
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-canvas">
+                      <img 
+                        src={project.img} 
+                        alt={project.title}
+                        className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/5 mix-blend-overlay pointer-events-none" />
+                      
+                      {/* Floating Tech Badges */}
+                      <div className="absolute top-4 left-4 flex gap-2">
+                         {project.github && project.github !== '#' && (
+                           <div 
+                             className="p-2 bg-on-dark/80 backdrop-blur-md text-canvas rounded-full hover:bg-primary transition-colors duration-300"
+                           >
+                             <GitBranch size={14} />
+                           </div>
+                         )}
+                      </div>
+
+                      <div className="absolute top-4 right-4">
+                        <span className="px-3 py-1 bg-surface-200/90 backdrop-blur-md text-[0.6rem] font-heading font-bold tracking-[0.16em] text-on-dark uppercase shadow-sm border border-border-strong">
+                          {project.category}
+                        </span>
+                      </div>
+
+                      {/* View Case Study Overlay */}
+                      <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                        <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-canvas flex items-center gap-2">
+                          View Case Study
+                          <ExternalLink size={12} />
+                        </span>
+                      </div>
+                    </div>
                     
-                    <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 bg-surface-200/90 backdrop-blur-md text-[0.6rem] font-heading font-bold tracking-[0.16em] text-on-dark uppercase shadow-sm border border-border-strong">
-                        {project.category}
-                      </span>
+                    <div className="photo-label flex flex-col items-start gap-1">
+                      <div className="w-full flex justify-between items-center">
+                        <h3 className="text-sm font-medium text-on-dark tracking-tight font-heading">{project.title}</h3>
+                        <div className="flex items-center gap-2">
+                          {project.github && project.github !== '#' && (
+                            <div className="text-body-muted group-hover:text-primary transition-colors">
+                              <GitBranch size={12} />
+                            </div>
+                          )}
+                          <span className="text-[8px] text-on-dark/30">REF_{2026 + project.id}</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-on-dark/60 line-clamp-1 font-sans">
+                        {project.desc}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className="photo-label flex flex-col items-start gap-1">
-                    <div className="w-full flex justify-between items-center">
-                      <h3 className="text-sm font-medium text-on-dark tracking-tight font-heading">{project.title}</h3>
-                      <span className="text-[8px] text-on-dark/30">REF_{2026 + project.id}</span>
-                    </div>
-                    <p className="text-[10px] text-on-dark/60 line-clamp-1 font-sans">
-                      {project.desc}
-                    </p>
-                  </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </AnimatePresence>
         </motion.div>
+        
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

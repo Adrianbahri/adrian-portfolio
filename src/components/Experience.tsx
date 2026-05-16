@@ -1,10 +1,42 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
 import { workData, organizationData, volunteerData } from '@/data/experience';
 
+// Helper function to automatically sort data by date (Newest/NOW first)
+const sortExperience = (data: any[]) => {
+  return [...data].sort((a, b) => {
+    const aYearStr = a.year.toUpperCase();
+    const bYearStr = b.year.toUpperCase();
+
+    // 1. Prioritize items with "NOW"
+    const aIsNow = aYearStr.includes('NOW');
+    const bIsNow = bYearStr.includes('NOW');
+
+    if (aIsNow && !bIsNow) return -1;
+    if (!aIsNow && bIsNow) return 1;
+
+    // 2. If both are NOW or both are past, sort by the highest year found in the string
+    const aYears = aYearStr.match(/\d{4}/g)?.map(Number) || [0];
+    const bYears = bYearStr.match(/\d{4}/g)?.map(Number) || [0];
+    
+    const aMaxYear = Math.max(...aYears);
+    const bMaxYear = Math.max(...bYears);
+
+    if (aMaxYear !== bMaxYear) {
+      return bMaxYear - aMaxYear;
+    }
+
+    // 3. If years are same, try to sort by start year (first year mentioned)
+    return bYears[0] - aYears[0];
+  });
+};
+
 export default function Experience() {
+  const sortedWork = sortExperience(workData);
+  const sortedOrg = sortExperience(organizationData);
+  const sortedVol = sortExperience(volunteerData);
+
   return (
     <section id="experience" className="section-anchor py-24 sm:py-32 bg-transparent blueprint-grid relative">
       {/* Subtle fade to black at top and bottom of grid */}
@@ -22,7 +54,7 @@ export default function Experience() {
           </div>
 
           <div className="space-y-16">
-            {workData.map((item, i) => (
+            {sortedWork.map((item, i) => (
               <article 
                 key={i} 
                 className="grid grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)] gap-8 md:gap-0 border-t border-border/20 pt-12 group"
@@ -95,7 +127,7 @@ export default function Experience() {
             <h3 className="font-heading text-2xl font-medium tracking-[-0.03em] text-on-dark border-b border-border/40 pb-6">Organization History</h3>
 
             <div className="space-y-10">
-              {organizationData.map((item, i) => (
+              {sortedOrg.map((item, i) => (
                 <article key={i} className="group space-y-2">
                   <p className="text-[10px] font-mono text-body-muted/60 uppercase tracking-[0.2em]">{item.year}</p>
                   <div className="space-y-1">
@@ -119,11 +151,11 @@ export default function Experience() {
             <h3 className="font-heading text-2xl font-medium tracking-[-0.03em] text-on-dark border-b border-border/40 pb-6">Volunteer & Activities</h3>
 
             <div className="space-y-10">
-              {volunteerData.map((item, i) => (
+              {sortedVol.map((item, i) => (
                 <article key={i} className="group space-y-2">
                   <p className="text-[10px] font-mono text-body-muted/60 uppercase tracking-[0.2em]">{item.year}</p>
                   <div className="space-y-1">
-                    <h4 className="font-heading text-lg font-medium text-on-dark">
+                    <h4 className="font-heading text-lg font-medium text-on-dark group-hover:text-primary transition-colors">
                       {item.role}
                     </h4>
                     <p className="text-[11px] font-mono text-body-muted/70 uppercase tracking-widest">

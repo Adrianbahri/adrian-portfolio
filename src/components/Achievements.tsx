@@ -6,6 +6,11 @@ import { Trophy, Award, Star, TrendingUp } from 'lucide-react';
 import { achievementsData } from '@/data/achievements';
 
 export default function Achievements() {
+  // Auto-sort achievements by year (newest first)
+  const sortedAchievements = [...achievementsData].sort((a, b) => {
+    return parseInt(b.year) - parseInt(a.year);
+  });
+
   return (
     <section id="achievements" className="section-anchor pt-16 sm:pt-24 pb-8 sm:pb-12 bg-transparent">
       <div className="section-container border-t border-white/10">
@@ -22,7 +27,7 @@ export default function Achievements() {
 
           {/* Items Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {achievementsData.map((item, i) => (
+            {sortedAchievements.map((item, i) => (
               <div
                 key={i}
                 className="group relative p-8 pt-12 border-t border-white/5 md:border-t-0 md:border-l border-white/5 hover:bg-white/[0.02] transition-colors min-h-[180px]"
