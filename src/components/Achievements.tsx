@@ -1,13 +1,39 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Trophy, Award, Star, TrendingUp } from 'lucide-react';
+import { achievementsData as staticAchievements } from '@/data/achievements';
 
-import { achievementsData } from '@/data/achievements';
+const iconMap: Record<string, any> = {
+  Trophy,
+  Award,
+  Star,
+  TrendingUp,
+};
 
 export default function Achievements() {
+  const [achievements, setAchievements] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      const { data } = await supabase.from('achievements').select('*');
+      if (data && data.length > 0) {
+        const mapped = data.map(item => ({
+          ...item,
+          icon: iconMap[item.icon] || Trophy
+        }));
+        setAchievements(mapped);
+      } else {
+        setAchievements(staticAchievements);
+      }
+    };
+    fetchAchievements();
+  }, []);
+
   // Auto-sort achievements by year (newest first)
-  const sortedAchievements = [...achievementsData].sort((a, b) => {
+  const sortedAchievements = [...achievements].sort((a, b) => {
     return parseInt(b.year) - parseInt(a.year);
   });
 
@@ -30,7 +56,7 @@ export default function Achievements() {
             {sortedAchievements.map((item, i) => (
               <div
                 key={i}
-                className="group relative p-8 pt-12 border-t border-white/5 md:border-t-0 md:border-l border-white/5 hover:bg-white/[0.02] transition-colors min-h-[180px]"
+                className="group relative p-8 pt-12 border-t border-white/5 md:border-t-0 md:border-l border-white/5 transition-colors min-h-[180px]"
               >
                 {/* Dynamic Expanding Line Overlay */}
                 <div className="absolute left-0 top-0 w-[1px] h-8 group-hover:h-full bg-primary/40 transition-all duration-500 hidden md:block" />

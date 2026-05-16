@@ -1,17 +1,19 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { workData, organizationData, volunteerData } from '@/data/experience';
 
 // Helper function to automatically sort data by date (Newest/NOW first)
 const sortExperience = (data: any[]) => {
   return [...data].sort((a, b) => {
-    const aYearStr = a.year.toUpperCase();
-    const bYearStr = b.year.toUpperCase();
+    const aYearStr = (a.year || a.timeline || '').toUpperCase();
+    const bYearStr = (b.year || b.timeline || '').toUpperCase();
 
     // 1. Prioritize items with "NOW"
-    const aIsNow = aYearStr.includes('NOW');
-    const bIsNow = bYearStr.includes('NOW');
+    const aIsNow = aYearStr.includes('NOW') || aYearStr.includes('PRESENT');
+    const bIsNow = bYearStr.includes('NOW') || bYearStr.includes('PRESENT');
 
     if (aIsNow && !bIsNow) return -1;
     if (!aIsNow && bIsNow) return 1;
@@ -28,19 +30,79 @@ const sortExperience = (data: any[]) => {
     }
 
     // 3. If years are same, try to sort by start year (first year mentioned)
-    return bYears[0] - aYears[0];
+    return (bYears[0] || 0) - (aYears[0] || 0);
   });
 };
 
 export default function Experience() {
-  const sortedWork = sortExperience(workData);
-  const sortedOrg = sortExperience(organizationData);
-  const sortedVol = sortExperience(volunteerData);
+  const [work, setWork] = useState<any[]>([]);
+  const [orgs, setOrgs] = useState<any[]>([]);
+  const [vols, setVols] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [
+          { data: workDataDb },
+          { data: orgDataDb },
+          { data: volDataDb }
+        ] = await Promise.all([
+          supabase.from('experiences').select('*'),
+          supabase.from('organizations').select('*'),
+          supabase.from('volunteers').select('*')
+        ]);
+
+        if (workDataDb && workDataDb.length > 0) {
+          const mapped = workDataDb.map(item => ({
+            ...item,
+            role: item.title || item.role,
+            year: item.timeline || item.year,
+            desc: item.description || item.desc
+          }));
+          setWork(sortExperience(mapped));
+        } else setWork(sortExperience(workData));
+
+        if (orgDataDb && orgDataDb.length > 0) {
+          const mapped = orgDataDb.map(item => ({
+            ...item,
+            role: item.title || item.role,
+            year: item.timeline || item.year,
+            desc: item.description || item.desc,
+            company: item.company
+          }));
+          setOrgs(sortExperience(mapped));
+        } else setOrgs(sortExperience(organizationData));
+
+        if (volDataDb && volDataDb.length > 0) {
+          const mapped = volDataDb.map(item => ({
+            ...item,
+            role: item.title || item.role,
+            year: item.timeline || item.year,
+            desc: item.description || item.desc,
+            company: item.company
+          }));
+          setVols(sortExperience(mapped));
+        } else setVols(sortExperience(volunteerData));
+      } catch (error) {
+        console.error('Error fetching experience:', error);
+        setWork(sortExperience(workData));
+        setOrgs(sortExperience(organizationData));
+        setVols(sortExperience(volunteerData));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const sortedWork = work;
+  const sortedOrg = orgs;
+  const sortedVol = vols;
 
   return (
-    <section id="experience" className="section-anchor py-24 sm:py-32 bg-transparent blueprint-grid relative">
-      {/* Subtle fade to black at top and bottom of grid */}
-      <div className="absolute inset-0 bg-gradient-to-b from-canvas via-transparent to-canvas pointer-events-none" />
+    <section id="experience" className="section-anchor py-24 sm:py-32 bg-transparent relative">
       
       <div className="section-container space-y-32 relative z-10">
         

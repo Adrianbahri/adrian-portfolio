@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, ChevronRight, Loader2, LayoutGrid, ScrollText } from 'lucide-react';
 import { Metadata } from 'next';
+import { cn } from '@/lib/utils';
 
 interface Props {
   params: Promise<{ projectSlug: string }>;
@@ -62,26 +63,57 @@ export default async function ProjectDetailPage({ params }: Props) {
           <div className="space-y-20 min-w-0">
             {/* Gallery Section (for Creative Mode) */}
             {project.mode === 'creative' && gallery.length > 0 && (
-              <section className="space-y-8">
+              <section className="space-y-12">
                 <div className="flex items-center gap-4">
                   <LayoutGrid className="text-primary/40" size={20} />
-                  <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/40">Visual Showcase</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/40">Media Production Showcase</h3>
                   <div className="flex-1 h-px bg-border-subtle/30" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {gallery.map((img: string, i: number) => (
-                    <div key={i} className={i % 3 === 0 ? "md:col-span-2 aspect-video" : "aspect-square"}>
-                      <img src={img} alt={`${project.title} asset ${i}`} className="w-full h-full object-cover rounded-sm border border-border-strong hover:border-primary/40 transition-all duration-700" />
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {gallery.map((item: any, i: number) => {
+                    const media = typeof item === 'string' ? { url: item, type: 'image', caption: '' } : item;
+                    const isVideo = media.type === 'video';
+                    
+                    return (
+                      <div key={i} className={cn(
+                        "group space-y-4",
+                        i % 3 === 0 ? "md:col-span-2" : "col-span-1"
+                      )}>
+                        <div className="relative aspect-video bg-surface-100 border border-border-strong overflow-hidden rounded-sm group-hover:border-primary/40 transition-all duration-700 shadow-xl">
+                          {isVideo ? (
+                            <iframe 
+                              src={media.url.replace('watch?v=', 'embed/')} 
+                              className="w-full h-full border-none"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <img src={media.url} alt={`${project.title} asset ${i}`} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
+                          )}
+                          <div className="absolute top-4 right-4 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[0.5rem] font-bold uppercase tracking-widest text-white/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {isVideo ? 'Video Production' : 'Design Asset'}
+                          </div>
+                        </div>
+                        {media.caption && (
+                          <p className="text-[0.65rem] text-body-muted font-medium uppercase tracking-[0.15em] leading-relaxed border-l-2 border-primary/20 pl-4">
+                            {media.caption}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
 
             {/* Markdown Content Section */}
-            <div className="content-prose">
+            <div className="content-prose pt-12 border-t border-border-subtle/30">
               {markdown ? (
                 <div className="space-y-12">
+                  <div className="flex items-center gap-4 mb-12">
+                    <ScrollText className="text-primary/40" size={18} />
+                    <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/40">Project Narrative</h3>
+                  </div>
                   {markdown.split('\n').map((line: string, i: number) => {
                     if (line.startsWith('## ')) {
                       return (

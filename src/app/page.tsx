@@ -8,6 +8,10 @@ import BentoTechStack from '@/components/BentoTechStack';
 import Contact from '@/components/Contact';
 import SmoothScrolling from '@/components/SmoothScrolling';
 
+import PhotoGallery from '@/components/PhotoGallery';
+import VideoShowcase from '@/components/VideoShowcase';
+import DesignShowcase from '@/components/DesignShowcase';
+
 export default function Home() {
   return (
     <SmoothScrolling>

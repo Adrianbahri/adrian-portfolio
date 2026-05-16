@@ -1,10 +1,24 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Plus as PlusIcon, Search as SearchIcon, Edit2 as EditIcon, Trash2 as TrashIcon, Eye as EyeIcon, FileText as FileTextIcon, FileEdit as FileEditIcon, X as XIcon, Image as ImageIconComponent, Type as TypeIcon, Save as SaveIcon, ChevronLeft as ChevronLeftIcon } from 'lucide-react';
+import { 
+  Plus, 
+  Search, 
+  Edit2, 
+  Trash2, 
+  Eye, 
+  FileText, 
+  FileEdit, 
+  X, 
+  Save, 
+  ChevronLeft
+} from 'lucide-react';
+import Editor from '@/components/Editor';
+import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
 import { articles as staticArticles } from '@/data/articles';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import DeleteModal from '@/components/Admin/DeleteModal';
 
 export default function AdminArticles() {
   const [view, setView] = useState<'list' | 'metadata' | 'content'>('list');
@@ -14,9 +28,12 @@ export default function AdminArticles() {
   const [isUploading, setIsUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | number | null>(null);
   
+  // Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+
   const [textContent, setTextContent] = useState('');
   const [activeArticle, setActiveArticle] = useState<any>(null);
-  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const [formData, setFormData] = useState({
     title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: '',
@@ -29,6 +46,8 @@ export default function AdminArticles() {
   };
 
   useEffect(() => { fetchArticles(); setLoading(false); }, []);
+
+
 
   const handleEditMetadata = (article: any) => {
     setEditingId(article.id);
@@ -76,17 +95,20 @@ export default function AdminArticles() {
     finally { setIsSaving(false); }
   };
 
-  const insertHeading = () => {
-    const textarea = editorRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    const before = text.substring(0, start);
-    const after = text.substring(end);
-    const newText = before + (before.endsWith('\n') || start === 0 ? '' : '\n') + '## ' + after;
-    setTextContent(newText);
-    setTimeout(() => { textarea.focus(); textarea.setSelectionRange(start + 3, start + 3); }, 10);
+  const confirmDelete = (article: any) => {
+    setItemToDelete(article);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    try {
+      const { error } = await supabase.from('articles').delete().eq('id', itemToDelete.id);
+      if (error) throw error;
+      setDbArticles(prev => prev.filter(a => a.id !== itemToDelete.id));
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+    } catch (err: any) { alert('Error: ' + err.message); }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,50 +121,69 @@ export default function AdminArticles() {
       const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
       if (error) throw error;
       const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-      setTextContent((prev) => prev + `\n\n![Image](${publicUrl})\n\n`);
+      
+      // If we are in content view, we want to append the image to the editor
+      // We'll handle this by updating the textContent which will be passed to the Editor
+      setTextContent((prev) => prev + `<img src="${publicUrl}" alt="Uploaded image" />`);
     } catch (err: any) { alert('Upload failed: ' + err.message); }
     finally { setIsUploading(false); }
   };
 
-  const allArticles = dbArticles.length > 0 ? dbArticles : staticArticles;
+  const allArticles = dbArticles;
 
   if (view === 'list') {
     return (
-      <div className="space-y-12 pb-20 animate-in fade-in duration-500">
+      <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
         <header className="flex items-center justify-between">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-heading font-medium tracking-tight">Manage <span className="text-primary italic">Articles</span></h1>
-            <p className="text-white/40">Total {allArticles.length} articles published.</p>
+          <div className="space-y-0.5">
+            <h1 className="text-xl font-medium text-[#ededed]">Articles</h1>
+            <p className="text-[13px] text-[#707070]">Total {allArticles.length} articles published in your blog.</p>
           </div>
-          <button onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '' }); setView('metadata'); }} className="flex items-center gap-2 bg-primary text-black px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]">
-            <PlusIcon size={16} /> New Article
+          <button 
+            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '' }); setView('metadata'); }} 
+            className="bg-[#3ecf8e] text-[#171717] px-3 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all"
+          >
+            New Article
           </button>
         </header>
-        <div className="bg-[#0a0a0a] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-          <table className="w-full text-left">
+
+        <div className="bg-[#1c1c1c] border border-[#2e2e2e] rounded-md overflow-hidden shadow-sm">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/5 bg-white/[0.02]">
-                <th className="px-8 py-5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-white/40">Article</th>
-                <th className="px-8 py-5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-white/40 text-right">Actions</th>
+              <tr className="border-b border-[#2e2e2e] bg-[#202020]">
+                <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#707070]">Article</th>
+                <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#707070]">Category</th>
+                <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#707070]">Date</th>
+                <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#707070] text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[#2e2e2e]">
               {allArticles.map((article, i) => (
-                <tr key={article.id || i} className="group hover:bg-white/[0.02] transition-colors">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-primary/40"><FileTextIcon size={20} /></div>
-                      <div>
-                        <p className="text-sm font-bold uppercase tracking-widest text-white group-hover:text-primary transition-colors">{article.title}</p>
-                        <p className="text-[0.65rem] text-white/30 font-mono">/{article.slug}</p>
+                <tr key={article.id || i} className="group hover:bg-[#232323] transition-colors">
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded bg-[#2e2e2e] flex items-center justify-center text-[#3ecf8e] border border-[#3e3e3e]">
+                        <FileText size={12} />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[13px] font-medium text-[#ededed] group-hover:text-[#3ecf8e] transition-colors truncate max-w-[300px]">{article.title}</span>
+                        <span className="text-[10px] font-mono text-[#707070]">/{article.slug}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => handleOpenContent(article)} className="p-2 bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-black transition-all shadow-sm" title="Edit Content"><FileEditIcon size={16} /></button>
-                      <button onClick={() => handleEditMetadata(article)} className="p-2 text-white/20 hover:text-white transition-colors" title="Edit Metadata"><EditIcon size={16} /></button>
-                      <button className="p-2 text-white/20 hover:text-red-500 transition-colors"><TrashIcon size={16} /></button>
+                  <td className="px-5 py-3.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#2e2e2e] text-[#9a9a9a] border border-[#3e3e3e]">
+                      {article.category}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className="text-[12px] text-[#707070]">{article.date}</span>
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => handleOpenContent(article)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#3ecf8e] border border-[#2e2e2e] transition-all"><FileEdit size={12} /></button>
+                      <button onClick={() => handleEditMetadata(article)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-white border border-[#2e2e2e] transition-all"><Edit2 size={12} /></button>
+                      <button onClick={() => confirmDelete(article)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#ff2201] border border-[#2e2e2e] transition-all"><Trash2 size={12} /></button>
                     </div>
                   </td>
                 </tr>
@@ -150,53 +191,79 @@ export default function AdminArticles() {
             </tbody>
           </table>
         </div>
+
+        <DeleteModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+          title="Delete Article"
+          itemName={itemToDelete?.title || 'this article'}
+        />
       </div>
     );
   }
 
   if (view === 'metadata') {
     return (
-      <div className="space-y-10 pb-20 animate-in slide-in-from-right-4 duration-500">
-        <header className="flex items-center justify-between border-b border-white/5 pb-8">
-          <div className="flex items-center gap-6">
-            <button onClick={() => setView('list')} className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white/40 hover:text-white transition-all"><ChevronLeftIcon size={24} /></button>
-            <h2 className="text-3xl font-heading font-medium italic">Article <span className="text-primary">Metadata</span></h2>
-          </div>
+      <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
+        <header className="flex items-center justify-between border-b border-[#2e2e2e] pb-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => setView('list')} className="px-6 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white">Cancel</button>
-            <button onClick={handleSaveMetadata} disabled={isSaving} className="bg-primary text-black px-12 py-3 rounded-xl text-xs font-bold uppercase tracking-widest shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]">{isSaving ? 'Saving...' : 'Save Metadata'}</button>
+            <button onClick={() => setView('list')} className="w-8 h-8 bg-[#252525] rounded-md border border-[#2e2e2e] flex items-center justify-center text-[#707070] hover:text-[#ededed] transition-all"><ChevronLeft size={16} /></button>
+            <h2 className="text-xl font-medium text-[#ededed]">Article Metadata</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setView('list')} className="px-4 py-1.5 text-[13px] font-medium text-[#707070] hover:text-[#ededed]">Cancel</button>
+            <button 
+              onClick={handleSaveMetadata} 
+              disabled={isSaving} 
+              className="bg-[#3ecf8e] text-[#171717] px-5 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
+            >
+              {isSaving ? 'Saving...' : <><Save size={14} /> Save Metadata</>}
+            </button>
           </div>
         </header>
-        <form onSubmit={handleSaveMetadata} className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-           <div className="space-y-6">
-              <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="Title" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm" />
-              <div className="grid grid-cols-2 gap-4">
-                <input type="text" value={formData.slug} onChange={(e) => setFormData({...formData, slug: e.target.value})} placeholder="Slug" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm" />
-                <input type="text" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} placeholder="Category" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm" />
+        <form onSubmit={handleSaveMetadata} className="max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+           <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Title</label>
+                <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
               </div>
-              <textarea rows={4} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Short Description" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Slug</label>
+                  <input type="text" value={formData.slug} onChange={(e) => setFormData({...formData, slug: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Category</label>
+                  <input type="text" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Description</label>
+                <textarea rows={4} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] resize-none" />
+              </div>
            </div>
-           <div className="space-y-6">
+           <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" value={formData.author} onChange={(e) => setFormData({...formData, author: e.target.value})} placeholder="Author" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm" />
-                <input type="text" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} placeholder="Date" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm" />
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Author</label>
+                  <input type="text" value={formData.author} onChange={(e) => setFormData({...formData, author: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Date</label>
+                  <input type="text" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+                </div>
               </div>
-              <div className="pt-6 border-t border-white/5 space-y-4">
-                <p className="text-[0.6rem] font-bold uppercase tracking-widest text-primary/40 ml-2">Search Engine Optimization (SEO)</p>
-                <input 
-                  type="text" 
-                  value={formData.seo_title} 
-                  onChange={(e) => setFormData({...formData, seo_title: e.target.value})}
-                  placeholder="Meta Title" 
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-primary/50 outline-none" 
-                />
-                <textarea 
-                  rows={2} 
-                  value={formData.seo_description} 
-                  onChange={(e) => setFormData({...formData, seo_description: e.target.value})}
-                  placeholder="Meta Description" 
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-primary/50 outline-none" 
-                />
+              <div className="pt-4 border-t border-[#2e2e2e] space-y-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#3ecf8e]/60">SEO Configuration</p>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Meta Title</label>
+                  <input type="text" value={formData.seo_title} onChange={(e) => setFormData({...formData, seo_title: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Meta Description</label>
+                  <textarea rows={2} value={formData.seo_description} onChange={(e) => setFormData({...formData, seo_description: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] resize-none" />
+                </div>
               </div>
            </div>
         </form>
@@ -205,44 +272,22 @@ export default function AdminArticles() {
   }
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-right-4 duration-500 pb-20">
-      <header className="flex items-center justify-between border-b border-white/5 pb-8">
-        <div className="flex items-center gap-6">
-          <button onClick={() => setView('list')} className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white/40 hover:text-white transition-all"><ChevronLeftIcon size={24} /></button>
-          <h2 className="text-3xl font-heading font-medium italic">Edit <span className="text-primary">Article</span></h2>
-        </div>
-        <div className="flex items-center gap-6">
-           <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
-             <button onClick={insertHeading} className="p-2 hover:bg-white/10 rounded-lg text-white/60" title="Sub Heading"><TypeIcon size={18} /></button>
-             <label className="p-2 hover:bg-white/10 rounded-lg text-white/60 cursor-pointer" title="Upload Image">
-               <ImageIconComponent size={18} />
-               <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
-             </label>
-           </div>
-           <button onClick={handleSaveContent} disabled={isSaving} className="bg-primary text-black px-12 py-3 rounded-xl text-xs font-bold uppercase tracking-widest shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]">
-             {isSaving ? 'Saving...' : 'Save Article'}
-           </button>
-        </div>
-      </header>
-      <div className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
-        <div className="px-8 py-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
-          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/20">Article Editor</span>
-          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-primary/40">Auto-Expanding</span>
-        </div>
-        <textarea 
-          ref={editorRef}
-          value={textContent}
-          onChange={(e) => setTextContent(e.target.value)}
-          className="w-full bg-transparent p-12 lg:p-20 text-xl font-mono leading-relaxed text-white focus:outline-none resize-none min-h-[60vh]"
-          placeholder="Start writing..."
-          autoFocus
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${target.scrollHeight}px`;
-          }}
-        />
-      </div>
-    </div>
+    <UnifiedEditorLayout 
+      title="Edit Article Content"
+      subtitle={activeArticle?.title}
+      content={textContent}
+      onContentChange={setTextContent}
+      onSave={handleSaveContent}
+      onBack={() => setView('list')}
+      isSaving={isSaving}
+      modeLabel="ARTICLE EDITOR MODE"
+      onImageUpload={() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e: any) => handleImageUpload(e);
+        input.click();
+      }}
+    />
   );
 }

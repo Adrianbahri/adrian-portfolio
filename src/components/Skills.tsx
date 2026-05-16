@@ -19,7 +19,7 @@ const skillGroups = [
 
 export default function Skills() {
   return (
-    <section id="skills" className="w-full py-24 bg-canvas border-t border-border-subtle">
+    <section id="skills" className="w-full py-24 bg-transparent border-t border-border-subtle">
       <div className="section-container">
         <div className="mb-16">
           <h2 className="text-[34px] font-bold text-on-dark mb-4 tracking-tight">Technical Stack</h2>
@@ -45,7 +45,7 @@ export default function Skills() {
                 {group.skills.map((skill, j) => (
                   <span
                     key={j}
-                    className="px-4 py-2 rounded-full border border-border-subtle bg-surface-75 text-sm text-on-dark hover:border-primary hover:text-primary transition-all cursor-default"
+                    className="px-4 py-2 rounded-full border border-border-subtle bg-transparent text-sm text-on-dark hover:border-primary hover:text-primary transition-all cursor-default"
                   >
                     {skill}
                   </span>

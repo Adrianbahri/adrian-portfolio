@@ -17,12 +17,11 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative pt-24 overflow-hidden bg-transparent">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-transparent pt-20 pb-16">
       {/* Background Elements */}
-      <div className="paper-dots h-32 w-full border-b border-border-subtle opacity-50" />
       <div className="grain" />
 
-      <div className="section-container py-16 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-20 items-start z-10">
+      <div className="section-container grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-20 items-center z-10">
 
         {/* Left Content */}
         <div className="space-y-10">
