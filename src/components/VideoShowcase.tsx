@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
-import { Youtube, Play, ExternalLink } from 'lucide-react';
+import { Play, ExternalLink } from 'lucide-react';
 
 const RemoteIcon = ({ url, className }: { url: string, className?: string }) => (
   <div 
