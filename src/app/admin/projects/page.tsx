@@ -248,9 +248,10 @@ function AdminProjectsContent() {
     return p.mode === listFilter || p.category?.toLowerCase() === listFilter.toLowerCase();
   });
 
-  if (view === 'list') {
-    return (
-      <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+  return (
+    <>
+      {view === 'list' && (
+        <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
         <header className="flex items-center justify-between">
           <div className="space-y-0.5">
             <h1 className="text-xl font-medium text-[#ededed]">Projects</h1>
@@ -339,13 +340,11 @@ function AdminProjectsContent() {
           title="Delete Project"
           itemName={itemToDelete?.title || 'this project'}
         />
-      </div>
-    );
-  }
+        </div>
+      )}
 
-  if (view === 'metadata') {
-    return (
-      <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
+      {view === 'metadata' && (
+        <div data-lenis-prevent className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
         <header className="flex items-center justify-between border-b border-[#2e2e2e] pb-6">
           <div className="flex items-center gap-4">
             <button onClick={() => setView('list')} className="w-8 h-8 bg-[#252525] rounded-md border border-[#2e2e2e] flex items-center justify-center text-[#707070] hover:text-[#ededed] transition-all"><ChevronLeft size={16} /></button>
@@ -527,13 +526,11 @@ function AdminProjectsContent() {
               </div>
            </div>
         </form>
-      </div>
-    );
-  }
+        </div>
+      )}
 
-  return (
-    <>
-      <UnifiedEditorLayout
+      {view === 'case-study' && (
+        <UnifiedEditorLayout
         title={activeProject?.mode === 'creative' ? 'Creative Studio' : 'Developer Studio'}
         subtitle={activeProject?.title}
         content={csContent}
@@ -623,6 +620,7 @@ function AdminProjectsContent() {
           </section>
         ) : null}
       />
+      )}
       
       <MediaLibraryModal 
         isOpen={isMediaModalOpen}
