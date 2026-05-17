@@ -18,7 +18,8 @@ import {
   LayoutGrid, 
   ScrollText, 
   PlusCircle, 
-  FileText 
+  FileText,
+  Image as ImageIcon
 } from 'lucide-react';
 import Editor from '@/components/Editor';
 import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
@@ -27,6 +28,7 @@ import { supabase } from '@/lib/supabase';
 import { compressToWebP } from '@/lib/image';
 import { cn, purgeSystemCache } from '@/lib/utils';
 import DeleteModal from '@/components/Admin/DeleteModal';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 export default function AdminProjects() {
   return (
@@ -44,6 +46,8 @@ function AdminProjectsContent() {
   // Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [isMediaModalOpenForGallery, setIsMediaModalOpenForGallery] = useState(false);
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -367,9 +371,9 @@ function AdminProjectsContent() {
                   {formData.imageUrl ? (
                     <>
                       <img src={formData.imageUrl} alt="Thumbnail" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                        <label className="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-[#3ecf8e] transition-all">
-                          Change
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label className="bg-white text-black px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer hover:bg-[#3ecf8e] hover:text-black transition-all">
+                          Upload
                           <input type="file" className="hidden" onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
@@ -386,30 +390,53 @@ function AdminProjectsContent() {
                             finally { setIsUploading(false); }
                           }} accept="image/*" />
                         </label>
-                        <button onClick={() => setFormData({...formData, imageUrl: ''})} className="bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
+                        <button 
+                          type="button"
+                          onClick={() => setIsMediaModalOpen(true)}
+                          className="bg-[#3ecf8e] text-[#171717] px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all"
+                        >
+                          Library
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setFormData({...formData, imageUrl: ''})} 
+                          className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 transition-all"
+                        >
                           Remove
                         </button>
                       </div>
                     </>
                   ) : (
-                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                      <PlusCircle size={32} className="text-[#3ecf8e] mb-2 opacity-40 group-hover/thumb:opacity-100 transition-all" />
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#707070] group-hover/thumb:text-[#3ecf8e] transition-all">Upload Thumbnail</p>
-                      <input type="file" className="hidden" onChange={async (e) => {
-                         const file = e.target.files?.[0];
-                         if (!file) return;
-                         setIsUploading(true);
-                         try {
-                           const fileExt = file.name.split('.').pop();
-                           const fileName = `${Math.random()}.${fileExt}`;
-                           const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
-                           if (error) throw error;
-                           const cleanProxyUrl = `/api/assets/${fileName}`;
-                           setFormData({...formData, imageUrl: cleanProxyUrl});
-                         } catch (err: any) { alert('Upload failed: ' + err.message); }
-                         finally { setIsUploading(false); }
-                      }} accept="image/*" />
-                    </label>
+                    <div className="flex flex-col items-center justify-center space-y-3 p-4">
+                      <ImageIcon size={32} className="text-[#3ecf8e] opacity-40 group-hover/thumb:opacity-100 transition-all" />
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#707070]">Thumbnail Image</p>
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer bg-white/5 border border-white/5 text-white hover:bg-white/10 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all">
+                          Upload File
+                          <input type="file" className="hidden" onChange={async (e) => {
+                             const file = e.target.files?.[0];
+                             if (!file) return;
+                             setIsUploading(true);
+                             try {
+                               const fileExt = file.name.split('.').pop();
+                               const fileName = `${Math.random()}.${fileExt}`;
+                               const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                               if (error) throw error;
+                               const cleanProxyUrl = `/api/assets/${fileName}`;
+                               setFormData({...formData, imageUrl: cleanProxyUrl});
+                             } catch (err: any) { alert('Upload failed: ' + err.message); }
+                             finally { setIsUploading(false); }
+                          }} accept="image/*" />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsMediaModalOpen(true)}
+                          className="bg-[#3ecf8e] text-[#171717] hover:bg-[#24b47e] px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
+                        >
+                          Choose from Library
+                        </button>
+                      </div>
+                    </div>
                   )}
                   {isUploading && (
                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
@@ -505,88 +532,111 @@ function AdminProjectsContent() {
   }
 
   return (
-    <UnifiedEditorLayout
-      title={activeProject?.mode === 'creative' ? 'Creative Studio' : 'Developer Studio'}
-      subtitle={activeProject?.title}
-      content={csContent}
-      onContentChange={setCsContent}
-      onSave={handleSaveCaseStudy}
-      onBack={() => setView('list')}
-      isSaving={isSaving}
-      saveLabel="Sync Changes"
-      modeLabel={activeProject?.mode === 'creative' ? 'STORYTELLING STUDIO' : 'TECHNICAL STUDIO'}
-      onImageUpload={() => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e: any) => handleImageUpload(e, false);
-        input.click();
-      }}
-      topContent={activeProject?.mode === 'creative' ? (
-        <section className="space-y-4 animate-in fade-in duration-500">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <LayoutGrid size={14} className="text-[#3ecf8e]" />
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Media Assets Manager</h3>
-            </div>
-            <span className="text-[10px] text-[#707070]">{gallery.length} items</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-[#1c1c1c] border-2 border-dashed border-[#2e2e2e] rounded-md p-8 flex flex-col items-center justify-center text-center hover:border-[#3ecf8e]/30 transition-all group">
-              <div className="w-12 h-12 rounded-full bg-[#252525] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <PlusCircle size={24} className="text-[#3ecf8e]" />
+    <>
+      <UnifiedEditorLayout
+        title={activeProject?.mode === 'creative' ? 'Creative Studio' : 'Developer Studio'}
+        subtitle={activeProject?.title}
+        content={csContent}
+        onContentChange={setCsContent}
+        onSave={handleSaveCaseStudy}
+        onBack={() => setView('list')}
+        isSaving={isSaving}
+        saveLabel="Sync Changes"
+        modeLabel={activeProject?.mode === 'creative' ? 'STORYTELLING STUDIO' : 'TECHNICAL STUDIO'}
+        onImageUpload={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = (e: any) => handleImageUpload(e, false);
+          input.click();
+        }}
+        topContent={activeProject?.mode === 'creative' ? (
+          <section className="space-y-4 animate-in fade-in duration-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LayoutGrid size={14} className="text-[#3ecf8e]" />
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Media Assets Manager</h3>
               </div>
-              <p className="text-[13px] font-medium text-[#ededed]">Upload Creative Assets</p>
-              <div className="flex items-center gap-2 mt-4">
-                <label className="bg-[#3ecf8e] text-[#171717] px-4 py-1.5 rounded-md text-[12px] font-medium hover:bg-[#24b47e] transition-all cursor-pointer">
-                  Browse Files
-                  <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, true)} accept="image/*" />
-                </label>
-                <button 
-                  onClick={addVideoLink}
-                  className="bg-[#2e2e2e] text-[#ededed] px-4 py-1.5 rounded-md text-[12px] font-medium hover:bg-[#3e3e3e] transition-all border border-[#3e3e3e]"
-                >
-                  Add Video Link
-                </button>
-              </div>
+              <span className="text-[10px] text-[#707070]">{gallery.length} items</span>
             </div>
-            <div className="bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-6 flex flex-col justify-center">
-              <h4 className="text-[12px] font-medium text-[#ededed] mb-2">Creative Portfolio Tips</h4>
-              <ul className="text-[11px] text-[#707070] space-y-2">
-                <li className="flex gap-2"><span>•</span> Use high-resolution images for designs.</li>
-                <li className="flex gap-2"><span>•</span> Add YouTube/Vimeo links for video edits.</li>
-              </ul>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-2">
-            {gallery.map((item, idx) => (
-              <div key={idx} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md overflow-hidden flex flex-col">
-                <div className="relative aspect-video bg-black">
-                  {item.type === 'video' ? (
-                    <div className="w-full h-full flex items-center justify-center bg-[#252525]">
-                       <Globe size={20} className="text-[#3ecf8e]" />
-                    </div>
-                  ) : (
-                    <img src={item.url} className="w-full h-full object-cover" alt="Gallery" />
-                  )}
-                  <button onClick={() => removeGalleryImage(idx)} className="absolute top-1.5 right-1.5 p-1 bg-[#171717]/80 text-white rounded opacity-0 group-hover:opacity-100 transition-all hover:bg-[#ff2201]"><X size={12} /></button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-[#1c1c1c] border-2 border-dashed border-[#2e2e2e] rounded-md p-8 flex flex-col items-center justify-center text-center hover:border-[#3ecf8e]/30 transition-all group">
+                <div className="w-12 h-12 rounded-full bg-[#252525] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <PlusCircle size={24} className="text-[#3ecf8e]" />
                 </div>
-                <div className="p-2 bg-[#202020]">
-                   <input 
-                      type="text" 
-                      placeholder="Add caption..." 
-                      value={item.caption || ''} 
-                      onChange={(e) => updateMediaCaption(idx, e.target.value)}
-                      className="w-full bg-transparent border-none text-[11px] text-[#ededed] placeholder:text-[#555] focus:outline-none"
-                   />
+                <p className="text-[13px] font-medium text-[#ededed]">Upload Creative Assets</p>
+                <div className="flex items-center gap-2 mt-4">
+                  <label className="bg-[#2e2e2e] text-[#ededed] px-4 py-1.5 rounded-md text-[12px] font-medium hover:bg-[#3e3e3e] transition-all border border-[#3e3e3e] cursor-pointer">
+                    Upload File
+                    <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, true)} accept="image/*" />
+                  </label>
+                  <button 
+                    type="button"
+                    onClick={() => setIsMediaModalOpenForGallery(true)}
+                    className="bg-[#3ecf8e] text-[#171717] px-4 py-1.5 rounded-md text-[12px] font-medium hover:bg-[#24b47e] transition-all"
+                  >
+                    Choose from Library
+                  </button>
+                  <button 
+                    onClick={addVideoLink}
+                    className="bg-[#2e2e2e] text-[#ededed] px-4 py-1.5 rounded-md text-[12px] font-medium hover:bg-[#3e3e3e] transition-all border border-[#3e3e3e]"
+                  >
+                    Add Video Link
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-    />
+              <div className="bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-6 flex flex-col justify-center">
+                <h4 className="text-[12px] font-medium text-[#ededed] mb-2">Creative Portfolio Tips</h4>
+                <ul className="text-[11px] text-[#707070] space-y-2">
+                  <li className="flex gap-2"><span>•</span> Use high-resolution images for designs.</li>
+                  <li className="flex gap-2"><span>•</span> Add YouTube/Vimeo links for video edits.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-2">
+              {gallery.map((item, idx) => (
+                <div key={idx} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md overflow-hidden flex flex-col">
+                  <div className="relative aspect-video bg-black">
+                    {item.type === 'video' ? (
+                      <div className="w-full h-full flex items-center justify-center bg-[#252525]">
+                         <Globe size={20} className="text-[#3ecf8e]" />
+                      </div>
+                    ) : (
+                      <img src={item.url} className="w-full h-full object-cover" alt="Gallery" />
+                    )}
+                    <button onClick={() => removeGalleryImage(idx)} className="absolute top-1.5 right-1.5 p-1 bg-[#171717]/80 text-white rounded opacity-0 group-hover:opacity-100 transition-all hover:bg-[#ff2201]"><X size={12} /></button>
+                  </div>
+                  <div className="p-2 bg-[#202020]">
+                     <input 
+                        type="text" 
+                        placeholder="Add caption..." 
+                        value={item.caption || ''} 
+                        onChange={(e) => updateMediaCaption(idx, e.target.value)}
+                        className="w-full bg-transparent border-none text-[11px] text-[#ededed] placeholder:text-[#555] focus:outline-none"
+                     />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      />
+      
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+        title="Select Project Thumbnail"
+      />
+
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpenForGallery}
+        onClose={() => setIsMediaModalOpenForGallery(false)}
+        onSelect={(url) => setGallery(prev => [...prev, { url, type: 'image', caption: '' }])}
+        title="Select Gallery Image"
+      />
+    </>
   );
 }

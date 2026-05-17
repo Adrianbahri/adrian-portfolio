@@ -1,0 +1,211 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Image as ImageIcon, Plus, Loader2, Check } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { compressToWebP } from '@/lib/image';
+
+interface MediaLibraryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (url: string) => void;
+  title?: string;
+}
+
+export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Select from Media Library" }: MediaLibraryModalProps) {
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPhotos();
+      setSelectedUrl(null);
+    }
+  }, [isOpen]);
+
+  const fetchPhotos = async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+      if (data) setPhotos(data);
+    } catch (err) {
+      console.error('Error fetching gallery:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const compressedFile = await compressToWebP(file);
+        const fileExt = compressedFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `gallery/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('portfolio-assets')
+          .upload(filePath, compressedFile);
+
+        if (uploadError) throw uploadError;
+
+        const cleanProxyUrl = `/api/assets/${filePath}`;
+        
+        // Insert into database gallery
+        const { data, error: insertError } = await supabase
+          .from('gallery')
+          .insert([{ image_url: cleanProxyUrl }])
+          .select();
+
+        if (insertError) throw insertError;
+        
+        return data?.[0];
+      });
+
+      const uploadedPhotos = await Promise.all(uploadPromises);
+      await fetchPhotos();
+      
+      // Auto-select the first newly uploaded image
+      if (uploadedPhotos.length > 0 && uploadedPhotos[0]?.image_url) {
+        setSelectedUrl(uploadedPhotos[0].image_url);
+      }
+    } catch (err: any) {
+      alert('Upload failed: ' + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleConfirmSelect = () => {
+    if (selectedUrl) {
+      onSelect(selectedUrl);
+      onClose();
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/85 backdrop-blur-sm"
+          />
+
+          {/* Modal Container */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-4xl h-[80vh] flex flex-col bg-[#171717] border border-white/5 rounded-3xl shadow-2xl overflow-hidden"
+          >
+            {/* Header */}
+            <header className="px-8 py-5 border-b border-white/5 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <h3 className="text-lg font-heading font-medium text-white italic">{title}</h3>
+                <p className="text-xs text-white/40">Select an existing asset or upload a new one to your database library.</p>
+              </div>
+              <button 
+                onClick={onClose}
+                className="text-white/20 hover:text-white transition-colors p-1"
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-[11px] font-mono font-bold tracking-wider text-white/45 uppercase">
+                  {photos.length} Assets Found
+                </p>
+                
+                <label className="cursor-pointer bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#24b47e] transition-all flex items-center gap-2">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                  {isUploading ? 'Uploading...' : 'Upload Asset'}
+                  <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={isUploading} />
+                </label>
+              </div>
+
+              {/* Grid */}
+              {loading && photos.length === 0 ? (
+                <div className="h-[40vh] flex items-center justify-center text-white/40">
+                  <Loader2 size={24} className="animate-spin text-[#3ecf8e] mr-2" />
+                  Loading assets...
+                </div>
+              ) : photos.length === 0 ? (
+                <div className="h-[40vh] flex flex-col items-center justify-center border border-dashed border-white/5 rounded-2xl text-white/30">
+                  <ImageIcon size={32} className="mb-3 opacity-20" />
+                  <p className="text-xs font-bold uppercase tracking-wider opacity-40">Library is empty</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                  {photos.map((photo) => {
+                    const isSelected = selectedUrl === photo.image_url;
+                    return (
+                      <div
+                        key={photo.id}
+                        onClick={() => setSelectedUrl(photo.image_url)}
+                        className={`group relative aspect-square bg-[#1c1c1c] border-2 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${
+                          isSelected 
+                            ? 'border-[#3ecf8e] ring-2 ring-[#3ecf8e]/20 scale-[0.98]' 
+                            : 'border-white/5 hover:border-white/20'
+                        }`}
+                      >
+                        <img 
+                          src={photo.image_url} 
+                          alt="Gallery Asset" 
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Selector Indicator */}
+                        {isSelected && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#3ecf8e] text-[#171717] flex items-center justify-center shadow-md animate-in zoom-in duration-200">
+                            <Check size={14} strokeWidth={3} />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 pointer-events-none">
+                          <span className="text-[8px] font-mono text-white/80 bg-black/60 px-2 py-0.5 rounded truncate w-full">
+                            {photo.image_url.split('/').pop()}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <footer className="px-8 py-5 border-t border-white/5 bg-[#141414] flex items-center justify-end gap-3">
+              <button
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-xl bg-white/5 border border-white/5 text-xs font-bold uppercase tracking-widest text-white/60 hover:bg-white/10 hover:text-white transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSelect}
+                disabled={!selectedUrl}
+                className="px-6 py-2.5 rounded-xl bg-[#3ecf8e] text-[#171717] text-xs font-bold uppercase tracking-widest hover:bg-[#24b47e] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#3ecf8e]/10"
+              >
+                Select Asset
+              </button>
+            </footer>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
