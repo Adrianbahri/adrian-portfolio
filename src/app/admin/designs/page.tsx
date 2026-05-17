@@ -33,6 +33,7 @@ export default function AdminDesigns() {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '', pdfUrl: '' });
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [isMediaModalOpenForImages, setIsMediaModalOpenForImages] = useState(false);
   
   // Unified images state: tracks the exact order, including existing and new files
   const [formImages, setFormImages] = useState<FormImage[]>([]);
@@ -448,13 +449,24 @@ export default function AdminDesigns() {
                 className="hidden" 
                 onChange={handleFileChange} 
               />
-              <label 
-                htmlFor="design-assets-input"
-                className="aspect-video rounded border-2 border-dashed border-[#2e2e2e] hover:border-[#3ecf8e]/30 hover:bg-[#171717]/30 transition-all flex flex-col items-center justify-center cursor-pointer group gap-1.5"
-              >
-                <Plus size={20} className="text-[#707070] group-hover:text-[#3ecf8e] transition-colors" />
-                <span className="text-[10px] text-[#707070] group-hover:text-[#ededed] font-medium transition-colors">Add Images</span>
-              </label>
+              <div className="aspect-video rounded border-2 border-dashed border-[#2e2e2e] flex flex-col items-center justify-center p-3 gap-2 bg-[#171717]/10">
+                <Plus size={16} className="text-[#707070]" />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label 
+                    htmlFor="design-assets-input"
+                    className="w-full text-center py-1 bg-[#2e2e2e] hover:bg-[#3e3e3e] text-[#ededed] text-[10px] font-bold uppercase tracking-wider rounded cursor-pointer border border-[#3e3e3e] transition-colors"
+                  >
+                    Upload File
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsMediaModalOpenForImages(true)}
+                    className="w-full text-center py-1 bg-[#3ecf8e] hover:bg-[#24b47e] text-[#171717] text-[10px] font-bold uppercase tracking-wider rounded cursor-pointer transition-colors"
+                  >
+                    From Library
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -573,6 +585,21 @@ export default function AdminDesigns() {
         onClose={() => setIsMediaModalOpen(false)}
         onSelect={(url) => setFormData(prev => ({ ...prev, pdfUrl: url }))}
         title="Select Design PDF / Magazine"
+      />
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpenForImages}
+        onClose={() => setIsMediaModalOpenForImages(false)}
+        onSelect={(url) => {
+          const newImg: FormImage = {
+            id: `existing-lib-${Math.random()}`,
+            type: 'existing',
+            url,
+            previewUrl: url
+          };
+          setFormImages(prev => [...prev, newImg]);
+          setIsMediaModalOpenForImages(false);
+        }}
+        title="Select Design Images"
       />
     </div>
   );

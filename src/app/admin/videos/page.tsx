@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { purgeSystemCache } from '@/lib/utils';
 import { compressToWebP } from '@/lib/image';
-import { Trash2, Plus, Video, Loader2, Globe, Pencil, X } from 'lucide-react';
+import { Trash2, Plus, Video, Loader2, Pencil, X } from 'lucide-react';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 export default function AdminVideos() {
   const [videos, setVideos] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({ title: '', url: '' });
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   // Edit states
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -99,6 +101,8 @@ export default function AdminVideos() {
         if (error) throw error;
       }
 
+      await purgeSystemCache();
+
       // Reset State
       setFormData({ title: '', url: '' });
       setThumbnailFile(null);
@@ -115,6 +119,7 @@ export default function AdminVideos() {
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus link video ini?')) return;
     await supabase.from('video_works').delete().eq('id', id);
+    await purgeSystemCache();
     fetchVideos();
   };
 
@@ -156,13 +161,20 @@ export default function AdminVideos() {
         
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Thumbnail (Optional)</label>
-          <div className="flex items-center gap-4">
-            {editingId && existingThumbnailUrl && (
+          <div className="flex items-center gap-4 flex-wrap">
+            {(existingThumbnailUrl || thumbnailFile) && (
               <div className="relative w-16 h-10 rounded bg-[#252525] border border-[#2e2e2e] overflow-hidden shrink-0 group">
-                <img src={existingThumbnailUrl} className="w-full h-full object-cover" />
+                <img 
+                  src={thumbnailFile ? URL.createObjectURL(thumbnailFile) : existingThumbnailUrl} 
+                  className="w-full h-full object-cover" 
+                  alt="Video Thumbnail Preview"
+                />
                 <button 
                   type="button"
-                  onClick={() => setExistingThumbnailUrl('')}
+                  onClick={() => {
+                    setExistingThumbnailUrl('');
+                    setThumbnailFile(null);
+                  }}
                   className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Remove Thumbnail"
                 >
@@ -170,12 +182,29 @@ export default function AdminVideos() {
                 </button>
               </div>
             )}
-            <input 
-              type="file" 
-              accept="image/*"
-              onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-              className="w-full text-[12px] text-[#707070] file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[11px] file:font-bold file:bg-[#2e2e2e] file:text-[#ededed] hover:file:bg-[#3e3e3e] cursor-pointer"
-            />
+            
+            <div className="flex items-center gap-2">
+              <label className="cursor-pointer bg-[#2e2e2e] text-[#ededed] px-3.5 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider hover:bg-[#3e3e3e] transition-all border border-white/5 whitespace-nowrap">
+                Upload File
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setThumbnailFile(file);
+                    if (file) setExistingThumbnailUrl('');
+                  }}
+                  className="hidden"
+                />
+              </label>
+              <button 
+                type="button"
+                onClick={() => setIsMediaModalOpen(true)}
+                className="bg-[#3ecf8e] text-[#171717] px-3.5 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all whitespace-nowrap cursor-pointer"
+              >
+                Library
+              </button>
+            </div>
           </div>
           {thumbnailFile && (
             <p className="text-[11px] text-[#3ecf8e] font-medium">Selected new file: {thumbnailFile.name}</p>
@@ -186,7 +215,7 @@ export default function AdminVideos() {
           <button 
             type="submit"
             disabled={isSaving}
-            className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
+            className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2 cursor-pointer"
           >
             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
             {editingId ? 'Update Video' : 'Add Video Link'}
@@ -196,7 +225,7 @@ export default function AdminVideos() {
             <button 
               type="button"
               onClick={cancelEdit}
-              className="border border-[#2e2e2e] text-[#ededed] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-white/5 transition-all"
+              className="border border-[#2e2e2e] text-[#ededed] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-white/5 transition-all cursor-pointer"
             >
               Cancel Edit
             </button>
@@ -209,8 +238,12 @@ export default function AdminVideos() {
         {videos.map((video: any) => (
           <div key={video.id} className="flex items-center justify-between p-4 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md group hover:border-[#3e3e3e] transition-all">
             <div className="flex items-center gap-4 min-w-0">
-              <div className="w-10 h-10 rounded bg-[#252525] border border-[#2e2e2e] flex items-center justify-center text-[#3ecf8e] shrink-0">
-                <Video size={18} />
+              <div className="w-10 h-10 rounded bg-[#252525] border border-[#2e2e2e] overflow-hidden flex items-center justify-center text-[#3ecf8e] shrink-0">
+                {video.thumbnail_url ? (
+                  <img src={video.thumbnail_url} className="w-full h-full object-cover" alt={video.title} />
+                ) : (
+                  <Video size={18} />
+                )}
               </div>
               <div className="min-w-0">
                 <h3 className="text-[14px] font-medium text-[#ededed] truncate">{video.title}</h3>
@@ -220,14 +253,14 @@ export default function AdminVideos() {
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <button 
                 onClick={() => startEdit(video)}
-                className="p-2 text-[#707070] hover:text-[#3ecf8e] transition-colors"
+                className="p-2 text-[#707070] hover:text-[#3ecf8e] transition-colors cursor-pointer"
                 title="Edit Video"
               >
                 <Pencil size={16} />
               </button>
               <button 
                 onClick={() => handleDelete(video.id)}
-                className="p-2 text-[#707070] hover:text-red-500 transition-colors"
+                className="p-2 text-[#707070] hover:text-red-500 transition-colors cursor-pointer"
                 title="Delete Video"
               >
                 <Trash2 size={16} />
@@ -236,6 +269,17 @@ export default function AdminVideos() {
           </div>
         ))}
       </div>
+
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => {
+          setExistingThumbnailUrl(url);
+          setThumbnailFile(null); // library overrides file selection
+          setIsMediaModalOpen(false);
+        }}
+        title="Select Video Thumbnail"
+      />
     </div>
   );
 }

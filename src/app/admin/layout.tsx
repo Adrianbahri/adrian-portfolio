@@ -43,7 +43,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   const [isProjectsOpen, setIsProjectsOpen] = useState(
     pathname.startsWith('/admin/projects') || 
-    ['/admin/gallery', '/admin/videos', '/admin/designs', '/admin/creative'].some(path => pathname.startsWith(path))
+    ['/admin/gallery', '/admin/videos', '/admin/designs', '/admin/creative', '/admin/magazines'].some(path => pathname.startsWith(path))
   );
   const [isActivitiesOpen, setIsActivitiesOpen] = useState(pathname.startsWith('/admin/activities'));
 
@@ -59,6 +59,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         { name: 'Gallery', href: '/admin/gallery' },
         { name: 'Videos', href: '/admin/videos' },
         { name: 'Designs', href: '/admin/designs' },
+        { name: 'Magazines & Print', href: '/admin/magazines' },
       ]
     },
     { name: 'Articles', href: '/admin/articles', icon: ScrollText },

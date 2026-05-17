@@ -5,10 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { purgeSystemCache } from '@/lib/utils';
 import { compressToWebP } from '@/lib/image';
 import { Trash2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 export default function AdminGallery() {
   const [photos, setPhotos] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   useEffect(() => {
     fetchPhotos();
@@ -42,6 +44,7 @@ export default function AdminGallery() {
       });
 
       await Promise.all(uploadPromises);
+      await purgeSystemCache();
       fetchPhotos();
     } catch (err: any) {
       alert('Error: ' + err.message);
@@ -50,15 +53,28 @@ export default function AdminGallery() {
     }
   };
 
+  const handleSelectFromLibrary = async (url: string) => {
+    try {
+      const { error } = await supabase.from('gallery').insert([{ image_url: url }]);
+      if (error) throw error;
+      await purgeSystemCache();
+      fetchPhotos();
+      setIsMediaModalOpen(false);
+    } catch (err: any) {
+      alert('Error adding from library: ' + err.message);
+    }
+  };
+
   const handleDelete = async (id: string, url: string) => {
     if (!confirm('Hapus foto ini dari galeri?')) return;
 
     try {
       const path = url.split('/').pop();
-      if (path) {
+      if (path && url.includes('portfolio-assets')) {
         await supabase.storage.from('portfolio-assets').remove([`gallery/${path}`]);
       }
       await supabase.from('gallery').delete().eq('id', id);
+      await purgeSystemCache();
       fetchPhotos();
     } catch (err: any) {
       alert('Error deleting: ' + err.message);
@@ -73,11 +89,20 @@ export default function AdminGallery() {
           <p className="text-[13px] text-[#707070]">Manage your visual exhibition.</p>
         </div>
         
-        <label className="cursor-pointer bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2">
-          {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-          {isUploading ? 'Uploading...' : 'Upload Photos'}
-          <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={isUploading} multiple />
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="cursor-pointer bg-[#2e2e2e] text-[#ededed] px-4 py-2 rounded-md text-[13px] font-semibold hover:bg-[#3e3e3e] transition-all flex items-center gap-2 border border-white/5 whitespace-nowrap">
+            {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            {isUploading ? 'Uploading...' : 'Upload Photos'}
+            <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={isUploading} multiple />
+          </label>
+          <button
+            type="button"
+            onClick={() => setIsMediaModalOpen(true)}
+            className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-semibold hover:bg-[#24b47e] transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer"
+          >
+            Library
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -94,7 +119,7 @@ export default function AdminGallery() {
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <button 
                 onClick={() => handleDelete(photo.id, photo.image_url)}
-                className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"
+                className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all cursor-pointer"
               >
                 <Trash2 size={16} />
               </button>
@@ -109,6 +134,13 @@ export default function AdminGallery() {
           </div>
         )}
       </div>
+
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={handleSelectFromLibrary}
+        title="Select Gallery Images"
+      />
     </div>
   );
 }

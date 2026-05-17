@@ -10,6 +10,7 @@ import Link from 'next/link';
 import PhotoGallery from '@/components/PhotoGallery';
 import VideoShowcase from '@/components/VideoShowcase';
 import DesignShowcase from '@/components/DesignShowcase';
+import PrintShowcase from '@/components/PrintShowcase';
 
 import { Suspense } from 'react';
 
@@ -110,6 +111,7 @@ function ProjectsPageContent() {
           >
             <VideoShowcase />
             <DesignShowcase />
+            <PrintShowcase />
             <PhotoGallery />
           </motion.div>
         )}
@@ -140,13 +142,20 @@ function ProjectsPageContent() {
                 >
                   {project.mode?.toLowerCase() === 'creative' ? (
                     /* CINEMATIC CREATIVE PREVIEW CARD */
-                    <Link href={`/projects/${project.slug}`} className="block relative aspect-[16/10] overflow-hidden group/card border border-border-subtle hover:border-white/20 transition-all duration-700 shadow-2xl">
-                       <img src={project.image_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
-                       <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent opacity-60 group-hover/card:opacity-90 transition-opacity duration-700" />
+                    <div className="block relative aspect-[16/10] overflow-hidden group/card border border-border-subtle hover:border-white/20 transition-all duration-700 shadow-2xl">
+                       <Link href={`/projects/${project.slug}`} className="absolute inset-0 z-0">
+                         <img src={project.image_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
+                         <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent opacity-60 group-hover/card:opacity-90 transition-opacity duration-700" />
+                       </Link>
                        
-                       <div className="absolute inset-x-0 bottom-0 p-8 transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-700">
+                       <div className="absolute inset-x-0 bottom-0 p-8 transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-700 z-10 pointer-events-none">
                           <div className="flex items-center gap-3 mb-3">
                              <span className="px-2 py-0.5 bg-white/10 text-[#ededed] border border-white/15 rounded text-[0.5rem] font-bold uppercase tracking-widest">{project.category}</span>
+                             {project.demo_url?.toLowerCase().includes('.pdf') && (
+                               <span className="px-2 py-0.5 bg-[#3ecf8e]/10 text-[#3ecf8e] border border-[#3ecf8e]/25 rounded text-[0.5rem] font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                                 PDF Edition
+                               </span>
+                             )}
                              <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
                              <span className="text-on-dark text-[0.6rem] uppercase tracking-[0.2em] font-bold">Featured Creative</span>
                           </div>
@@ -158,11 +167,22 @@ function ProjectsPageContent() {
                        </div>
                        
                        {/* Floating Decorative Elements */}
-                       <div className="absolute top-8 right-8 flex items-center gap-2 opacity-0 group-hover/card:opacity-100 transition-all duration-700 -translate-y-2 group-hover/card:translate-y-0">
+                       <div className="absolute top-8 right-8 flex items-center gap-3 opacity-0 group-hover/card:opacity-100 transition-all duration-700 -translate-y-2 group-hover/card:translate-y-0 z-20">
+                          {project.demo_url?.toLowerCase().includes('.pdf') && (
+                            <a 
+                              href={project.demo_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="px-3 py-1 bg-white hover:bg-[#3ecf8e] text-canvas hover:text-white rounded-md text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all shadow-lg active:scale-95 cursor-pointer"
+                              title="Read PDF Directly"
+                            >
+                              Read PDF <ExternalLink size={10} />
+                            </a>
+                          )}
                           <span className="w-8 h-[1px] bg-white/20" />
                           <span className="text-[0.5rem] font-mono text-white/40 uppercase tracking-[0.3em]">Cinematic Edit</span>
                        </div>
-                    </Link>
+                    </div>
                   ) : (
                     /* TECHNICAL DEVELOPER CARD */
                     <div className="grid grid-cols-1 lg:grid-cols-[40%_60%]">

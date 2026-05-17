@@ -7,6 +7,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import SmoothScrolling from "@/components/SmoothScrolling";
 import GlobalNav from "@/components/GlobalNav";
+import GlobalPdfModal from "@/components/GlobalPdfModal";
 import { supabase } from "@/lib/supabase";
 
 const firaCode = Fira_Code({ 
@@ -114,6 +115,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <GlobalNav />
           </Suspense>
+          <GlobalPdfModal />
           {children}
         </SmoothScrolling>
       </body>

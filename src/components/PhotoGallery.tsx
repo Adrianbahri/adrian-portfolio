@@ -19,9 +19,11 @@ export default function PhotoGallery() {
 
   if (photos.length === 0) return null;
 
-  // 2 rows of photos
+  // 3 rows of photos
   const row1 = photos.length > 0 ? photos : [];
   const row2 = photos.length > 0 ? [...photos].reverse() : [];
+  // Shift photos by 3 elements for row3 to avoid same image vertical alignment
+  const row3 = photos.length > 0 ? [...photos.slice(3), ...photos.slice(0, 3)] : [];
 
   const MarqueeRow = ({ items, duration, reverse = false }: { items: any[], duration: number, reverse?: boolean }) => (
     <div className="flex overflow-hidden">
@@ -70,12 +72,13 @@ export default function PhotoGallery() {
         <div 
           className="relative z-10"
           style={{
-            maskImage: 'radial-gradient(ellipse 100% 100% at 50% 0%, black 30%, transparent 90%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 100% 100% at 50% 0%, black 30%, transparent 90%)'
+            maskImage: 'radial-gradient(ellipse 100% 100% at 50% 0%, black 65%, transparent 97%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 100% 100% at 50% 0%, black 65%, transparent 97%)'
           }}
         >
           <MarqueeRow items={row1} duration={70} />
           <MarqueeRow items={row2} duration={90} reverse />
+          <MarqueeRow items={row3} duration={80} />
         </div>
       </div>
       

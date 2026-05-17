@@ -19,12 +19,17 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { cn, purgeSystemCache } from '@/lib/utils';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 export default function AdminAboutPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
+  // Media Library Integration State
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [libraryTarget, setLibraryTarget] = useState<'profileImage' | 'resume' | null>(null);
 
   // Form State
   const [heroImage, setHeroImage] = useState('');
@@ -202,10 +207,25 @@ export default function AdminAboutPage() {
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[#707070] italic text-xs">No image</div>
               )}
-              <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <input type="file" onChange={handleImageUpload} className="hidden" accept="image/*" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-white">{uploading ? 'Uploading...' : 'Change Photo'}</span>
-              </label>
+              <div className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#707070]">Profile Image</span>
+                <div className="flex flex-col gap-2 w-32">
+                  <label className="cursor-pointer bg-[#2e2e2e] hover:bg-[#3e3e3e] border border-[#3e3e3e] text-white text-center py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap">
+                    <input type="file" onChange={handleImageUpload} className="hidden" accept="image/*" />
+                    Upload File
+                  </label>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setLibraryTarget('profileImage');
+                      setIsMediaModalOpen(true);
+                    }}
+                    className="bg-[#3ecf8e] text-[#171717] text-center py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all cursor-pointer"
+                  >
+                    From Library
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -269,27 +289,39 @@ export default function AdminAboutPage() {
                   onChange={(e) => setSocials({...socials, resume: e.target.value})} 
                   className="bg-transparent border-none focus:outline-none text-[12px] w-full text-[#ededed] font-mono" 
                 />
-                <label className="cursor-pointer bg-[#252525] px-2 py-1 rounded text-[10px] font-bold text-[#ededed] hover:bg-[#2e2e2e] transition-colors whitespace-nowrap">
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setUploading(true);
-                      try {
-                        const fileName = `resume-${Date.now()}.pdf`;
-                        const compressedFile = await compressToWebP(file);
-                        const { error } = await supabase.storage.from('portfolio-assets').upload(`documents/${fileName}`, compressedFile);
-                        if (error) throw error;
-                        const cleanProxyUrl = `/api/assets/documents/${fileName}`;
-                        setSocials({...socials, resume: cleanProxyUrl});
-                      } catch (err: any) { alert(err.message); }
-                      finally { setUploading(false); }
-                    }} 
-                  />
-                  UPLOAD
-                </label>
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer bg-[#252525] border border-white/5 px-2.5 py-1.5 rounded text-[10px] font-bold text-[#ededed] hover:bg-[#2e2e2e] transition-colors whitespace-nowrap">
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const fileName = `resume-${Date.now()}.pdf`;
+                          const compressedFile = await compressToWebP(file);
+                          const { error } = await supabase.storage.from('portfolio-assets').upload(`documents/${fileName}`, compressedFile);
+                          if (error) throw error;
+                          const cleanProxyUrl = `/api/assets/documents/${fileName}`;
+                          setSocials({...socials, resume: cleanProxyUrl});
+                        } catch (err: any) { alert(err.message); }
+                        finally { setUploading(false); }
+                      }} 
+                    />
+                    UPLOAD
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLibraryTarget('resume');
+                      setIsMediaModalOpen(true);
+                    }}
+                    className="bg-[#3ecf8e] text-[#171717] px-2.5 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    Library
+                  </button>
+                </div>
               </div>
             </section>
           </div>
@@ -348,6 +380,23 @@ export default function AdminAboutPage() {
           </div>
         </div>
       </div>
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => {
+          setIsMediaModalOpen(false);
+          setLibraryTarget(null);
+        }}
+        onSelect={(url) => {
+          if (libraryTarget === 'profileImage') {
+            setHeroImage(url);
+          } else if (libraryTarget === 'resume') {
+            setSocials(prev => ({ ...prev, resume: url }));
+          }
+          setIsMediaModalOpen(false);
+          setLibraryTarget(null);
+        }}
+        title={libraryTarget === 'profileImage' ? "Select Profile Photo" : "Select Resume / CV"}
+      />
     </div>
   );
 }

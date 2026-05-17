@@ -69,15 +69,24 @@ export default function Hero() {
                 View Projects
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <a 
-                href={settings.resume_url || '#'} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full sm:w-48 py-4 border border-border-strong text-on-dark font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-surface-75 transition-all font-heading rounded-[3px]"
+              <button 
+                onClick={() => {
+                  if (settings.resume_url) {
+                    window.dispatchEvent(
+                      new CustomEvent('open-pdf-reader', {
+                        detail: {
+                          url: settings.resume_url,
+                          title: 'Resume - Adrian Bahri',
+                        },
+                      })
+                    );
+                  }
+                }}
+                className="w-full sm:w-48 py-4 border border-border-strong text-on-dark font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-surface-75 transition-all font-heading rounded-[3px] cursor-pointer"
               >
                 <FileText size={14} />
                 Resume
-              </a>
+              </button>
             </div>
           </motion.div>
         </div>
