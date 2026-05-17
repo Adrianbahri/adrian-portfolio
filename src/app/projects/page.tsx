@@ -69,7 +69,7 @@ function ProjectsPageContent() {
               className={cn(
                 "px-6 sm:px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                 filter === 'developer' 
-                  ? "bg-white text-canvas" 
+                  ? "bg-on-dark text-canvas" 
                   : "text-body-muted hover:text-on-dark"
               )}
             >
@@ -80,7 +80,7 @@ function ProjectsPageContent() {
               className={cn(
                 "px-6 sm:px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                 filter === 'creative' 
-                  ? "bg-white text-canvas" 
+                  ? "bg-on-dark text-canvas" 
                   : "text-body-muted hover:text-on-dark"
               )}
             >
