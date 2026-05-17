@@ -28,6 +28,9 @@ export default function DesignShowcase() {
   if (themes.length === 0) return null;
 
   const currentTheme = themes[currentIndex];
+  const pdfMatch = currentTheme.description?.match(/\[PDF:\s*(.*?)\]/);
+  const pdfLink = currentTheme.pdf_url || (pdfMatch ? pdfMatch[1] : null);
+  const cleanDescription = currentTheme.description?.replace(/\[PDF:\s*(.*?)\]/, '').trim() || currentTheme.description;
 
   return (
     <section className="section-container py-24 overflow-hidden">
@@ -65,12 +68,24 @@ export default function DesignShowcase() {
               {currentTheme.title}
             </h3>
             <p className="text-sm text-body-muted max-w-2xl">
-              {currentTheme.description}
+              {cleanDescription}
             </p>
           </div>
-          <div className="flex items-center gap-3 text-primary shrink-0">
-            <Layout size={16} />
-            <span className="text-[0.6rem] font-bold uppercase tracking-[0.2em]">{currentTheme.images.length} Assets</span>
+          <div className="flex items-center gap-6 shrink-0">
+            {pdfLink && (
+              <a 
+                href={pdfLink} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="px-4 py-2 bg-[#3ecf8e] text-[#171717] rounded-md text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 hover:bg-[#24b47e] transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                Read Magazine (PDF)
+              </a>
+            )}
+            <div className="flex items-center gap-3 text-primary">
+              <Layout size={16} />
+              <span className="text-[0.6rem] font-bold uppercase tracking-[0.2em]">{currentTheme.images.length} Assets</span>
+            </div>
           </div>
         </div>
       </div>

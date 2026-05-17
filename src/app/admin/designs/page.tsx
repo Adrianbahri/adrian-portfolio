@@ -18,6 +18,7 @@ import {
   GripVertical
 } from 'lucide-react';
 import { cn, purgeSystemCache } from '@/lib/utils';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 interface FormImage {
   id: string;
@@ -30,7 +31,8 @@ interface FormImage {
 export default function AdminDesigns() {
   const [themes, setThemes] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({ title: '', description: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', pdfUrl: '' });
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   
   // Unified images state: tracks the exact order, including existing and new files
   const [formImages, setFormImages] = useState<FormImage[]>([]);
@@ -185,9 +187,12 @@ export default function AdminDesigns() {
 
   const startEdit = (theme: any) => {
     setEditingId(theme.id);
+    const pdfMatch = theme.description?.match(/\[PDF:\s*(.*?)\]/);
+    const cleanDescription = theme.description?.replace(/\[PDF:\s*(.*?)\]/, '').trim() || theme.description;
     setFormData({
       title: theme.title,
-      description: theme.description || ''
+      description: cleanDescription || '',
+      pdfUrl: theme.pdf_url || (pdfMatch ? pdfMatch[1] : '')
     });
     setFormImages((theme.images || []).map((url: string, index: number) => ({
       id: `existing-${index}-${Math.random()}`,
@@ -202,7 +207,7 @@ export default function AdminDesigns() {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ title: '', description: '' });
+    setFormData({ title: '', description: '', pdfUrl: '' });
     setFormImages([]);
   };
 
@@ -231,13 +236,17 @@ export default function AdminDesigns() {
         }
       }
 
+      const finalDescription = formData.pdfUrl 
+        ? `${formData.description}\n\n[PDF: ${formData.pdfUrl}]` 
+        : formData.description;
+
       if (editingId) {
         // Update Design Theme
         const { error } = await supabase
           .from('design_themes')
           .update({ 
             title: formData.title, 
-            description: formData.description, 
+            description: finalDescription, 
             images: finalImages 
           })
           .eq('id', editingId);
@@ -246,14 +255,14 @@ export default function AdminDesigns() {
       } else {
         // Create Design Theme
         const { error } = await supabase.from('design_themes').insert([
-          { title: formData.title, description: formData.description, images: finalImages }
+          { title: formData.title, description: finalDescription, images: finalImages }
         ]);
 
         if (error) throw error;
       }
 
       // Reset State
-      setFormData({ title: '', description: '' });
+      setFormData({ title: '', description: '', pdfUrl: '' });
       setFormImages([]);
       setEditingId(null);
       fetchThemes();
@@ -282,8 +291,8 @@ export default function AdminDesigns() {
       {/* Add / Edit Theme Form */}
       <form onSubmit={handleSubmit} className="p-6 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md space-y-6">
         <div className="grid grid-cols-1 gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-1.5 md:col-span-1">
               <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
                 {editingId ? 'Edit Theme Title' : 'Theme Title'}
               </label>
@@ -295,7 +304,7 @@ export default function AdminDesigns() {
                 className="w-full bg-[#171717] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 md:col-span-1">
               <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Description</label>
               <textarea 
                 placeholder="Explain the design concept..."
@@ -303,6 +312,53 @@ export default function AdminDesigns() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full bg-[#171717] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] h-24 resize-none focus:outline-none focus:border-[#3ecf8e] transition-all"
               />
+            </div>
+            <div className="space-y-1.5 md:col-span-1">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">PDF Magazine File (Optional)</label>
+              <div className="flex flex-col gap-2">
+                <input 
+                  type="text" 
+                  placeholder="e.g. /api/assets/...pdf or direct link"
+                  value={formData.pdfUrl}
+                  onChange={(e) => setFormData({ ...formData, pdfUrl: e.target.value })}
+                  className="w-full bg-[#171717] border border-[#2e2e2e] rounded-md px-3 py-2 text-[13px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
+                />
+                <div className="flex items-center gap-2">
+                  <label className="bg-[#2e2e2e] text-[#ededed] px-3.5 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider hover:bg-[#3e3e3e] transition-all border border-[#3e3e3e] cursor-pointer whitespace-nowrap">
+                    Upload PDF
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="application/pdf" 
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setIsSaving(true);
+                        try {
+                          const fileExt = file.name.split('.').pop();
+                          const fileName = `magazine-${Math.random()}.${fileExt}`;
+                          const { error } = await supabase.storage.from('portfolio-assets').upload(`designs/${fileName}`, file);
+                          if (error) throw error;
+                          const cleanProxyUrl = `/api/assets/designs/${fileName}`;
+                          setFormData(prev => ({ ...prev, pdfUrl: cleanProxyUrl }));
+                          alert('PDF Magazine uploaded successfully!');
+                        } catch (err: any) { 
+                          alert('Upload failed: ' + err.message); 
+                        } finally { 
+                          setIsSaving(false); 
+                        }
+                      }} 
+                    />
+                  </label>
+                  <button 
+                    type="button"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="bg-[#3ecf8e] text-[#171717] px-3.5 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all whitespace-nowrap"
+                  >
+                    Library
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -512,6 +568,12 @@ export default function AdminDesigns() {
           ))}
         </div>
       </div>
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => setFormData(prev => ({ ...prev, pdfUrl: url }))}
+        title="Select Design PDF / Magazine"
+      />
     </div>
   );
 }

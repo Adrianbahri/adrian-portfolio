@@ -289,6 +289,9 @@ DROP POLICY IF EXISTS "Allow public select" ON site_settings;
 CREATE POLICY "Allow public select" ON site_settings FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Allow auth all" ON site_settings;
 CREATE POLICY "Allow auth all" ON site_settings FOR ALL TO authenticated USING (true);
+
+-- 10. ALIGN DESIGN THEMES TABLE WITH PDF URL SUPPORT
+ALTER TABLE design_themes ADD COLUMN IF NOT EXISTS pdf_url TEXT;
   `.trim();
 
   return (
