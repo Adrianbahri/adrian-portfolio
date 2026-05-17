@@ -14,8 +14,48 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio | Adrian Bahri",
-  description: "A modern editorial portfolio",
+  metadataBase: new URL('https://adrianbahri.com'),
+  title: {
+    default: "Adrian Bahri — Creative Technologist & Developer",
+    template: "%s | Adrian Bahri"
+  },
+  description: "Professional portfolio of Adrian Bahri showcasing premium digital experiences, creative engineering, interactive design, and technical storytelling.",
+  keywords: ["Adrian Bahri", "Creative Technologist", "Creative Engineer", "Fullstack Developer", "Web Design", "Next.js", "Supabase", "UI/UX"],
+  authors: [{ name: "Adrian Bahri", url: "https://adrianbahri.com" }],
+  creator: "Adrian Bahri",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://adrianbahri.com",
+    title: "Adrian Bahri — Creative Technologist & Developer",
+    description: "Professional portfolio of Adrian Bahri showcasing premium digital experiences, creative engineering, interactive design, and technical storytelling.",
+    siteName: "Adrian Bahri Portfolio",
+    images: [
+      {
+        url: "/api/assets/uploads/profile-fallback.webp",
+        width: 1200,
+        height: 630,
+        alt: "Adrian Bahri Portfolio Preview",
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Adrian Bahri — Creative Technologist & Developer",
+    description: "Professional portfolio of Adrian Bahri showcasing premium digital experiences, creative engineering, interactive design, and technical storytelling.",
+    creator: "@adrianbahri",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export const viewport = {

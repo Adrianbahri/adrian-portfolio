@@ -24,7 +24,8 @@ import Editor from '@/components/Editor';
 import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
 import { projects as staticProjects } from '@/data/projects';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { compressToWebP } from '@/lib/image';
+import { cn, purgeSystemCache } from '@/lib/utils';
 import DeleteModal from '@/components/Admin/DeleteModal';
 
 export default function AdminProjects() {
@@ -121,6 +122,7 @@ function AdminProjectsContent() {
     try {
       const { error } = await supabase.from('projects').delete().eq('id', itemToDelete.id);
       if (error) throw error;
+      await purgeSystemCache();
       setDbProjects(prev => prev.filter(p => p.id !== itemToDelete.id));
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
@@ -169,6 +171,7 @@ function AdminProjectsContent() {
         alert('Warning: Update successful but no rows changed. Check RLS policies for "projects" table.');
       } else {
         await fetchProjects();
+        await purgeSystemCache();
         alert('Project successfully saved!');
         setView('list');
         setEditingId(null);
@@ -190,6 +193,7 @@ function AdminProjectsContent() {
         
       const { error } = await supabase.from('projects').update(updateData).eq('id', activeProject.id);
       if (error) throw error;
+      await purgeSystemCache();
       setView('list');
       fetchProjects();
     } catch (err: any) { alert('Error: ' + err.message); }
@@ -203,16 +207,17 @@ function AdminProjectsContent() {
     if (!file) return;
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const compressedFile = await compressToWebP(file);
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, compressedFile);
       if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
+      const cleanProxyUrl = `/api/assets/${fileName}`;
       
       if (isGallery) {
-        setGallery(prev => [...prev, { url: publicUrl, type: 'image', caption: '' }]);
+        setGallery(prev => [...prev, { url: cleanProxyUrl, type: 'image', caption: '' }]);
       } else {
-        setCsContent((prev) => prev + `<img src="${publicUrl}" alt="Project image" />`);
+        setCsContent((prev) => prev + `<img src="${cleanProxyUrl}" alt="Project image" />`);
       }
     } catch (err: any) { alert('Upload failed: ' + err.message); }
     finally { setIsUploading(false); }
@@ -370,12 +375,13 @@ function AdminProjectsContent() {
                             if (!file) return;
                             setIsUploading(true);
                             try {
-                              const fileExt = file.name.split('.').pop();
+                              const compressedFile = await compressToWebP(file);
+                              const fileExt = compressedFile.name.split('.').pop();
                               const fileName = `${Math.random()}.${fileExt}`;
-                              const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                              const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, compressedFile);
                               if (error) throw error;
-                              const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-                              setFormData({...formData, imageUrl: publicUrl});
+                              const cleanProxyUrl = `/api/assets/${fileName}`;
+                              setFormData({...formData, imageUrl: cleanProxyUrl});
                             } catch (err: any) { alert('Upload failed: ' + err.message); }
                             finally { setIsUploading(false); }
                           }} accept="image/*" />
@@ -398,8 +404,8 @@ function AdminProjectsContent() {
                            const fileName = `${Math.random()}.${fileExt}`;
                            const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
                            if (error) throw error;
-                           const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-                           setFormData({...formData, imageUrl: publicUrl});
+                           const cleanProxyUrl = `/api/assets/${fileName}`;
+                           setFormData({...formData, imageUrl: cleanProxyUrl});
                          } catch (err: any) { alert('Upload failed: ' + err.message); }
                          finally { setIsUploading(false); }
                       }} accept="image/*" />

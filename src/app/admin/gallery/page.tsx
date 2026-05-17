@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { purgeSystemCache } from '@/lib/utils';
+import { compressToWebP } from '@/lib/image';
 import { Trash2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 export default function AdminGallery() {
@@ -24,21 +26,19 @@ export default function AdminGallery() {
     setIsUploading(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
-        const fileExt = file.name.split('.').pop();
+        const compressedFile = await compressToWebP(file);
+        const fileExt = compressedFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `gallery/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('portfolio-assets')
-          .upload(filePath, file);
+          .upload(filePath, compressedFile);
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('portfolio-assets')
-          .getPublicUrl(filePath);
-
-        return supabase.from('gallery').insert([{ image_url: publicUrl }]);
+        const cleanProxyUrl = `/api/assets/${filePath}`;
+        return supabase.from('gallery').insert([{ image_url: cleanProxyUrl }]);
       });
 
       await Promise.all(uploadPromises);

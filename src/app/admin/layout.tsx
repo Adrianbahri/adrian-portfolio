@@ -43,7 +43,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   const [isProjectsOpen, setIsProjectsOpen] = useState(
     pathname.startsWith('/admin/projects') || 
-    ['/admin/gallery', '/admin/videos', '/admin/designs'].some(path => pathname.startsWith(path))
+    ['/admin/gallery', '/admin/videos', '/admin/designs', '/admin/creative'].some(path => pathname.startsWith(path))
   );
   const [isActivitiesOpen, setIsActivitiesOpen] = useState(pathname.startsWith('/admin/activities'));
 
@@ -55,6 +55,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       icon: FolderKanban,
       submenu: [
         { name: 'Technical', href: '/admin/projects?type=developer' },
+        { name: 'Creative Spotlight', href: '/admin/creative' },
         { name: 'Gallery', href: '/admin/gallery' },
         { name: 'Videos', href: '/admin/videos' },
         { name: 'Designs', href: '/admin/designs' },

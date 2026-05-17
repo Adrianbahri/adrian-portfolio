@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { compressToWebP } from '@/lib/image';
+import { cn, purgeSystemCache } from '@/lib/utils';
 import DeleteModal from '@/components/Admin/DeleteModal';
 
 export default function AdminExperience() {
@@ -58,6 +59,7 @@ export default function AdminExperience() {
     try {
       if (editingId) { await supabase.from('experiences').update(formData).eq('id', editingId); }
       else { await supabase.from('experiences').insert([formData]); }
+      await purgeSystemCache();
       setView('list');
       setEditingId(null);
       fetchExperiences();
@@ -75,6 +77,7 @@ export default function AdminExperience() {
     try {
       const { error } = await supabase.from('experiences').delete().eq('id', itemToDelete.id);
       if (error) throw error;
+      await purgeSystemCache();
       setExperiences(prev => prev.filter(e => e.id !== itemToDelete.id));
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
@@ -100,12 +103,13 @@ export default function AdminExperience() {
             const file = e.target.files?.[0];
             if (!file) return;
             try {
-               const fileExt = file.name.split('.').pop();
+               const compressedFile = await compressToWebP(file);
+               const fileExt = compressedFile.name.split('.').pop();
                const fileName = `${Math.random()}.${fileExt}`;
-               const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+               const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, compressedFile);
                if (error) throw error;
-               const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-               setFormData(prev => ({ ...prev, description: prev.description + `<img src="${publicUrl}" alt="Experience Image" />` }));
+               const cleanProxyUrl = `/api/assets/${fileName}`;
+               setFormData(prev => ({ ...prev, description: prev.description + `<img src="${cleanProxyUrl}" alt="Experience Image" />` }));
             } catch (err: any) { alert(err.message); }
           };
           input.click();

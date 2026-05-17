@@ -16,7 +16,8 @@ import {
   MapPin
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { compressToWebP } from '@/lib/image';
+import { cn, purgeSystemCache } from '@/lib/utils';
 import { organizationData as staticOrg, volunteerData as staticVolunteer } from '@/data/experience';
 import DeleteModal from '@/components/Admin/DeleteModal';
 import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
@@ -96,6 +97,7 @@ function AdminActivitiesContent() {
     try {
       const { error } = await supabase.from(table).delete().eq('id', itemToDelete.id);
       if (error) throw error;
+      await purgeSystemCache();
       if (activeTab === 'organizations') setOrgs(prev => prev.filter(o => o.id !== itemToDelete.id));
       else setVolunteers(prev => prev.filter(v => v.id !== itemToDelete.id));
       setIsDeleteModalOpen(false);
@@ -131,6 +133,7 @@ function AdminActivitiesContent() {
       
       if (result.error) throw result.error;
       
+      await purgeSystemCache();
       await fetchData(); // Refresh data
       setView('list');
       setEditingId(null);
@@ -171,8 +174,8 @@ function AdminActivitiesContent() {
                 const fileName = `${Math.random()}.${fileExt}`;
                 const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
                 if (error) throw error;
-                const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-                setFormData(prev => ({ ...prev, description: prev.description + `<img src="${publicUrl}" alt="Activity Image" />` }));
+                const cleanProxyUrl = `/api/assets/${fileName}`;
+                setFormData(prev => ({ ...prev, description: prev.description + `<img src="${cleanProxyUrl}" alt="Activity Image" />` }));
              } catch (err: any) { alert(err.message); }
            };
            input.click();

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { purgeSystemCache } from '@/lib/utils';
+import { compressToWebP } from '@/lib/image';
 import { Trash2, Plus, Video, Loader2, Globe, Pencil, X } from 'lucide-react';
 
 export default function AdminVideos() {
@@ -59,13 +61,13 @@ export default function AdminVideos() {
 
       // Upload new thumbnail if selected
       if (thumbnailFile) {
-        const fileExt = thumbnailFile.name.split('.').pop();
+        const compressedFile = await compressToWebP(thumbnailFile);
+        const fileExt = compressedFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `video-thumbnails/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from('portfolio-assets').upload(filePath, thumbnailFile);
+        const { error: uploadError } = await supabase.storage.from('portfolio-assets').upload(filePath, compressedFile);
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(filePath);
-        finalThumbnailUrl = publicUrl;
+        finalThumbnailUrl = `/api/assets/${filePath}`;
       }
 
       const platform = getPlatform(formData.url);

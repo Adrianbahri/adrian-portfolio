@@ -13,6 +13,7 @@ type ProjectMode = 'developer' | 'creative';
 export default function FeaturedWork() {
   const [mode, setMode] = useState<ProjectMode>('developer');
   const [dbProjects, setDbProjects] = useState<any[]>([]);
+  const [dbCreative, setDbCreative] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -33,7 +34,33 @@ export default function FeaturedWork() {
         setDbProjects(staticProjects);
       }
     };
+
+    const fetchCreative = async () => {
+      try {
+        const { data } = await supabase
+          .from('creative_categories')
+          .select('*')
+          .order('order_index', { ascending: true });
+        
+        if (data && data.length > 0) {
+          const mapped = data.map(c => ({
+            id: c.id,
+            title: c.title,
+            category: c.category,
+            desc: c.description,
+            img: c.image_url,
+            span: 'md:col-span-4',
+            href: c.link_url || '/projects?mode=creative'
+          }));
+          setDbCreative(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching creative spotlight cards:', err);
+      }
+    };
+
     fetchProjects();
+    fetchCreative();
   }, []);
 
   // Defining Creative Category Cards for fallback/default view
@@ -71,7 +98,7 @@ export default function FeaturedWork() {
 
   const displayProjects = mode === 'developer'
     ? (filteredProjects.length > 0 ? filteredProjects : staticProjects.filter(p => p.mode === 'developer').slice(0, 3))
-    : creativeCategories;
+    : (dbCreative.length > 0 ? dbCreative : creativeCategories);
 
   return (
     <section id="work" className="w-full py-20 bg-transparent">

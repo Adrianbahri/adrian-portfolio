@@ -100,14 +100,8 @@ export default function Hero() {
             </div>
 
             <div className="photo-label">
-              <span>IMG_2026_ADRN</span>
+              <span>IMG_{new Date().getFullYear()}_DRIAN</span>
               <span>Visual Storyteller</span>
-            </div>
-
-            {/* Floating badge over the photo */}
-            <div className="absolute bottom-12 left-8 p-3 bg-surface-200 border border-border-strong shadow-xl rounded-[3px] transition-transform group-hover:-translate-y-1">
-              <p className="text-[10px] uppercase tracking-widest text-on-dark/40 font-bold mb-0.5">Focus</p>
-              <p className="text-xs text-on-dark font-medium">Next.js + Motion</p>
             </div>
           </div>
         </motion.div>

@@ -18,7 +18,8 @@ import Editor from '@/components/Editor';
 import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
 import { articles as staticArticles } from '@/data/articles';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { compressToWebP } from '@/lib/image';
+import { cn, purgeSystemCache } from '@/lib/utils';
 import DeleteModal from '@/components/Admin/DeleteModal';
 
 export default function AdminArticles() {
@@ -135,15 +136,16 @@ export default function AdminArticles() {
     if (!file) return;
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const compressedFile = await compressToWebP(file);
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, compressedFile);
       if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
+      const cleanProxyUrl = `/api/assets/${fileName}`;
       
       // If we are in content view, we want to append the image to the editor
       // We'll handle this by updating the textContent which will be passed to the Editor
-      setTextContent((prev) => prev + `<img src="${publicUrl}" alt="Uploaded image" />`);
+      setTextContent((prev) => prev + `<img src="${cleanProxyUrl}" alt="Uploaded image" />`);
     } catch (err: any) { alert('Upload failed: ' + err.message); }
     finally { setIsUploading(false); }
   };
@@ -259,12 +261,13 @@ export default function AdminArticles() {
                             if (!file) return;
                             setIsUploading(true);
                             try {
-                              const fileExt = file.name.split('.').pop();
+                              const compressedFile = await compressToWebP(file);
+                              const fileExt = compressedFile.name.split('.').pop();
                               const fileName = `${Math.random()}.${fileExt}`;
-                              const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                              const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, compressedFile);
                               if (error) throw error;
-                              const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-                              setFormData({...formData, img: publicUrl});
+                              const cleanProxyUrl = `/api/assets/${fileName}`;
+                              setFormData({...formData, img: cleanProxyUrl});
                             } catch (err: any) { alert('Upload failed: ' + err.message); }
                             finally { setIsUploading(false); }
                           }} accept="image/*" />
@@ -287,8 +290,8 @@ export default function AdminArticles() {
                            const fileName = `${Math.random()}.${fileExt}`;
                            const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
                            if (error) throw error;
-                           const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
-                           setFormData({...formData, img: publicUrl});
+                           const cleanProxyUrl = `/api/assets/${fileName}`;
+                           setFormData({...formData, img: cleanProxyUrl});
                          } catch (err: any) { alert('Upload failed: ' + err.message); }
                          finally { setIsUploading(false); }
                       }} accept="image/*" />

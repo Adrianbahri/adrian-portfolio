@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { compressToWebP } from '@/lib/image';
 import { 
   Trash2, 
   Plus, 
@@ -16,7 +17,7 @@ import {
   GripHorizontal,
   GripVertical
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, purgeSystemCache } from '@/lib/utils';
 
 interface FormImage {
   id: string;
@@ -220,13 +221,13 @@ export default function AdminDesigns() {
         if (item.type === 'existing' && item.url) {
           finalImages.push(item.url);
         } else if (item.type === 'new' && item.file) {
-          const fileExt = item.file.name.split('.').pop();
+          const compressedFile = await compressToWebP(item.file);
+          const fileExt = compressedFile.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
           const filePath = `designs/${fileName}`;
-          const { error: uploadError } = await supabase.storage.from('portfolio-assets').upload(filePath, item.file);
+          const { error: uploadError } = await supabase.storage.from('portfolio-assets').upload(filePath, compressedFile);
           if (uploadError) throw uploadError;
-          const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(filePath);
-          finalImages.push(publicUrl);
+          finalImages.push(`/api/assets/${filePath}`);
         }
       }
 

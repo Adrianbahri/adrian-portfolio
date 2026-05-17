@@ -122,6 +122,43 @@ export default function AdminSync() {
       logs[5] = { name: 'Achievements', status: 'success', count: achToSync.length };
     } catch (err: any) { logs[5] = { name: 'Achievements', status: 'error', message: err.message }; }
 
+    // 7. CREATIVE SPOTLIGHT (Homepage Creative Categories)
+    logs.push({ name: 'Creative Spotlight', status: 'processing' });
+    try {
+      const creativeCategoriesToSync = [
+        {
+          id: 'motion',
+          title: 'Cinematic & Motion',
+          category: 'Motion',
+          description: 'Crafting narratives through visual rhythm and cinematic motion graphics.',
+          image_url: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1200&q=80',
+          link_url: '/projects?mode=creative',
+          order_index: 0
+        },
+        {
+          id: 'design',
+          title: 'Visual Explorations',
+          category: 'Design',
+          description: 'Exploring aesthetics through themed visual compositions and high-fidelity experiments.',
+          image_url: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1200&q=80',
+          link_url: '/projects?mode=creative',
+          order_index: 1
+        },
+        {
+          id: 'photo',
+          title: 'Perspectives',
+          category: 'Photography',
+          description: 'A visual journal of light and perspectives captured through the lens.',
+          image_url: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?auto=format&fit=crop&w=1200&q=80',
+          link_url: '/projects?mode=creative',
+          order_index: 2
+        }
+      ];
+      const { error } = await supabase.from('creative_categories').upsert(creativeCategoriesToSync, { onConflict: 'id' });
+      if (error) throw error;
+      logs[6] = { name: 'Creative Spotlight', status: 'success', count: creativeCategoriesToSync.length };
+    } catch (err: any) { logs[6] = { name: 'Creative Spotlight', status: 'error', message: err.message }; }
+
     setResults([...logs]);
     setLoading(false);
   };
@@ -184,6 +221,25 @@ DROP POLICY IF EXISTS "Allow public insert" ON messages;
 CREATE POLICY "Allow public insert" ON messages FOR INSERT WITH CHECK (true);
 DROP POLICY IF EXISTS "Allow auth all" ON messages;
 CREATE POLICY "Allow auth all" ON messages FOR ALL TO authenticated USING (true);
+
+-- CREATIVE SPOTLIGHT TABLE FOR HOMEPAGE
+CREATE TABLE IF NOT EXISTS creative_categories (
+  id TEXT PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  image_url TEXT NOT NULL,
+  link_url TEXT DEFAULT '/projects?mode=creative',
+  order_index INT DEFAULT 0
+);
+
+-- SECURITY FOR CREATIVE SPOTLIGHT
+ALTER TABLE creative_categories ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public select" ON creative_categories;
+CREATE POLICY "Allow public select" ON creative_categories FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow auth all" ON creative_categories;
+CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated USING (true);
   `.trim();
 
   return (

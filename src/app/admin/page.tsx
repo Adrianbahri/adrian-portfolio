@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { compressToWebP } from '@/lib/image';
 import { 
   Save, 
   Loader2, 
@@ -17,7 +18,7 @@ import {
   Activity,
   ArrowRight
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, purgeSystemCache } from '@/lib/utils';
 
 export default function AdminAboutPage() {
   const [loading, setLoading] = useState(true);
@@ -87,21 +88,19 @@ export default function AdminAboutPage() {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const compressedFile = await compressToWebP(file);
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `profile-${Math.random()}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('portfolio-assets')
-        .upload(filePath, file);
+        .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('portfolio-assets')
-        .getPublicUrl(filePath);
-
-      setHeroImage(publicUrl);
+      const cleanProxyUrl = `/api/assets/${filePath}`;
+      setHeroImage(cleanProxyUrl);
     } catch (err: any) {
       alert('Upload failed: ' + err.message);
     } finally {
@@ -280,10 +279,11 @@ export default function AdminAboutPage() {
                       setUploading(true);
                       try {
                         const fileName = `resume-${Date.now()}.pdf`;
-                        const { error } = await supabase.storage.from('portfolio-assets').upload(`documents/${fileName}`, file);
+                        const compressedFile = await compressToWebP(file);
+                        const { error } = await supabase.storage.from('portfolio-assets').upload(`documents/${fileName}`, compressedFile);
                         if (error) throw error;
-                        const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(`documents/${fileName}`);
-                        setSocials({...socials, resume: publicUrl});
+                        const cleanProxyUrl = `/api/assets/documents/${fileName}`;
+                        setSocials({...socials, resume: cleanProxyUrl});
                       } catch (err: any) { alert(err.message); }
                       finally { setUploading(false); }
                     }} 
