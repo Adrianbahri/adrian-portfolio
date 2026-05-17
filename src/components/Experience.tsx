@@ -159,9 +159,10 @@ export default function Experience() {
                     )}
                   </div>
 
-                  <p className="text-lg leading-relaxed text-body-muted font-sans font-light max-w-3xl">
-                    {item.desc}
-                  </p>
+                  <div 
+                    className="text-lg leading-relaxed text-body-muted font-sans font-light max-w-3xl"
+                    dangerouslySetInnerHTML={{ __html: item.desc }}
+                  />
 
                   {item.points && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 pt-2">
@@ -200,9 +201,10 @@ export default function Experience() {
                       {item.company}
                     </p>
                   </div>
-                  <p className="text-sm leading-relaxed text-body-muted/80 max-w-md font-sans font-light">
-                    {item.desc}
-                  </p>
+                  <div 
+                    className="text-sm leading-relaxed text-body-muted/80 max-w-md font-sans font-light"
+                    dangerouslySetInnerHTML={{ __html: item.desc }}
+                  />
                 </article>
               ))}
             </div>
@@ -224,9 +226,10 @@ export default function Experience() {
                       {item.company}
                     </p>
                   </div>
-                  <p className="text-sm leading-relaxed text-body-muted/80 max-w-md font-sans font-light">
-                    {item.desc}
-                  </p>
+                  <div 
+                    className="text-sm leading-relaxed text-body-muted/80 max-w-md font-sans font-light"
+                    dangerouslySetInnerHTML={{ __html: item.desc }}
+                  />
                 </article>
               ))}
             </div>
