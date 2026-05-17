@@ -38,7 +38,7 @@ export default function AdminArticles() {
 
   const [formData, setFormData] = useState({
     title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: '',
-    seo_title: '', seo_description: '', img: ''
+    seo_title: '', seo_description: '', img: '', tags: '', seo_keywords: ''
   });
 
   const fetchArticles = async () => {
@@ -62,7 +62,9 @@ export default function AdminArticles() {
       date: article.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       seo_title: article.seo_title || '',
       seo_description: article.seo_description || '',
-      img: article.img || ''
+      img: article.img || '',
+      tags: Array.isArray(article.tags) ? article.tags.join(', ') : '',
+      seo_keywords: article.seo_keywords || ''
     });
     setView('metadata');
   };
@@ -76,9 +78,24 @@ export default function AdminArticles() {
   const handleSaveMetadata = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+
+    const payload = {
+      title: formData.title,
+      slug: formData.slug,
+      category: formData.category,
+      description: formData.description,
+      author: formData.author,
+      date: formData.date,
+      seo_title: formData.seo_title,
+      seo_description: formData.seo_description,
+      img: formData.img || null,
+      seo_keywords: formData.seo_keywords || null,
+      tags: formData.tags ? formData.tags.split(',').map(t => t.trim().toUpperCase()).filter(Boolean) : []
+    };
+
     try {
-      if (editingId) { await supabase.from('articles').update(formData).eq('id', editingId); }
-      else { await supabase.from('articles').insert([formData]); }
+      if (editingId) { await supabase.from('articles').update(payload).eq('id', editingId); }
+      else { await supabase.from('articles').insert([payload]); }
       setView('list');
       setEditingId(null);
       fetchArticles();
@@ -142,7 +159,7 @@ export default function AdminArticles() {
             <p className="text-[13px] text-[#707070]">Total {allArticles.length} articles published in your blog.</p>
           </div>
           <button 
-            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '', img: '' }); setView('metadata'); }} 
+            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '', img: '', tags: '', seo_keywords: '' }); setView('metadata'); }} 
             className="bg-[#3ecf8e] text-[#171717] px-3 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all"
           >
             New Article
@@ -302,6 +319,10 @@ export default function AdminArticles() {
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Description</label>
                 <textarea rows={4} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] resize-none" />
               </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Tags (Comma separated)</label>
+                <input type="text" placeholder="e.g. FLUTTER, MOBILE, TECH" value={formData.tags} onChange={(e) => setFormData({...formData, tags: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+              </div>
            </div>
            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -323,6 +344,10 @@ export default function AdminArticles() {
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Meta Description</label>
                   <textarea rows={2} value={formData.seo_description} onChange={(e) => setFormData({...formData, seo_description: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] resize-none" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">SEO Keywords</label>
+                  <input type="text" placeholder="e.g. flutter 2026, mobile development, tech trends" value={formData.seo_keywords} onChange={(e) => setFormData({...formData, seo_keywords: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
                 </div>
               </div>
            </div>
