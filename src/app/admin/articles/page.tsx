@@ -200,6 +200,7 @@ export default function AdminArticles() {
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <a href={`/blog/${article.slug}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#3ecf8e] border border-[#2e2e2e] transition-all" title="View live article"><Eye size={12} /></a>
                       <button onClick={() => handleOpenContent(article)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#3ecf8e] border border-[#2e2e2e] transition-all"><FileEdit size={12} /></button>
                       <button onClick={() => handleEditMetadata(article)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-white border border-[#2e2e2e] transition-all"><Edit2 size={12} /></button>
                       <button onClick={() => confirmDelete(article)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#ff2201] border border-[#2e2e2e] transition-all"><Trash2 size={12} /></button>
