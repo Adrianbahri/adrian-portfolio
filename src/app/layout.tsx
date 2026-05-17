@@ -62,7 +62,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: "Drian Portfolio",
       images: [
         {
-          url: heroImage,
+          url: "/opengraph-image",
           width: 1200,
           height: 630,
           alt: "Drian Portfolio Preview",
@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: siteTitle,
       description: siteDescription,
       creator: "@adrianbahri",
-      images: [heroImage],
+      images: ["/opengraph-image"],
     },
     robots: {
       index: true,
