@@ -18,7 +18,7 @@ export const articles: Article[] = [
     desc: 'Eksplorasi mendalam tentang bagaimana Flutter terus mendominasi pasar pengembangan lintas platform dan apa yang baru di ekosistem Dart.',
     date: 'March 15, 2026',
     category: 'Technology',
-    author: 'Adrian Bahri',
+    author: 'Drian',
     tags: ['FLUTTER', 'MOBILE', 'DART', 'TECH-TRENDS'],
     content: `
       <h2>Kenapa Flutter Masih Relevan?</h2>

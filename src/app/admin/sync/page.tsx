@@ -55,7 +55,7 @@ export default function AdminSync() {
         slug: a.slug,
         category: a.category,
         description: a.description || (a as any).desc || '',
-        author: a.author || 'Adrian Bahri',
+        author: a.author || 'Drian',
         date: a.date,
         content: a.content || ''
       }));

@@ -38,7 +38,7 @@ export default function AdminArticles() {
   const [activeArticle, setActiveArticle] = useState<any>(null);
 
   const [formData, setFormData] = useState({
-    title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: '',
+    title: '', slug: '', category: '', description: '', author: 'Drian', date: '',
     seo_title: '', seo_description: '', img: '', tags: '', seo_keywords: ''
   });
 
@@ -59,7 +59,7 @@ export default function AdminArticles() {
       slug: article.slug || '',
       category: article.category || '',
       description: article.description || '',
-      author: article.author || 'Adrian Bahri',
+      author: article.author || 'Drian',
       date: article.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       seo_title: article.seo_title || '',
       seo_description: article.seo_description || '',
@@ -161,7 +161,7 @@ export default function AdminArticles() {
             <p className="text-[13px] text-[#707070]">Total {allArticles.length} articles published in your blog.</p>
           </div>
           <button 
-            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '', img: '', tags: '', seo_keywords: '' }); setView('metadata'); }} 
+            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Drian', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '', img: '', tags: '', seo_keywords: '' }); setView('metadata'); }} 
             className="bg-[#3ecf8e] text-[#171717] px-3 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all"
           >
             New Article

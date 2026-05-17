@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: project } = await supabase.from('projects').select('*').eq('slug', decodedSlug).single();
   
   return {
-    title: project?.seo_title || `${project?.title || 'Project'} | Adrian Bahri`,
+    title: project?.seo_title || `${project?.title || 'Project'} | Drian`,
     description: project?.seo_description || project?.description,
   };
 }
