@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, ChevronRight, Loader2, LayoutGrid, ScrollText } from 'lucide-react';
+import { ArrowLeft, ExternalLink, ChevronRight, Loader2, LayoutGrid } from 'lucide-react';
 import { Metadata } from 'next';
 import { cn } from '@/lib/utils';
 
@@ -107,25 +107,26 @@ export default async function ProjectDetailPage({ params }: Props) {
               </section>
             )}
 
-            {/* Markdown Content Section */}
-            <div className="pt-12 border-t border-border-subtle/30">
+            {/* Markdown Content Section & Hero Image */}
+            <div className="space-y-8">
+              {/* Hero Image / Fallback Hero if no media at all */}
+              {!markdown.includes('![Image]') && gallery.length === 0 && (
+                <div className="aspect-[16/10] bg-surface-100 border border-border-strong overflow-hidden rounded-sm group shadow-2xl">
+                  <img src={project.image_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                </div>
+              )}
+
               {markdown ? (
-                <div className="space-y-12">
-                  <div className="flex items-center gap-4 mb-12">
-                    <ScrollText className="text-primary/40" size={18} />
-                    <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/40">Project Narrative</h3>
-                  </div>
-                  <div className="content-prose pt-12 border-t border-border-subtle/30">
-                    <div dangerouslySetInnerHTML={{ 
-                      __html: markdown
-                        .replace(/##\s+(.*?)(?=\s+##|\n|$)/g, '<h2>$1</h2>')
-                        .replace(/!\[Image\]\((.*?)\)/gim, '<img src="$1" alt="Project Insight" />')
-                        .split('\n')
-                        .filter((p: string) => p.trim() !== '')
-                        .map((p: string) => p.startsWith('<h') || p.startsWith('<img') ? p : `<p>${p}</p>`)
-                        .join('')
-                    }} />
-                  </div>
+                <div className="content-prose">
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: markdown
+                      .replace(/##\s+(.*?)(?=\s+##|\n|$)/g, '<h2>$1</h2>')
+                      .replace(/!\[Image\]\((.*?)\)/gim, '<img src="$1" alt="Project Insight" />')
+                      .split('\n')
+                      .filter((p: string) => p.trim() !== '')
+                      .map((p: string) => p.startsWith('<h') || p.startsWith('<img') ? p : `<p>${p}</p>`)
+                      .join('')
+                  }} />
                 </div>
               ) : project.mode !== 'creative' && (
                 <div className="py-20 text-center border border-dashed border-border-subtle rounded-sm">
@@ -133,13 +134,6 @@ export default async function ProjectDetailPage({ params }: Props) {
                 </div>
               )}
             </div>
-            
-            {/* Fallback Hero if no media at all */}
-            {!markdown.includes('![Image]') && gallery.length === 0 && (
-              <div className="aspect-[16/10] bg-surface-100 border border-border-strong overflow-hidden rounded-sm group shadow-2xl">
-                <img src={project.img_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-              </div>
-            )}
           </div>
 
           {/* Sticky Info Sidebar */}
