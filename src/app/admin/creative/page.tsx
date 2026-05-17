@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { cn, purgeSystemCache } from '@/lib/utils';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 interface CreativeCategory {
   id: string;
@@ -38,6 +39,8 @@ export default function AdminCreativeSpotlight() {
   const [dbError, setDbError] = useState<boolean>(false);
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
   const [rawError, setRawError] = useState<string | null>(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
 
   // 3 Creative Items state matching the default creativeCategories
   const [items, setItems] = useState<CreativeCategory[]>([
@@ -468,19 +471,13 @@ CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated U
                         <div className="absolute inset-0 bg-[#171717]/30 group-hover/preview:bg-transparent transition-colors duration-500" />
                       </div>
 
-                      {/* UPLOAD OVERLAY */}
-                      <label 
+                      {/* HOVER OVERLAY WITH TWO OPTIONS */}
+                      <div 
                         className={cn(
-                          "absolute inset-0 bg-black/75 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2 cursor-pointer opacity-0 hover:opacity-100 transition-opacity duration-300 z-20",
+                          "absolute inset-0 bg-black/85 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 opacity-0 hover:opacity-100 transition-opacity duration-300 z-20",
                           uploadingId === item.id && "opacity-100 pointer-events-none"
                         )}
                       >
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => handleImageUpload(item.id, e)} 
-                          className="hidden" 
-                        />
                         {uploadingId === item.id ? (
                           <>
                             <Loader2 size={24} className="animate-spin text-[#3ecf8e]" />
@@ -488,14 +485,34 @@ CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated U
                           </>
                         ) : (
                           <>
-                            <div className="w-10 h-10 rounded-full bg-[#3ecf8e]/10 border border-[#3ecf8e]/30 flex items-center justify-center text-[#3ecf8e]">
-                              <Upload size={16} />
+                            <div className="flex flex-col items-center gap-1.5 mb-1 text-center">
+                              <span className="text-[10px] uppercase font-bold tracking-widest text-white">Manage Spotlight Image</span>
+                              <span className="text-[8px] text-[#707070] font-sans px-4">Choose from library or upload new file</span>
                             </div>
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-white">Upload New Photo</span>
-                            <span className="text-[8px] text-[#707070] font-sans max-w-[200px] text-center">Max 5MB. Replaces current photo URL with CDN path.</span>
+                            <div className="flex items-center gap-2">
+                              <label className="bg-[#2e2e2e] text-[#ededed] px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-[#3e3e3e] transition-all border border-[#3e3e3e] cursor-pointer">
+                                Upload
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  onChange={(e) => handleImageUpload(item.id, e)} 
+                                  className="hidden" 
+                                />
+                              </label>
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setActiveItemId(item.id);
+                                  setIsMediaModalOpen(true);
+                                }}
+                                className="bg-[#3ecf8e] text-[#171717] px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all shadow-md shadow-[#3ecf8e]/10"
+                              >
+                                Library
+                              </button>
+                            </div>
                           </>
                         )}
-                      </label>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] px-1 text-[#707070]">
@@ -528,6 +545,21 @@ CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated U
           </div>
         </div>
       )}
+      
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => {
+          setIsMediaModalOpen(false);
+          setActiveItemId(null);
+        }}
+        onSelect={(url) => {
+          if (activeItemId) {
+            handleFieldChange(activeItemId, 'image_url', url);
+            setMessage({ type: 'success', text: `Spotlight cover image updated from library!` });
+          }
+        }}
+        title="Select Spotlight Cover Image"
+      />
     </div>
   );
 }
