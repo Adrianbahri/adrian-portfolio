@@ -68,7 +68,7 @@ function ProjectsPageContent() {
               className={cn(
                 "px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                 filter === 'developer' 
-                  ? "bg-primary text-canvas" 
+                  ? "bg-white text-canvas" 
                   : "text-body-muted hover:text-on-dark"
               )}
             >
@@ -79,7 +79,7 @@ function ProjectsPageContent() {
               className={cn(
                 "px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                 filter === 'creative' 
-                  ? "bg-primary text-canvas" 
+                  ? "bg-white text-canvas" 
                   : "text-body-muted hover:text-on-dark"
               )}
             >
@@ -135,32 +135,32 @@ function ProjectsPageContent() {
                     "group relative overflow-hidden transition-all duration-500",
                     project.mode?.toLowerCase() === 'creative' 
                       ? "bg-transparent" 
-                      : "bg-transparent border border-white/5 hover:border-primary/20"
+                      : "bg-transparent border border-white/5 hover:border-white/10"
                   )}
                 >
                   {project.mode?.toLowerCase() === 'creative' ? (
                     /* CINEMATIC CREATIVE PREVIEW CARD */
-                    <Link href={`/projects/${project.slug}`} className="block relative aspect-[16/10] overflow-hidden group/card border border-border-subtle hover:border-primary/40 transition-all duration-700 shadow-2xl">
+                    <Link href={`/projects/${project.slug}`} className="block relative aspect-[16/10] overflow-hidden group/card border border-border-subtle hover:border-white/20 transition-all duration-700 shadow-2xl">
                        <img src={project.image_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
                        <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent opacity-60 group-hover/card:opacity-90 transition-opacity duration-700" />
                        
                        <div className="absolute inset-x-0 bottom-0 p-8 transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-700">
                           <div className="flex items-center gap-3 mb-3">
-                             <span className="px-2 py-0.5 bg-primary text-canvas rounded text-[0.5rem] font-bold uppercase tracking-widest">{project.category}</span>
-                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                             <span className="px-2 py-0.5 bg-white/10 text-[#ededed] border border-white/15 rounded text-[0.5rem] font-bold uppercase tracking-widest">{project.category}</span>
+                             <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
                              <span className="text-on-dark text-[0.6rem] uppercase tracking-[0.2em] font-bold">Featured Creative</span>
                           </div>
                           <h3 className="text-3xl lg:text-5xl font-medium text-on-dark font-heading tracking-tight leading-tight mb-4">{project.title}</h3>
                           <div className="flex items-center gap-4 text-body-muted opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 delay-100">
                              <span className="text-[0.65rem] font-bold uppercase tracking-widest">View Experience</span>
-                             <ChevronRight size={14} className="text-primary" />
+                             <ChevronRight size={14} className="text-white/60" />
                           </div>
                        </div>
                        
                        {/* Floating Decorative Elements */}
                        <div className="absolute top-8 right-8 flex items-center gap-2 opacity-0 group-hover/card:opacity-100 transition-all duration-700 -translate-y-2 group-hover/card:translate-y-0">
-                          <span className="w-8 h-[1px] bg-primary/40" />
-                          <span className="text-[0.5rem] font-mono text-primary/60 uppercase tracking-[0.3em]">Cinematic Edit</span>
+                          <span className="w-8 h-[1px] bg-white/20" />
+                          <span className="text-[0.5rem] font-mono text-white/40 uppercase tracking-[0.3em]">Cinematic Edit</span>
                        </div>
                     </Link>
                   ) : (
@@ -174,12 +174,12 @@ function ProjectsPageContent() {
                         <div className="space-y-4">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                              <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded text-[0.55rem] font-bold uppercase tracking-widest">{project.status || 'Active'}</span>
+                              <span className="inline-flex items-center justify-center px-2 py-1 bg-white/5 text-[#ededed] border border-white/15 rounded text-[0.55rem] font-bold uppercase tracking-wider leading-none">{project.status || 'Active'}</span>
                               <span className="text-body-muted text-[0.6rem] uppercase tracking-widest font-medium">{project.year_range || '2025'}</span>
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <h3 className="text-xl lg:text-2xl font-medium text-on-dark font-heading tracking-tight group-hover:text-primary transition-colors">{project.title}</h3>
+                            <h3 className="text-xl lg:text-2xl font-medium text-on-dark font-heading tracking-tight group-hover:text-white transition-colors">{project.title}</h3>
                             <p className="text-sm text-body-muted leading-relaxed font-sans max-w-2xl line-clamp-2 lg:line-clamp-3">{project.description}</p>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -190,8 +190,8 @@ function ProjectsPageContent() {
                         </div>
                         <div className="mt-6 pt-5 border-t border-border-subtle flex items-center justify-between gap-4">
                           <div className="flex gap-4">
-                            {project.github_url && <a href={project.github_url} target="_blank" className="text-body-muted hover:text-primary transition-colors"><Code2 size={16} /></a>}
-                            {project.demo_url && <a href={project.demo_url} target="_blank" className="text-body-muted hover:text-primary transition-colors"><Globe size={16} /></a>}
+                            {project.github_url && <a href={project.github_url} target="_blank" className="text-body-muted hover:text-white transition-colors"><Code2 size={16} /></a>}
+                            {project.demo_url && <a href={project.demo_url} target="_blank" className="text-body-muted hover:text-white transition-colors"><Globe size={16} /></a>}
                           </div>
                           <Link href={`/projects/${project.slug}`} className="inline-flex items-center gap-2 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-primary hover:text-on-dark transition-all group/link">
                             View Case Study
@@ -210,7 +210,7 @@ function ProjectsPageContent() {
         {/* FOOTER BACK BUTTON */}
         <div className="mt-24 pt-12 border-t border-white/5 flex justify-center">
           <Link href="/" className="group flex flex-col items-center gap-4 text-center">
-            <div className="w-12 h-12 rounded-full border border-border-subtle flex items-center justify-center group-hover:bg-primary group-hover:text-canvas group-hover:border-primary transition-all duration-500">
+            <div className="w-12 h-12 rounded-full border border-border-subtle flex items-center justify-center group-hover:bg-white group-hover:text-canvas group-hover:border-white transition-all duration-500">
               <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             </div>
             <div className="space-y-1">
