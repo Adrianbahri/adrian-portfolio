@@ -29,10 +29,73 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
   const fetchPhotos = async () => {
     setLoading(true);
     try {
-      const { data } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-      if (data) setPhotos(data);
+      // 1. Fetch root items from the portfolio-assets bucket
+      const { data: rootItems, error: rootError } = await supabase.storage
+        .from('portfolio-assets')
+        .list('', { limit: 150 });
+
+      if (rootError) throw rootError;
+
+      const items = rootItems || [];
+
+      // Separate root files and subfolders
+      const rootFiles = items.filter(item => item.metadata !== null && item.name !== '.emptyFolderPlaceholder');
+      const folders = items.filter(item => item.metadata === null);
+
+      // 2. Fetch contents of each folder in parallel
+      const folderPromises = folders.map(async (folder) => {
+        try {
+          const { data: folderItems, error: folderError } = await supabase.storage
+            .from('portfolio-assets')
+            .list(folder.name, { limit: 150 });
+
+          if (folderError) return [];
+
+          return (folderItems || [])
+            .filter(item => item.metadata !== null && item.name !== '.emptyFolderPlaceholder')
+            .map(item => ({
+              id: item.id,
+              name: item.name,
+              created_at: item.created_at || item.updated_at,
+              image_url: `/api/assets/${folder.name}/${item.name}`
+            }));
+        } catch (e) {
+          console.error(`Error listing folder ${folder.name}:`, e);
+          return [];
+        }
+      });
+
+      const nestedItemsArray = await Promise.all(folderPromises);
+
+      // 3. Map root files to correct image_url proxy paths
+      const mappedRootFiles = rootFiles.map(item => ({
+        id: item.id,
+        name: item.name,
+        created_at: item.created_at || item.updated_at,
+        image_url: `/api/assets/${item.name}`
+      }));
+
+      // 4. Merge all items and sort by date descending (newest first)
+      const allAssets = [
+        ...mappedRootFiles,
+        ...nestedItemsArray.flat()
+      ];
+
+      allAssets.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        return dateB - dateA;
+      });
+
+      // Filter only image types to display in the selector grid
+      const imageAssets = allAssets.filter(asset => {
+        const ext = asset.name.split('.').pop()?.toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'avif'].includes(ext || '');
+      });
+
+      setPhotos(imageAssets);
     } catch (err) {
-      console.error('Error fetching gallery:', err);
+      console.error('Error fetching global storage assets:', err);
     } finally {
       setLoading(false);
     }
@@ -57,16 +120,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
         if (uploadError) throw uploadError;
 
         const cleanProxyUrl = `/api/assets/${filePath}`;
-        
-        // Insert into database gallery
-        const { data, error: insertError } = await supabase
-          .from('gallery')
-          .insert([{ image_url: cleanProxyUrl }])
-          .select();
-
-        if (insertError) throw insertError;
-        
-        return data?.[0];
+        return { image_url: cleanProxyUrl };
       });
 
       const uploadedPhotos = await Promise.all(uploadPromises);
@@ -114,7 +168,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
             <header className="px-8 py-5 border-b border-white/5 flex items-center justify-between">
               <div className="space-y-0.5">
                 <h3 className="text-lg font-heading font-medium text-white italic">{title}</h3>
-                <p className="text-xs text-white/40">Select an existing asset or upload a new one to your database library.</p>
+                <p className="text-xs text-white/40">Select any asset from your entire Supabase Storage bucket globally, or upload a new one.</p>
               </div>
               <button 
                 onClick={onClose}
@@ -129,7 +183,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
               {/* Toolbar */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-[11px] font-mono font-bold tracking-wider text-white/45 uppercase">
-                  {photos.length} Assets Found
+                  {photos.length} Assets Found Globally
                 </p>
                 
                 <label className="cursor-pointer bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#24b47e] transition-all flex items-center gap-2">
@@ -143,7 +197,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
               {loading && photos.length === 0 ? (
                 <div className="h-[40vh] flex items-center justify-center text-white/40">
                   <Loader2 size={24} className="animate-spin text-[#3ecf8e] mr-2" />
-                  Loading assets...
+                  Loading assets globally...
                 </div>
               ) : photos.length === 0 ? (
                 <div className="h-[40vh] flex flex-col items-center justify-center border border-dashed border-white/5 rounded-2xl text-white/30">
