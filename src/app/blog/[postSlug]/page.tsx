@@ -49,6 +49,15 @@ export default async function BlogPostPage({ params }: Props) {
                 <span className="text-body-muted">{article.date}</span>
               </div>
               <h1 className="text-4xl lg:text-6xl font-medium tracking-tight text-on-dark font-heading leading-tight">{article.title}</h1>
+              {article.tags && article.tags.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  {article.tags.map((tag: string, tIdx: number) => (
+                    <span key={tIdx} className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded bg-surface-50 text-body-muted border border-border-subtle">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-center gap-4 pt-4">

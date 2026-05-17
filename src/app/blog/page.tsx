@@ -70,6 +70,15 @@ export default function BlogPage() {
                     </div>
                     <h3 className="text-xl font-medium text-on-dark group-hover:text-primary transition-colors leading-snug">{article.title}</h3>
                     <p className="text-sm text-body-muted line-clamp-3 leading-relaxed">{article.description}</p>
+                    {article.tags && article.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2">
+                        {article.tags.map((tag: string, tIdx: number) => (
+                          <span key={tIdx} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-100 text-body-muted border border-border-subtle group-hover:border-primary/20 group-hover:text-primary transition-colors">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </Link>
               </motion.article>
