@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Trash2, Plus, Image as ImageIcon, Loader2, X } from 'lucide-react';
+import { Trash2, Plus, Image as ImageIcon, Loader2, X, Pencil } from 'lucide-react';
 
 export default function AdminDesigns() {
   const [themes, setThemes] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '' });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  
+  // Edit states
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
 
   useEffect(() => {
     fetchThemes();
@@ -29,13 +33,38 @@ export default function AdminDesigns() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleAddTheme = async (e: React.FormEvent) => {
+  const removeExistingImage = (url: string) => {
+    setExistingImages(prev => prev.filter(img => img !== url));
+  };
+
+  const startEdit = (theme: any) => {
+    setEditingId(theme.id);
+    setFormData({
+      title: theme.title,
+      description: theme.description || ''
+    });
+    setExistingImages(theme.images || []);
+    setSelectedFiles([]); // Reset new files queue
+    
+    // Smooth scroll to top form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setFormData({ title: '', description: '' });
+    setExistingImages([]);
+    setSelectedFiles([]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || selectedFiles.length === 0) return;
+    if (!formData.title) return;
+    if (!editingId && selectedFiles.length === 0) return;
 
     setIsSaving(true);
     try {
-      const imageUrls = [];
+      const newUrls = [];
       for (const file of selectedFiles) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -43,16 +72,42 @@ export default function AdminDesigns() {
         const { error: uploadError } = await supabase.storage.from('portfolio-assets').upload(filePath, file);
         if (uploadError) throw uploadError;
         const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(filePath);
-        imageUrls.push(publicUrl);
+        newUrls.push(publicUrl);
       }
 
-      const { error } = await supabase.from('design_themes').insert([
-        { title: formData.title, description: formData.description, images: imageUrls }
-      ]);
+      const finalImages = [...existingImages, ...newUrls];
+      if (finalImages.length === 0) {
+        alert('Design theme must contain at least one image!');
+        setIsSaving(false);
+        return;
+      }
 
-      if (error) throw error;
+      if (editingId) {
+        // Update Design Theme
+        const { error } = await supabase
+          .from('design_themes')
+          .update({ 
+            title: formData.title, 
+            description: formData.description, 
+            images: finalImages 
+          })
+          .eq('id', editingId);
+
+        if (error) throw error;
+      } else {
+        // Create Design Theme
+        const { error } = await supabase.from('design_themes').insert([
+          { title: formData.title, description: formData.description, images: finalImages }
+        ]);
+
+        if (error) throw error;
+      }
+
+      // Reset State
       setFormData({ title: '', description: '' });
       setSelectedFiles([]);
+      setExistingImages([]);
+      setEditingId(null);
       fetchThemes();
     } catch (err: any) {
       alert('Error: ' + err.message);
@@ -76,12 +131,14 @@ export default function AdminDesigns() {
         </div>
       </header>
 
-      {/* Add Theme Form */}
-      <form onSubmit={handleAddTheme} className="p-6 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md space-y-6">
+      {/* Add / Edit Theme Form */}
+      <form onSubmit={handleSubmit} className="p-6 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Theme Title</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+                {editingId ? 'Edit Theme Title' : 'Theme Title'}
+              </label>
               <input 
                 type="text" 
                 placeholder="e.g. Health & Wellness UI"
@@ -102,18 +159,41 @@ export default function AdminDesigns() {
           </div>
 
           <div className="space-y-4">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Design Assets (Upload Many)</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+              Design Assets {editingId ? '(Add or Manage)' : '(Upload Many)'}
+            </label>
             <div className="flex flex-wrap gap-2">
-              {selectedFiles.map((file, i) => (
-                <div key={i} className="relative w-16 h-16 rounded bg-[#2e2e2e] overflow-hidden group">
-                  <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-50" />
+              {/* Existing Images (Edit Mode Only) */}
+              {editingId && existingImages.map((url, i) => (
+                <div key={`existing-${i}`} className="relative w-16 h-16 rounded bg-[#2e2e2e] overflow-hidden group border border-[#2e2e2e]">
+                  <img src={url} className="w-full h-full object-cover" />
                   <button 
                     type="button"
-                    onClick={() => removeFile(i)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeExistingImage(url)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X size={14} className="text-white" />
                   </button>
+                  <div className="absolute top-0 right-0 bg-[#3ecf8e] text-[#171717] text-[8px] font-bold px-1 rounded-bl leading-normal">
+                    Live
+                  </div>
+                </div>
+              ))}
+
+              {/* Newly Selected Files */}
+              {selectedFiles.map((file, i) => (
+                <div key={`new-${i}`} className="relative w-16 h-16 rounded bg-[#2e2e2e] overflow-hidden group border border-[#3ecf8e]/30">
+                  <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-60" />
+                  <button 
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={14} className="text-white" />
+                  </button>
+                  <div className="absolute top-0 right-0 bg-yellow-500 text-canvas text-[8px] font-bold px-1 rounded-bl leading-normal">
+                    New
+                  </div>
                 </div>
               ))}
               
@@ -135,13 +215,26 @@ export default function AdminDesigns() {
           </div>
         </div>
 
-        <button 
-          disabled={isSaving}
-          className="bg-[#3ecf8e] text-[#171717] px-6 py-2.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
-        >
-          {isSaving ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
-          Create Design Theme
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            type="submit"
+            disabled={isSaving}
+            className="bg-[#3ecf8e] text-[#171717] px-6 py-2.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
+          >
+            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+            {editingId ? 'Update Design Theme' : 'Create Design Theme'}
+          </button>
+          
+          {editingId && (
+            <button 
+              type="button"
+              onClick={cancelEdit}
+              className="border border-[#2e2e2e] text-[#ededed] px-6 py-2.5 rounded-md text-[13px] font-medium hover:bg-white/5 transition-all"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Themes List */}
@@ -164,12 +257,22 @@ export default function AdminDesigns() {
                 <p className="text-[11px] text-[#707070] uppercase font-bold tracking-wider">{theme.images.length} Assets</p>
               </div>
             </div>
-            <button 
-              onClick={() => handleDelete(theme.id)}
-              className="p-2 text-[#707070] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-            >
-              <Trash2 size={16} />
-            </button>
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => startEdit(theme)}
+                className="p-2 text-[#707070] hover:text-[#3ecf8e] transition-colors"
+                title="Edit Theme"
+              >
+                <Pencil size={16} />
+              </button>
+              <button 
+                onClick={() => handleDelete(theme.id)}
+                className="p-2 text-[#707070] hover:text-red-500 transition-colors"
+                title="Delete Theme"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
