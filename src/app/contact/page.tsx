@@ -5,15 +5,10 @@ import { useState } from 'react';
 import { Mail, Globe, Camera, ArrowUpRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-
-const socials = [
-  { name: 'GitHub', label: '@adrianbahri', href: '#' },
-  { name: 'LinkedIn', label: 'Profile', href: '#' },
-  { name: 'Instagram', label: '@adrianbahri', href: '#' },
-  { name: 'Email', label: 'adrian@example.com', href: 'mailto:adrian@example.com' },
-];
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export default function ContactPage() {
+  const { settings } = useSiteSettings();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(false);
@@ -24,6 +19,29 @@ export default function ContactPage() {
     message: '',
     website: '' // Honeypot field
   });
+
+  const socials = [
+    { 
+      name: 'GitHub', 
+      label: settings.github_url ? settings.github_url.replace(/https?:\/\/(www\.)?github\.com\//, '@').replace(/\/$/, '') : '@adrianbahri', 
+      href: settings.github_url || '#' 
+    },
+    { 
+      name: 'LinkedIn', 
+      label: 'Profile', 
+      href: settings.linkedin_url || '#' 
+    },
+    { 
+      name: 'Instagram', 
+      label: settings.instagram_url ? settings.instagram_url.replace(/https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '') : '@adrianbahri', 
+      href: settings.instagram_url || '#' 
+    },
+    { 
+      name: 'Email', 
+      label: settings.email_address || 'adrian@example.com', 
+      href: settings.email_address ? `mailto:${settings.email_address}` : 'mailto:adrian@example.com' 
+    },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,7 +260,7 @@ export default function ContactPage() {
       </div>
 
       <footer className="section-container border-t border-border-subtle py-12 flex justify-between items-center text-[10px] font-mono text-body-muted/40 uppercase tracking-widest">
-        <p>© 2026 ADRIAN BAHRI</p>
+        <p>© 2026 DRIAN. ALL RIGHTS RESERVED.</p>
         <div className="flex gap-6">
           <Link href="/blog" className="hover:text-on-dark">Blog</Link>
           <Link href="/projects" className="hover:text-on-dark">Projects</Link>

@@ -56,7 +56,7 @@ export default function Contact() {
       <div className="section-container border-t border-border-subtle mt-12 sm:mt-16 py-12 flex flex-col md:flex-row justify-between items-center gap-12">
         <div className="flex flex-col items-center md:items-start gap-2 text-center md:text-left">
           <p className="text-[10px] text-body-muted uppercase tracking-[0.3em] font-mono font-bold">
-            © 2026 ADRIAN BAHRI. ALL RIGHTS RESERVED.
+            © 2026 DRIAN. ALL RIGHTS RESERVED.
           </p>
           <p className="text-[10px] text-primary/40 uppercase tracking-[0.2em] font-mono font-bold">
             I built this whole thing in only 2 days, btw.

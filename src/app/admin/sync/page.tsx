@@ -240,6 +240,20 @@ DROP POLICY IF EXISTS "Allow public select" ON creative_categories;
 CREATE POLICY "Allow public select" ON creative_categories FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Allow auth all" ON creative_categories;
 CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated USING (true);
+
+-- SITE SETTINGS TABLE
+CREATE TABLE IF NOT EXISTS site_settings (
+  key TEXT PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  value TEXT
+);
+
+-- SECURITY FOR SITE SETTINGS
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public select" ON site_settings;
+CREATE POLICY "Allow public select" ON site_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow auth all" ON site_settings;
+CREATE POLICY "Allow auth all" ON site_settings FOR ALL TO authenticated USING (true);
   `.trim();
 
   return (
