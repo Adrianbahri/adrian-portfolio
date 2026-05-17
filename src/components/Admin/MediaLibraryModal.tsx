@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Image as ImageIcon, Plus, Loader2, Check } from 'lucide-react';
+import { X, Image as ImageIcon, Plus, Loader2, Check, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { compressToWebP } from '@/lib/image';
 
@@ -144,6 +144,27 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent, imageUrl: string) => {
+    e.stopPropagation();
+    if (!confirm('Hapus aset ini secara permanen dari Supabase Storage?')) return;
+
+    try {
+      const storagePath = imageUrl.replace(/^\/api\/assets\//, '');
+      const { error } = await supabase.storage.from('portfolio-assets').remove([storagePath]);
+      if (error) throw error;
+
+      await supabase.from('gallery').delete().eq('image_url', imageUrl);
+      
+      if (selectedUrl === imageUrl) {
+        setSelectedUrl(null);
+      }
+      
+      fetchPhotos();
+    } catch (err: any) {
+      alert('Gagal menghapus file: ' + err.message);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -229,7 +250,17 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
                             <Check size={14} strokeWidth={3} />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 pointer-events-none">
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={(e) => handleDelete(e, photo.image_url)}
+                              className="p-1.5 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-md"
+                              title="Hapus file"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                           <span className="text-[8px] font-mono text-white/80 bg-black/60 px-2 py-0.5 rounded truncate w-full">
                             {photo.image_url.split('/').pop()}
                           </span>
