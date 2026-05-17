@@ -78,7 +78,7 @@ export default function GlobalNav() {
         className="fixed top-6 inset-x-0 z-[100] pointer-events-none"
       >
         <nav className="max-w-fit mx-auto px-4">
-          <div className="pointer-events-auto flex items-center gap-4 h-12 px-6 sm:px-8 bg-canvas/60 backdrop-blur-xl border border-on-dark/10 rounded-[5px] shadow-2xl shadow-main overflow-hidden">
+          <div className="pointer-events-auto flex items-center gap-4 h-12 px-6 sm:px-8 bg-canvas/60 backdrop-blur-xl border border-on-dark/10 rounded-[5px] shadow-2xl shadow-main overflow-hidden -rotate-1 hover:rotate-0 transition-transform duration-500">
             
             <AnimatePresence mode="wait">
               {!showProjectSwitch ? (
@@ -89,7 +89,7 @@ export default function GlobalNav() {
                   exit={{ x: -20, opacity: 0 }}
                   className="flex items-center"
                 >
-                  <Link href="/" className="px-4 py-2 text-[0.8rem] font-heading font-bold uppercase tracking-[0.3em] text-on-dark hover:text-primary transition-all">
+                  <Link href="/" className="px-4 py-2 text-[0.8rem] font-fira font-bold tracking-[0.3em] text-on-dark hover:text-primary transition-all">
                     Drian
                   </Link>
                 </motion.div>

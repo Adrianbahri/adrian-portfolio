@@ -19,7 +19,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-transparent pt-20 pb-16">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-transparent pt-48 lg:pt-20 pb-16">
       {/* Background Elements */}
       <div className="grain" />
 

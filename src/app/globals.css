@@ -16,6 +16,7 @@
   --font-mono: var(--font-geist-mono), monospace;
   --font-heading: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-display: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-fira: var(--font-fira-code), monospace;
 
   --animate-float: float 6s ease-in-out infinite;
   --animate-grain: grain 8s steps(10) infinite;

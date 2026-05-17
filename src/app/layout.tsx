@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Fira_Code } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import SmoothScrolling from "@/components/SmoothScrolling";
 import GlobalNav from "@/components/GlobalNav";
+
+const firaCode = Fira_Code({ 
+  subsets: ["latin"], 
+  variable: "--font-fira-code" 
+});
 
 export const metadata: Metadata = {
   title: "Portfolio | Adrian Bahri",
@@ -25,8 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body className={cn(GeistSans.variable, GeistMono.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${firaCode.variable}`}>
+      <body className={cn(GeistSans.variable, GeistMono.variable, firaCode.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
         {/* Global Background Layer */}
         <div className="fixed inset-0 z-[-1] pointer-events-none">
           <div className="absolute inset-0 blueprint-grid" />
@@ -34,7 +40,7 @@ export default function RootLayout({
         </div>
 
         {/* Top Fade Gradient Mask (Melebur Effect) */}
-        <div className="fixed top-0 inset-x-0 h-32 bg-gradient-to-b from-[var(--color-canvas)] to-transparent z-[80] pointer-events-none" />
+        <div className="fixed top-0 inset-x-0 h-16 md:h-32 bg-gradient-to-b from-[var(--color-canvas)] to-transparent z-[80] pointer-events-none" />
 
         <SmoothScrolling>
           <Suspense fallback={null}>

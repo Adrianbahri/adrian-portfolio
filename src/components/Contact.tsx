@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Mail, Code2, Globe, Camera, ArrowUpRight, Phone } from 'lucide-react';
+import { Mail, ArrowUpRight } from 'lucide-react';
+import { FiGithub, FiInstagram, FiLinkedin } from 'react-icons/fi';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import Link from 'next/link';
 
@@ -10,10 +11,9 @@ export default function Contact() {
 
   const socials = [
     { name: 'Email', icon: Mail, href: `mailto:${settings.email_address || 'adrian@example.com'}` },
-    { name: 'GitHub', icon: Code2, href: settings.github_url || '#' },
-    { name: 'Instagram', icon: Camera, href: settings.instagram_url || '#' },
-    { name: 'LinkedIn', icon: Globe, href: settings.linkedin_url || '#' },
-    { name: 'WhatsApp', icon: Phone, href: settings.whatsapp_number ? `https://wa.me/${settings.whatsapp_number}` : '#' },
+    { name: 'GitHub', icon: FiGithub, href: settings.github_url || '#' },
+    { name: 'Instagram', icon: FiInstagram, href: settings.instagram_url || '#' },
+    { name: 'LinkedIn', icon: FiLinkedin, href: settings.linkedin_url || '#' },
   ];
 
   return (
@@ -84,7 +84,7 @@ export default function Contact() {
                   className="text-on-dark/80 group-hover:text-primary transition-colors" 
                 />
               </div>
-              <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-primary text-canvas text-[8px] font-bold uppercase tracking-widest opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap rounded-[2px]">
+              <span className="hidden lg:block absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-primary text-canvas text-[8px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap rounded-[2px]">
                 {item.name}
               </span>
             </motion.a>

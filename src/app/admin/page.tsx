@@ -38,7 +38,6 @@ export default function AdminAboutPage() {
     github: '',
     instagram: '',
     linkedin: '',
-    whatsapp: '',
     resume: ''
   });
 
@@ -72,7 +71,6 @@ export default function AdminAboutPage() {
           github: settingsMap.github_url || '',
           instagram: settingsMap.instagram_url || '',
           linkedin: settingsMap.linkedin_url || '',
-          whatsapp: settingsMap.whatsapp_number || '',
           resume: settingsMap.resume_url || ''
         });
       }
@@ -126,7 +124,6 @@ export default function AdminAboutPage() {
         { key: 'github_url', value: socials.github },
         { key: 'instagram_url', value: socials.instagram },
         { key: 'linkedin_url', value: socials.linkedin },
-        { key: 'whatsapp_number', value: socials.whatsapp },
         { key: 'resume_url', value: socials.resume },
       ];
 
