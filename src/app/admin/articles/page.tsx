@@ -11,7 +11,8 @@ import {
   FileEdit, 
   X, 
   Save, 
-  ChevronLeft
+  ChevronLeft,
+  PlusCircle
 } from 'lucide-react';
 import Editor from '@/components/Editor';
 import UnifiedEditorLayout from '@/components/UnifiedEditorLayout';
@@ -37,7 +38,7 @@ export default function AdminArticles() {
 
   const [formData, setFormData] = useState({
     title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: '',
-    seo_title: '', seo_description: ''
+    seo_title: '', seo_description: '', img: ''
   });
 
   const fetchArticles = async () => {
@@ -60,7 +61,8 @@ export default function AdminArticles() {
       author: article.author || 'Adrian Bahri',
       date: article.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       seo_title: article.seo_title || '',
-      seo_description: article.seo_description || ''
+      seo_description: article.seo_description || '',
+      img: article.img || ''
     });
     setView('metadata');
   };
@@ -140,7 +142,7 @@ export default function AdminArticles() {
             <p className="text-[13px] text-[#707070]">Total {allArticles.length} articles published in your blog.</p>
           </div>
           <button 
-            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '' }); setView('metadata'); }} 
+            onClick={() => { setEditingId(null); setFormData({ title: '', slug: '', category: '', description: '', author: 'Adrian Bahri', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), seo_title: '', seo_description: '', img: '' }); setView('metadata'); }} 
             className="bg-[#3ecf8e] text-[#171717] px-3 py-1.5 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all"
           >
             New Article
@@ -224,6 +226,64 @@ export default function AdminArticles() {
         </header>
         <form onSubmit={handleSaveMetadata} className="max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8">
            <div className="space-y-4">
+              {/* Featured Image Section */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Featured Image (Gambar Unggulan)</label>
+                <div className="relative group/thumb aspect-video rounded-xl bg-[#1c1c1c] border border-[#2e2e2e] overflow-hidden flex flex-col items-center justify-center transition-all hover:border-[#3ecf8e]/30">
+                  {formData.img ? (
+                    <>
+                      <img src={formData.img} alt="Featured Image" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <label className="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-[#3ecf8e] transition-all">
+                          Change
+                          <input type="file" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setIsUploading(true);
+                            try {
+                              const fileExt = file.name.split('.').pop();
+                              const fileName = `${Math.random()}.${fileExt}`;
+                              const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                              if (error) throw error;
+                              const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
+                              setFormData({...formData, img: publicUrl});
+                            } catch (err: any) { alert('Upload failed: ' + err.message); }
+                            finally { setIsUploading(false); }
+                          }} accept="image/*" />
+                        </label>
+                        <button type="button" onClick={() => setFormData({...formData, img: ''})} className="bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
+                          Remove
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                      <PlusCircle size={32} className="text-[#3ecf8e] mb-2 opacity-40 group-hover/thumb:opacity-100 transition-all" />
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#707070] group-hover/thumb:text-[#3ecf8e] transition-all">Upload Featured Image</p>
+                      <input type="file" className="hidden" onChange={async (e) => {
+                         const file = e.target.files?.[0];
+                         if (!file) return;
+                         setIsUploading(true);
+                         try {
+                           const fileExt = file.name.split('.').pop();
+                           const fileName = `${Math.random()}.${fileExt}`;
+                           const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                           if (error) throw error;
+                           const { data: { publicUrl } } = supabase.storage.from('portfolio-assets').getPublicUrl(fileName);
+                           setFormData({...formData, img: publicUrl});
+                         } catch (err: any) { alert('Upload failed: ' + err.message); }
+                         finally { setIsUploading(false); }
+                      }} accept="image/*" />
+                    </label>
+                  )}
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                      <div className="w-8 h-8 border-2 border-[#3ecf8e] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Title</label>
                 <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
