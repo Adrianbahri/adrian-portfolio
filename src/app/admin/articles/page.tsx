@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase';
 import { compressToWebP } from '@/lib/image';
 import { cn, purgeSystemCache } from '@/lib/utils';
 import DeleteModal from '@/components/Admin/DeleteModal';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
 export default function AdminArticles() {
   const [view, setView] = useState<'list' | 'metadata' | 'content'>('list');
@@ -33,6 +34,7 @@ export default function AdminArticles() {
   // Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   const [textContent, setTextContent] = useState('');
   const [activeArticle, setActiveArticle] = useState<any>(null);
@@ -272,30 +274,49 @@ export default function AdminArticles() {
                             finally { setIsUploading(false); }
                           }} accept="image/*" />
                         </label>
+                        <button 
+                          type="button" 
+                          onClick={() => setIsMediaModalOpen(true)}
+                          className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-[#24b47e] transition-all"
+                        >
+                          Library
+                        </button>
                         <button type="button" onClick={() => setFormData({...formData, img: ''})} className="bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
                           Remove
                         </button>
                       </div>
                     </>
                   ) : (
-                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                    <div className="flex flex-col items-center justify-center p-4 text-center">
                       <PlusCircle size={32} className="text-[#3ecf8e] mb-2 opacity-40 group-hover/thumb:opacity-100 transition-all" />
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#707070] group-hover/thumb:text-[#3ecf8e] transition-all">Upload Featured Image</p>
-                      <input type="file" className="hidden" onChange={async (e) => {
-                         const file = e.target.files?.[0];
-                         if (!file) return;
-                         setIsUploading(true);
-                         try {
-                           const fileExt = file.name.split('.').pop();
-                           const fileName = `${Math.random()}.${fileExt}`;
-                           const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
-                           if (error) throw error;
-                           const cleanProxyUrl = `/api/assets/${fileName}`;
-                           setFormData({...formData, img: cleanProxyUrl});
-                         } catch (err: any) { alert('Upload failed: ' + err.message); }
-                         finally { setIsUploading(false); }
-                      }} accept="image/*" />
-                    </label>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#707070] mb-3">Featured Image</p>
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer bg-white/5 border border-white/10 text-white hover:bg-white/10 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all">
+                          Upload File
+                          <input type="file" className="hidden" onChange={async (e) => {
+                             const file = e.target.files?.[0];
+                             if (!file) return;
+                             setIsUploading(true);
+                             try {
+                               const fileExt = file.name.split('.').pop();
+                               const fileName = `${Math.random()}.${fileExt}`;
+                               const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                               if (error) throw error;
+                               const cleanProxyUrl = `/api/assets/${fileName}`;
+                               setFormData({...formData, img: cleanProxyUrl});
+                             } catch (err: any) { alert('Upload failed: ' + err.message); }
+                             finally { setIsUploading(false); }
+                          }} accept="image/*" />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsMediaModalOpen(true)}
+                          className="bg-[#3ecf8e] text-[#171717] hover:bg-[#24b47e] px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+                        >
+                          From Library
+                        </button>
+                      </div>
+                    </div>
                   )}
                   {isUploading && (
                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
@@ -361,22 +382,33 @@ export default function AdminArticles() {
   }
 
   return (
-    <UnifiedEditorLayout 
-      title="Edit Article Content"
-      subtitle={activeArticle?.title}
-      content={textContent}
-      onContentChange={setTextContent}
-      onSave={handleSaveContent}
-      onBack={() => setView('list')}
-      isSaving={isSaving}
-      modeLabel="ARTICLE EDITOR MODE"
-      onImageUpload={() => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e: any) => handleImageUpload(e);
-        input.click();
-      }}
-    />
+    <>
+      <UnifiedEditorLayout 
+        title="Edit Article Content"
+        subtitle={activeArticle?.title}
+        content={textContent}
+        onContentChange={setTextContent}
+        onSave={handleSaveContent}
+        onBack={() => setView('list')}
+        isSaving={isSaving}
+        modeLabel="ARTICLE EDITOR MODE"
+        onImageUpload={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = (e: any) => handleImageUpload(e);
+          input.click();
+        }}
+      />
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => {
+          setFormData(prev => ({ ...prev, img: url }));
+          setIsMediaModalOpen(false);
+        }}
+        title="Select Featured Image"
+      />
+    </>
   );
 }
