@@ -50,7 +50,6 @@ export default async function ProjectDetailPage({ params }: Props) {
             Back to projects
           </Link>
           <div className="flex items-center gap-3">
-             <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded text-[0.5rem] font-bold uppercase tracking-widest">{project.mode || 'Dev'}</span>
              <p className="eyebrow">{project.status || 'Active build'}</p>
           </div>
           <div className="space-y-4">
