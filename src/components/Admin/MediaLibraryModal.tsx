@@ -87,10 +87,10 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
         return dateB - dateA;
       });
 
-      // Filter only image types to display in the selector grid
+      // Filter image and PDF types to display in the selector grid
       const imageAssets = allAssets.filter(asset => {
         const ext = asset.name.split('.').pop()?.toLowerCase();
-        return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'avif'].includes(ext || '');
+        return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'avif', 'pdf'].includes(ext || '');
       });
 
       setPhotos(imageAssets);
@@ -239,11 +239,24 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
                             : 'border-white/5 hover:border-white/20'
                         }`}
                       >
-                        <img 
-                          src={photo.image_url} 
-                          alt="Gallery Asset" 
-                          className="w-full h-full object-cover"
-                        />
+                         {photo.image_url.toLowerCase().endsWith('.pdf') ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-[#202020] text-red-500 gap-2 border border-red-500/10">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-10 h-10 opacity-70">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                              <line x1="16" y1="13" x2="8" y2="13" />
+                              <line x1="16" y1="17" x2="8" y2="17" />
+                              <polyline points="10 9 9 9 8 9" />
+                            </svg>
+                            <span className="text-[9px] uppercase font-bold tracking-widest text-red-400">PDF Document</span>
+                          </div>
+                        ) : (
+                          <img 
+                            src={photo.image_url} 
+                            alt="Gallery Asset" 
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                         {/* Selector Indicator */}
                         {isSelected && (
                           <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#3ecf8e] text-[#171717] flex items-center justify-center shadow-md animate-in zoom-in duration-200">

@@ -48,6 +48,7 @@ function AdminProjectsContent() {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [isMediaModalOpenForGallery, setIsMediaModalOpenForGallery] = useState(false);
+  const [isMediaModalOpenForDemo, setIsMediaModalOpenForDemo] = useState(false);
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -487,9 +488,56 @@ function AdminProjectsContent() {
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Live Demo URL</label>
-                    <input type="text" value={formData.demoUrl} onChange={(e) => setFormData({...formData, demoUrl: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
+                 <div className="space-y-1.5 col-span-2">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+                      {formData.mode === 'creative' ? 'Live Demo / Magazine PDF URL' : 'Live Demo URL'}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        value={formData.demoUrl} 
+                        onChange={(e) => setFormData({...formData, demoUrl: e.target.value})} 
+                        placeholder={formData.mode === 'creative' ? "e.g. /api/assets/...pdf or web link" : "e.g. https://..."}
+                        className="flex-1 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" 
+                      />
+                      {formData.mode === 'creative' && (
+                        <div className="flex items-center gap-1.5">
+                          <label className="bg-[#2e2e2e] text-[#ededed] px-3.5 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider hover:bg-[#3e3e3e] transition-all border border-[#3e3e3e] cursor-pointer whitespace-nowrap">
+                            Upload PDF
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="application/pdf" 
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setIsUploading(true);
+                                try {
+                                  const fileExt = file.name.split('.').pop();
+                                  const fileName = `magazine-${Math.random()}.${fileExt}`;
+                                  const { error } = await supabase.storage.from('portfolio-assets').upload(fileName, file);
+                                  if (error) throw error;
+                                  const cleanProxyUrl = `/api/assets/${fileName}`;
+                                  setFormData({...formData, demoUrl: cleanProxyUrl});
+                                  alert('PDF Magazine uploaded successfully!');
+                                } catch (err: any) { 
+                                  alert('Upload failed: ' + err.message); 
+                                } finally { 
+                                  setIsUploading(false); 
+                                }
+                              }} 
+                            />
+                          </label>
+                          <button 
+                            type="button"
+                            onClick={() => setIsMediaModalOpenForDemo(true)}
+                            className="bg-[#3ecf8e] text-[#171717] px-3.5 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider hover:bg-[#24b47e] transition-all whitespace-nowrap"
+                          >
+                            Library
+                          </button>
+                        </div>
+                      )}
+                    </div>
                  </div>
                  {formData.mode === 'developer' && (
                    <div className="space-y-1.5">
@@ -634,6 +682,13 @@ function AdminProjectsContent() {
         onClose={() => setIsMediaModalOpenForGallery(false)}
         onSelect={(url) => setGallery(prev => [...prev, { url, type: 'image', caption: '' }])}
         title="Select Gallery Image"
+      />
+
+      <MediaLibraryModal 
+        isOpen={isMediaModalOpenForDemo}
+        onClose={() => setIsMediaModalOpenForDemo(false)}
+        onSelect={(url) => setFormData(prev => ({ ...prev, demoUrl: url }))}
+        title="Select Project PDF / Redirection Link"
       />
     </>
   );
