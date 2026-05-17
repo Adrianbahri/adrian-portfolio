@@ -39,9 +39,6 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--color-canvas)]/50 to-[var(--color-canvas)]" />
         </div>
 
-        {/* Top Fade Gradient Mask (Melebur Effect) */}
-        <div className="fixed top-0 inset-x-0 h-16 md:h-32 bg-gradient-to-b from-[var(--color-canvas)] to-transparent z-[80] pointer-events-none" />
-
         <SmoothScrolling>
           <Suspense fallback={null}>
             <GlobalNav />
