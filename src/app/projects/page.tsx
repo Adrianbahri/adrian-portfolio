@@ -179,7 +179,7 @@ function ProjectsPageContent() {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <h3 className="text-xl lg:text-2xl font-medium text-on-dark font-heading tracking-tight group-hover:text-white transition-colors">{project.title}</h3>
+                            <h3 className="text-xl lg:text-2xl font-medium text-on-dark font-heading tracking-tight group-hover:text-primary transition-colors">{project.title}</h3>
                             <p className="text-sm text-body-muted leading-relaxed font-sans max-w-2xl line-clamp-2 lg:line-clamp-3">{project.description}</p>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
