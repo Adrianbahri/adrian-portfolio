@@ -51,25 +51,6 @@ export default async function BlogPostPage({ params }: Props) {
                 <span className="text-body-muted">{article.date}</span>
               </div>
               <h1 className="text-4xl lg:text-6xl font-medium tracking-tight text-on-dark font-heading leading-tight">{article.title}</h1>
-              {article.tags && article.tags.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-2 pt-2">
-                  {article.tags.map((tag: string, tIdx: number) => (
-                    <span key={tIdx} className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded bg-surface-50 text-body-muted border border-border-subtle">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-center gap-4 pt-4">
-              <div className="w-10 h-10 rounded-full bg-surface-100 border border-border-subtle flex items-center justify-center text-primary/40 font-bold text-xs">
-                {article.author?.charAt(0) || 'A'}
-              </div>
-              <div className="text-left">
-                <p className="text-xs font-bold uppercase tracking-widest text-on-dark">{article.author || 'Adrian Bahri'}</p>
-                <p className="text-[0.6rem] text-body-muted uppercase tracking-widest">Creative Technologist</p>
-              </div>
             </div>
           </header>
 
@@ -92,6 +73,16 @@ export default async function BlogPostPage({ params }: Props) {
               <p className="text-body-muted italic text-center py-20 border border-dashed border-border-subtle">Article content is currently empty.</p>
             )}
           </div>
+
+          {article.tags && article.tags.length > 0 && (
+            <div className="mx-auto max-w-3xl mt-16 flex flex-wrap gap-2">
+              {article.tags.map((tag: string, tIdx: number) => (
+                <span key={tIdx} className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-surface-100 text-body-muted border border-border-subtle hover:text-primary hover:border-primary/20 transition-all">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           <footer className="mt-24 pt-12 border-t border-border-subtle flex items-center justify-between">
             <div className="flex gap-4">
