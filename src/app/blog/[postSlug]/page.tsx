@@ -10,7 +10,8 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { postSlug } = await params;
-  const { data: article } = await supabase.from('articles').select('*').eq('slug', postSlug).single();
+  const decodedSlug = decodeURIComponent(postSlug);
+  const { data: article } = await supabase.from('articles').select('*').eq('slug', decodedSlug).single();
   
   return {
     title: article?.seo_title || `${article?.title || 'Blog'} | Adrian Bahri`,
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { postSlug } = await params;
-  const { data: article } = await supabase.from('articles').select('*').eq('slug', postSlug).single();
+  const decodedSlug = decodeURIComponent(postSlug);
+  const { data: article } = await supabase.from('articles').select('*').eq('slug', decodedSlug).single();
 
   if (!article) {
     return notFound();

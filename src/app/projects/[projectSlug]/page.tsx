@@ -11,7 +11,8 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { projectSlug } = await params;
-  const { data: project } = await supabase.from('projects').select('*').eq('slug', projectSlug).single();
+  const decodedSlug = decodeURIComponent(projectSlug);
+  const { data: project } = await supabase.from('projects').select('*').eq('slug', decodedSlug).single();
   
   return {
     title: project?.seo_title || `${project?.title || 'Project'} | Adrian Bahri`,
@@ -21,7 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { projectSlug } = await params;
-  const { data: project } = await supabase.from('projects').select('*').eq('slug', projectSlug).single();
+  const decodedSlug = decodeURIComponent(projectSlug);
+  const { data: project } = await supabase.from('projects').select('*').eq('slug', decodedSlug).single();
 
   if (!project) {
     return notFound();
