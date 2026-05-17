@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, X, Download, FileText, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface FlipbookReaderProps {
@@ -14,8 +14,14 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [scale, setScale] = useState(1.0); // State to handle dynamic zooming (0.5 to 2.0)
+  const scaleRef = useRef(scale);
 
-  // Listen for touchpad pinch-to-zoom gestures (wheel + ctrlKey) on the canvas
+  // Sync ref with scale state
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  // Listen for touchpad pinch-to-zoom and touch screen pinch gestures on the canvas
   useEffect(() => {
     if (loading || pages.length === 0) return;
     
@@ -34,9 +40,48 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
       }
     };
 
+    // Touch screen pinch-to-zoom
+    let initialTouchDistance = 0;
+    let initialScale = 1.0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialTouchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+        initialScale = scaleRef.current;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialTouchDistance > 0) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+        const ratio = currentDistance / initialTouchDistance;
+        
+        setScale(() => {
+          const next = initialScale * ratio;
+          return Math.min(Math.max(next, 0.5), 2.0);
+        });
+      }
+    };
+
+    const handleTouchEnd = () => {
+      initialTouchDistance = 0;
+    };
+
     container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
     return () => {
       container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
     };
   }, [loading, pages]);
 
@@ -147,7 +192,7 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
       </div>
 
       {/* Top Controls Header Bar */}
-      <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-black/40 rounded-none shrink-0 z-20 w-full relative">
+      <div className="h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 bg-black/40 rounded-none shrink-0 z-20 w-full relative">
         
         {/* Left: Title info */}
         <div className="flex items-center gap-3">
@@ -159,14 +204,15 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
 
         {/* Center: Bespoke Dynamic Zoom Controls / Resize Slider */}
         {!loading && pages.length > 0 && (
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-1.5 rounded-none">
+          <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 p-1 rounded-none">
             <button
+              type="button"
               onClick={zoomOut}
               disabled={scale <= 0.5}
-              className="text-white/60 hover:text-white disabled:opacity-30 disabled:hover:text-white/60 transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
               title="Resize Smaller"
             >
-              <ZoomOut size={14} />
+              <ZoomOut size={16} />
             </button>
             
             {/* Dynamic Slider Resize Control */}
@@ -177,42 +223,43 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
               step="0.05"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-16 sm:w-28 accent-[#3ecf8e] bg-white/10 h-1 outline-none cursor-pointer appearance-none rounded-none"
+              className="hidden sm:inline-block w-28 accent-[#3ecf8e] bg-white/10 h-1 outline-none cursor-pointer appearance-none rounded-none mx-2"
               title="Drag to resize page layout"
             />
 
-            <span className="text-[10px] font-mono text-white/80 min-w-[45px] text-center select-none">
+            <span className="text-[10px] font-mono text-white/80 min-w-[38px] sm:min-w-[45px] text-center select-none font-bold">
               {Math.round(scale * 100)}%
             </span>
             <button
+              type="button"
               onClick={zoomIn}
               disabled={scale >= 2.0}
-              className="text-white/60 hover:text-white disabled:opacity-30 disabled:hover:text-white/60 transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
               title="Resize Larger"
             >
-              <ZoomIn size={14} />
+              <ZoomIn size={16} />
             </button>
           </div>
         )}
 
         {/* Right: Close and download floating triggers */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <a
             href={pdfUrl}
             download
             target="_blank"
             rel="noopener noreferrer"
-            className="w-10 h-10 border border-white/10 hover:border-[#3ecf8e]/30 text-white/70 hover:text-[#3ecf8e] flex items-center justify-center transition-all cursor-pointer rounded-none"
+            className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-[#3ecf8e]/30 text-white/70 hover:text-[#3ecf8e] flex items-center justify-center transition-all cursor-pointer rounded-none"
             title="Download PDF"
           >
-            <Download size={16} />
+            <Download size={14} className="sm:w-4 sm:h-4" />
           </a>
           <button
             onClick={onClose}
-            className="w-10 h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
+            className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
             title="Close Reader"
           >
-            <X size={18} />
+            <X size={16} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
       </div>
@@ -220,11 +267,11 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
       {/* Main Workspace Frame */}
       <div className="flex-1 flex overflow-hidden w-full relative z-10">
         
-        {/* Left Column: Pages Preview Sidebar (Dynamic Thumbnails Column) */}
+        {/* Left Column: Pages Preview Sidebar (Dynamic Thumbnails Column) - Hidden on Mobile & Tablet */}
         {!loading && pages.length > 0 && (
           <aside 
             data-lenis-prevent
-            className="w-24 sm:w-44 border-r border-white/5 bg-black/25 overflow-y-auto flex flex-col gap-6 p-4 shrink-0 custom-scrollbar z-10"
+            className="hidden lg:flex w-44 border-r border-white/5 bg-black/25 overflow-y-auto flex-col gap-6 p-4 shrink-0 custom-scrollbar z-10"
           >
             {pages.map((imgSrc, index) => (
               <div 
@@ -252,7 +299,7 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
         <div 
           id="pdf-render-canvas"
           data-lenis-prevent
-          className="flex-1 overflow-y-auto custom-scrollbar py-12 px-6 flex flex-col items-center gap-8 bg-transparent"
+          className="flex-1 overflow-y-auto custom-scrollbar py-6 sm:py-12 px-2 sm:px-6 flex flex-col items-center gap-4 sm:gap-8 bg-transparent"
         >
           {loading ? (
             <div className="my-auto flex flex-col items-center gap-4 text-white/40">

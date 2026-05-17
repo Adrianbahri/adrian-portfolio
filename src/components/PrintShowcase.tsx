@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Download, ExternalLink, Tag, X, ZoomIn, ZoomOut } from 'lucide-react';
@@ -157,14 +157,21 @@ export default function PrintShowcase() {
 function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: string; onClose: () => void }) {
   const isImage = pdfUrl && /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(pdfUrl);
   const [scale, setScale] = useState(1.0); // State to handle dynamic zooming/resizing of mockup images
+  const scaleRef = useRef(scale);
 
-  // Listen for touchpad pinch-to-zoom gestures (ctrlKey + wheel) on trackpad
+  // Sync ref with scale state
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  // Listen for touchpad pinch-to-zoom and touch screen pinch gestures
   useEffect(() => {
     if (!isImage) return;
 
     const container = document.getElementById('image-render-canvas');
     if (!container) return;
 
+    // Trackpad wheel zooming
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey) {
         e.preventDefault();
@@ -176,9 +183,48 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
       }
     };
 
+    // Touch screen pinch gesture zooming
+    let initialTouchDistance = 0;
+    let initialScale = 1.0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialTouchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+        initialScale = scaleRef.current;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialTouchDistance > 0) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+        const ratio = currentDistance / initialTouchDistance;
+        
+        setScale(() => {
+          const next = initialScale * ratio;
+          return Math.min(Math.max(next, 0.5), 2.0);
+        });
+      }
+    };
+
+    const handleTouchEnd = () => {
+      initialTouchDistance = 0;
+    };
+
     container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
     return () => {
       container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isImage]);
 
@@ -219,7 +265,7 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
         </div>
 
         {/* Top Controls Header Bar */}
-        <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-black/40 rounded-none shrink-0 z-20 w-full relative">
+        <div className="h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 bg-black/40 rounded-none shrink-0 z-20 w-full relative">
           
           {/* Left: Title info */}
           <div className="flex items-center gap-3">
@@ -230,14 +276,15 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
           </div>
 
           {/* Center: Bespoke Dynamic Zoom Controls / Resize Slider */}
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-1.5 rounded-none">
+          <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 p-1 rounded-none">
             <button
+              type="button"
               onClick={zoomOut}
               disabled={scale <= 0.5}
-              className="text-white/60 hover:text-white disabled:opacity-30 disabled:hover:text-white/60 transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
               title="Resize Smaller"
             >
-              <ZoomOut size={14} />
+              <ZoomOut size={16} />
             </button>
             
             {/* Dynamic Slider Resize Control */}
@@ -248,41 +295,42 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
               step="0.05"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-16 sm:w-28 accent-[#3ecf8e] bg-white/10 h-1 outline-none cursor-pointer appearance-none rounded-none"
+              className="hidden sm:inline-block w-28 accent-[#3ecf8e] bg-white/10 h-1 outline-none cursor-pointer appearance-none rounded-none mx-2"
               title="Drag to resize mockup width"
             />
 
-            <span className="text-[10px] font-mono text-white/80 min-w-[45px] text-center select-none">
+            <span className="text-[10px] font-mono text-white/80 min-w-[38px] sm:min-w-[45px] text-center select-none font-bold">
               {Math.round(scale * 100)}%
             </span>
             <button
+              type="button"
               onClick={zoomIn}
               disabled={scale >= 2.0}
-              className="text-white/60 hover:text-white disabled:opacity-30 disabled:hover:text-white/60 transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
               title="Resize Larger"
             >
-              <ZoomIn size={14} />
+              <ZoomIn size={16} />
             </button>
           </div>
 
           {/* Right: Close and download triggers */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <a
               href={pdfUrl}
               download
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 border border-white/10 hover:border-[#3ecf8e]/30 text-white/70 hover:text-[#3ecf8e] flex items-center justify-center transition-all cursor-pointer rounded-none"
+              className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-[#3ecf8e]/30 text-white/70 hover:text-[#3ecf8e] flex items-center justify-center transition-all cursor-pointer rounded-none"
               title="Download Image"
             >
-              <Download size={16} />
+              <Download size={14} className="sm:w-4 sm:h-4" />
             </a>
             <button
               onClick={onClose}
-              className="w-10 h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
+              className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
               title="Close Reader"
             >
-              <X size={18} />
+              <X size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
           </div>
         </div>
@@ -290,7 +338,7 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
         {/* Scrollable Container so they can view the full height of very long layout/mockup images! */}
         <div 
           id="image-render-canvas"
-          className="flex-1 w-full overflow-y-auto py-12 px-6 flex flex-col items-center justify-start relative z-10"
+          className="flex-1 w-full overflow-y-auto py-6 sm:py-12 px-2 sm:px-6 flex flex-col items-center justify-start relative z-10"
         >
           
           {/* Ambient background blur that matches the image */}

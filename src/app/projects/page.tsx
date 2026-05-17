@@ -62,12 +62,12 @@ function ProjectsPageContent() {
     <main className="min-h-screen bg-transparent pb-24 relative">
       <div className="section-container relative z-10 pt-24">
         {/* MAIN MODE SWITCHER (Above the Title) */}
-        <div className="py-6 mb-12 border-b border-white/5">
+        <div className="py-6 mb-12 border-b border-white/5 flex justify-center sm:justify-start">
           <div className="flex items-center p-1 bg-surface-100 border border-border-strong w-fit">
             <button
               onClick={() => setFilter('developer')}
               className={cn(
-                "px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                "px-6 sm:px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                 filter === 'developer' 
                   ? "bg-white text-canvas" 
                   : "text-body-muted hover:text-on-dark"
@@ -78,7 +78,7 @@ function ProjectsPageContent() {
             <button
               onClick={() => setFilter('creative')}
               className={cn(
-                "px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                "px-6 sm:px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                 filter === 'creative' 
                   ? "bg-white text-canvas" 
                   : "text-body-muted hover:text-on-dark"
