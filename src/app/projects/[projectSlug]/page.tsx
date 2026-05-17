@@ -74,13 +74,17 @@ export default async function ProjectDetailPage({ params }: Props) {
                   {gallery.map((item: any, i: number) => {
                     const media = typeof item === 'string' ? { url: item, type: 'image', caption: '' } : item;
                     const isVideo = media.type === 'video';
+                    const isPdf = media.type === 'pdf' || media.url?.toLowerCase().includes('.pdf');
                     
                     return (
                       <div key={i} className={cn(
                         "group space-y-4",
-                        i % 3 === 0 ? "md:col-span-2" : "col-span-1"
+                        (i % 3 === 0 || isPdf) ? "md:col-span-2" : "col-span-1"
                       )}>
-                        <div className="relative aspect-video bg-surface-100 border border-border-strong overflow-hidden rounded-sm group-hover:border-primary/40 transition-all duration-700 shadow-xl">
+                        <div className={cn(
+                          "relative bg-surface-100 border border-border-strong overflow-hidden rounded-sm group-hover:border-primary/40 transition-all duration-700 shadow-xl",
+                          isPdf ? "aspect-[16/10] md:aspect-[16/9]" : "aspect-video"
+                        )}>
                           {isVideo ? (
                             <iframe 
                               src={media.url.replace('watch?v=', 'embed/')} 
@@ -88,11 +92,35 @@ export default async function ProjectDetailPage({ params }: Props) {
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
                             />
+                          ) : isPdf ? (
+                            <div className="w-full h-full flex flex-col bg-[#171717]">
+                              {/* Premium Frame Header */}
+                              <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#121212]/80 z-10">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/85 animate-pulse" />
+                                  <span className="text-[9px] font-mono font-bold tracking-widest text-[#707070] uppercase">
+                                    Interactive Layout PDF Reader
+                                  </span>
+                                </div>
+                                <a 
+                                  href={media.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-[9px] font-bold uppercase tracking-widest text-[#3ecf8e] hover:text-[#24b47e] transition-colors flex items-center gap-1 cursor-pointer"
+                                >
+                                  Open External <ExternalLink size={10} />
+                                </a>
+                              </div>
+                              <iframe 
+                                src={media.url} 
+                                className="w-full flex-1 border-none bg-[#1e1e1e]"
+                              />
+                            </div>
                           ) : (
                             <img src={media.url} alt={`${project.title} asset ${i}`} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
                           )}
-                          <div className="absolute top-4 right-4 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[0.5rem] font-bold uppercase tracking-widest text-white/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {isVideo ? 'Video Production' : 'Design Asset'}
+                          <div className="absolute top-4 right-4 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[0.5rem] font-bold uppercase tracking-widest text-white/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                            {isVideo ? 'Video Production' : isPdf ? 'Magazine PDF Reader' : 'Design Asset'}
                           </div>
                         </div>
                         {media.caption && (
@@ -179,7 +207,9 @@ export default async function ProjectDetailPage({ params }: Props) {
                   )}
                   {project.demo_url && (
                     <a href={project.demo_url} target="_blank" className="inline-flex items-center gap-2 text-sm text-on-dark hover:text-primary transition-colors group w-fit">
-                      <span className="underline decoration-border-subtle underline-offset-4 group-hover:decoration-primary">Live Demo</span>
+                      <span className="underline decoration-border-subtle underline-offset-4 group-hover:decoration-primary">
+                        {project.demo_url.toLowerCase().includes('.pdf') ? 'Read Magazine (PDF)' : 'Live Demo'}
+                      </span>
                       <ExternalLink size={14} className="opacity-40 group-hover:opacity-100 transition-all" />
                     </a>
                   )}
