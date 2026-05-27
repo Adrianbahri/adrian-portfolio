@@ -39,10 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   // Cool, premium title as requested
-  const siteTitle = "Adrian Bahri | Creative Technologist & Full Stack Developer";
+  const siteTitle = "Adrian Bahri | Creative Technologist";
   
-  // Custom description using the first paragraph of the About section and experience details
-  const siteDescription = "Adrian Bahri (Drian) — Creative Technologist & Full Stack Developer specializing in Next.js, Supabase, and Creative Technology. Developing digital systems, media platforms, and UI/UX design in Makassar, Indonesia. Google Student Ambassador & Informatics Engineering student at Hasanuddin University.";
+  // Custom description using the first paragraph of the About section as requested
+  const siteDescription = "I’m an Informatics Engineering student at Hasanuddin University passionate about creative technology, digital experiences, and building intelligent systems through code.";
 
   const primaryUrl = "https://dri4n.com";
 
