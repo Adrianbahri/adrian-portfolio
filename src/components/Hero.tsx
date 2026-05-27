@@ -1,22 +1,15 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { FileText, ArrowRight } from 'lucide-react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-
-const dynamicWords = ['Creative', 'Humorist', 'Firefighter', 'Resourceful', 'Ordinary', 'Agile'];
+import { cn } from '@/lib/utils';
 
 export default function Hero() {
-  const [index, setIndex] = useState(0);
   const { settings } = useSiteSettings();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % dynamicWords.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+  const statusText = settings.site_status || 'Open for Collaboration';
+  const isBusy = statusText.toLowerCase().includes('busy') || statusText.toLowerCase().includes('full') || statusText.toLowerCase().includes('closed');
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-transparent pt-48 lg:pt-20 pb-16">
@@ -31,26 +24,27 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="space-y-6"
           >
-            <p className="eyebrow">Creative Technologist & also known as</p>
-            <h1 className="text-[32px] sm:text-[42px] lg:text-[58px] font-medium leading-[1.1] tracking-[-0.06em] text-on-dark font-heading">
-              {/^[aeiou]/i.test(dynamicWords[index]) ? 'An' : 'A'}{" "}
-              <span className="relative inline-block text-primary">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={dynamicWords[index]}
-                    initial={{ y: 20, opacity: 0, filter: 'blur(10px)' }}
-                    animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-                    exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="inline-block px-2"
-                  >
-                    {dynamicWords[index]}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
-              <br className="hidden sm:block" />
-              Guy
+            {/* Status Pill / Badge */}
+            <div className="flex">
+              <div className={cn(
+                "inline-flex items-center gap-2 border px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest rounded-[3px]",
+                isBusy 
+                  ? "border-red-500/35 bg-red-500/8 text-red-500" 
+                  : "border-primary/35 bg-primary/8 text-primary animate-pulse-glow"
+              )}>
+                <span className={cn(
+                  "size-2 rounded-full",
+                  isBusy ? "bg-red-500" : "bg-primary animate-pulse"
+                )}></span>
+                {statusText}
+              </div>
+            </div>
+
+            <p className="eyebrow">Creative Portfolio</p>
+            <h1 className="text-[42px] sm:text-[58px] lg:text-[76px] font-medium leading-[1.05] tracking-[-0.06em] text-on-dark font-heading">
+              Creative <span className="text-primary">Technologist</span>
             </h1>
           </motion.div>
 

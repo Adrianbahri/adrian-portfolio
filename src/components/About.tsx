@@ -43,18 +43,6 @@ export default function About() {
         <div className="mt-16">
           <div className="grid gap-12 lg:gap-16 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
             <div className="space-y-6 text-lg leading-relaxed text-on-dark/80 font-sans font-light">
-              <div className={cn(
-                "inline-flex items-center gap-2 border px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest rounded-[3px]",
-                isBusy 
-                  ? "border-red-500/35 bg-red-500/8 text-red-500" 
-                  : "border-primary/35 bg-primary/8 text-primary"
-              )}>
-                <span className={cn(
-                  "size-2 rounded-full",
-                  isBusy ? "bg-red-500" : "bg-primary animate-pulse"
-                )}></span>
-                {statusText}
-              </div>
               <div className="whitespace-pre-wrap">
                 {mainBio}
               </div>
