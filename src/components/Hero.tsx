@@ -42,7 +42,6 @@ export default function Hero() {
               </div>
             </div>
 
-            <p className="eyebrow">Creative Portfolio</p>
             <h1 className="text-[42px] sm:text-[58px] lg:text-[76px] font-medium leading-[1.05] tracking-[-0.06em] text-on-dark font-heading">
               Creative <span className="text-primary">Technologist</span>
             </h1>
