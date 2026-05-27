@@ -11,14 +11,14 @@ import GlobalPdfModal from "@/components/GlobalPdfModal";
 import { supabase } from "@/lib/supabase";
 import { Analytics } from "@vercel/analytics/next";
 
-const firaCode = Fira_Code({ 
-  subsets: ["latin"], 
-  variable: "--font-fira-code" 
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-fira-code"
 });
 
 export async function generateMetadata(): Promise<Metadata> {
   let heroImage = "/api/assets/uploads/profile-fallback.webp";
-  
+
   try {
     const { data } = await supabase
       .from('site_settings')
@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   // Cool, premium title as requested
   const siteTitle = "Adrian Bahri | Creative Technologist";
-  
+
   // Custom description using the first paragraph of the About section as requested
   const siteDescription = "I’m an Informatics Engineering student at Hasanuddin University passionate about creative technology, digital experiences, and building intelligent systems through code.";
 
