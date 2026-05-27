@@ -30,7 +30,7 @@ export default function AdminExperience() {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   const [formData, setFormData] = useState({
-    title: '', company: '', timeline: '', location: '', description: '', points: [] as string[]
+    title: '', company: '', timeline: '', location: '', description: '', logo_url: '', points: [] as string[]
   });
 
   const fetchExperiences = async () => {
@@ -44,12 +44,18 @@ export default function AdminExperience() {
 
   const handleEdit = (exp: any) => {
     setEditingId(exp.id);
+    const desc = exp.description || '';
+    const logoMatch = desc.match(/<!-- LOGO_URL:\s*(.*?)\s*-->/);
+    const logoUrl = exp.logo_url || (logoMatch ? logoMatch[1] : '');
+    const cleanDesc = desc.replace(/<!-- LOGO_URL:\s*(.*?)\s*-->/, '');
+
     setFormData({
       title: exp.title || '',
       company: exp.company || '',
       timeline: exp.timeline || '',
       location: exp.location || '',
-      description: exp.description || '',
+      description: cleanDesc,
+      logo_url: logoUrl,
       points: Array.isArray(exp.points) ? exp.points : []
     });
     setView('edit');
@@ -58,8 +64,22 @@ export default function AdminExperience() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (editingId) { await supabase.from('experiences').update(formData).eq('id', editingId); }
-      else { await supabase.from('experiences').insert([formData]); }
+      let finalDescription = formData.description;
+      if (formData.logo_url) {
+        finalDescription = `<!-- LOGO_URL: ${formData.logo_url} -->` + finalDescription;
+      }
+
+      const payload = {
+        title: formData.title,
+        company: formData.company,
+        timeline: formData.timeline,
+        location: formData.location,
+        description: finalDescription,
+        points: formData.points
+      };
+
+      if (editingId) { await supabase.from('experiences').update(payload).eq('id', editingId); }
+      else { await supabase.from('experiences').insert([payload]); }
       await purgeSystemCache();
       setView('list');
       setEditingId(null);
@@ -158,6 +178,65 @@ export default function AdminExperience() {
                   placeholder="e.g. Remote"
                 />
               </div>
+
+              {/* Logo URL / Upload */}
+              <div className="space-y-1.5 col-span-1 md:col-span-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Company Logo (1:1)</label>
+                <div className="flex items-center gap-4 bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-3">
+                  <div className="w-12 h-12 bg-[#252525] rounded-md border border-[#2e2e2e] flex items-center justify-center text-[#707070] overflow-hidden relative shrink-0">
+                    {formData.logo_url ? (
+                      <img src={formData.logo_url} alt="Logo Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Briefcase size={18} />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input 
+                      type="text" 
+                      value={formData.logo_url} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
+                      className="w-full bg-[#171717] border border-[#2e2e2e] rounded px-3 py-1.5 text-[12px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] transition-all"
+                      placeholder="Logo URL or upload a file..."
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = async (e: any) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                               const compressedFile = await compressToWebP(file);
+                               const fileExt = compressedFile.name.split('.').pop();
+                               const fileName = `${Math.random()}.${fileExt}`;
+                               const { data, error } = await supabase.storage.from('portfolio-assets').upload(fileName, compressedFile);
+                               if (error) throw error;
+                               const cleanProxyUrl = `/api/assets/${fileName}`;
+                               setFormData(prev => ({ ...prev, logo_url: cleanProxyUrl }));
+                            } catch (err: any) { alert(err.message); }
+                          };
+                          input.click();
+                        }}
+                        className="bg-[#2a2a2a] hover:bg-[#353535] text-[11px] font-bold text-white px-3 py-1 rounded transition-all cursor-pointer"
+                      >
+                        Upload Logo
+                      </button>
+                      {formData.logo_url && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, logo_url: '' }))}
+                          className="text-[#ff2201] hover:underline text-[11px] font-bold px-2 py-1"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Key Highlights / Points Builder */}
@@ -244,7 +323,7 @@ export default function AdminExperience() {
           <p className="text-[13px] text-[#707070]">Manage your professional career history.</p>
         </div>
         <button
-          onClick={() => { setEditingId(null); setFormData({ title: '', company: '', timeline: '', location: '', description: '', points: [] }); setView('edit'); }}
+          onClick={() => { setEditingId(null); setFormData({ title: '', company: '', timeline: '', location: '', description: '', logo_url: '', points: [] }); setView('edit'); }}
           className="bg-[#3ecf8e] text-[#171717] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[#24b47e] transition-all flex items-center gap-2"
         >
           <Plus size={14} /> New Experience
@@ -252,40 +331,50 @@ export default function AdminExperience() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {experiences.map((exp, i) => (
-          <div key={exp.id || i} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-5 hover:border-[#3e3e3e] transition-all">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-10 h-10 bg-[#252525] rounded-md flex items-center justify-center text-[#3ecf8e] border border-[#2e2e2e]">
-                <Briefcase size={18} />
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => handleEdit(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-white border border-[#2e2e2e] transition-all"><Edit2 size={12} /></button>
-                <button onClick={() => confirmDelete(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#ff2201] border border-[#2e2e2e] transition-all"><Trash2 size={12} /></button>
-              </div>
-            </div>
-            
-            <div className="space-y-1 mb-4">
-              <h3 className="text-[15px] font-medium text-[#ededed]">{exp.title}</h3>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#3ecf8e]">{exp.company}</p>
-            </div>
+        {experiences.map((exp, i) => {
+          const desc = exp.description || '';
+          const logoMatch = desc.match(/<!-- LOGO_URL:\s*(.*?)\s*-->/);
+          const logoUrl = exp.logo_url || (logoMatch ? logoMatch[1] : null);
+          const cleanDesc = desc.replace(/<!-- LOGO_URL:\s*(.*?)\s*-->/, '');
 
-            <div className="flex flex-wrap gap-4 text-[11px] text-[#707070] mb-4">
-              <div className="flex items-center gap-1.5">
-                <Clock size={12} />
-                <span>{exp.timeline}</span>
-              </div>
-              {exp.location && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin size={12} />
-                  <span>{exp.location}</span>
+          return (
+            <div key={exp.id || i} className="group relative bg-[#1c1c1c] border border-[#2e2e2e] rounded-md p-5 hover:border-[#3e3e3e] transition-all">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 bg-[#252525] rounded-md flex items-center justify-center text-[#3ecf8e] border border-[#2e2e2e] overflow-hidden">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Briefcase size={18} />
+                  )}
                 </div>
-              )}
-            </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => handleEdit(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-white border border-[#2e2e2e] transition-all"><Edit2 size={12} /></button>
+                  <button onClick={() => confirmDelete(exp)} className="p-1.5 bg-[#252525] text-[#9a9a9a] rounded hover:text-[#ff2201] border border-[#2e2e2e] transition-all"><Trash2 size={12} /></button>
+                </div>
+              </div>
+              
+              <div className="space-y-1 mb-4">
+                <h3 className="text-[15px] font-medium text-[#ededed]">{exp.title}</h3>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#3ecf8e]">{exp.company}</p>
+              </div>
 
-            <div 
-              className="text-[13px] text-[#9a9a9a] line-clamp-2 leading-relaxed prose prose-invert prose-sm max-w-none mb-4"
-              dangerouslySetInnerHTML={{ __html: exp.description }}
-            />
+              <div className="flex flex-wrap gap-4 text-[11px] text-[#707070] mb-4">
+                <div className="flex items-center gap-1.5">
+                  <Clock size={12} />
+                  <span>{exp.timeline}</span>
+                </div>
+                {exp.location && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={12} />
+                    <span>{exp.location}</span>
+                  </div>
+                )}
+              </div>
+
+              <div 
+                className="text-[13px] text-[#9a9a9a] line-clamp-2 leading-relaxed prose prose-invert prose-sm max-w-none mb-4"
+                dangerouslySetInnerHTML={{ __html: cleanDesc }}
+              />
 
             {exp.points && exp.points.length > 0 && (
               <div className="pt-4 border-t border-[#2e2e2e] space-y-2">
@@ -304,7 +393,8 @@ export default function AdminExperience() {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <DeleteModal

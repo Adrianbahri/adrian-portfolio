@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { workData, organizationData, volunteerData } from '@/data/experience';
+import { Briefcase } from 'lucide-react';
 
 // Helper function to automatically sort data by date (Newest/NOW first)
 const sortExperience = (data: any[]) => {
@@ -116,53 +117,72 @@ export default function Experience() {
           </div>
 
           <div className="space-y-12">
-            {sortedWork.map((item, i) => (
-              <article 
-                key={i} 
-                className="grid grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)] gap-8 md:gap-0 border-t border-border-strong/40 pt-10 group"
-              >
-                {/* Left Side: Date & Location */}
-                <div className="md:pr-12 space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-bold text-body-muted/60 uppercase tracking-[0.2em] font-mono">
-                      {item.year}
-                    </p>
-                    <p className="text-[13px] text-body-muted/80 leading-relaxed font-sans font-medium">
-                      {item.location}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Right Side: Role, Company, Desc, Points */}
-                <div className="space-y-8 md:border-l md:border-border-strong/40 md:pl-12 group-hover:border-primary/50 transition-colors">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
-                    <div className="space-y-1">
-                      <h3 className="font-heading text-2xl md:text-3xl font-medium tracking-[-0.04em] text-on-dark group-hover:text-primary transition-colors">
-                        {item.role}
-                      </h3>
-                      <p className="text-[11px] font-mono text-body-muted/70 uppercase tracking-widest font-bold">
-                        {item.company}
+            {sortedWork.map((item, i) => {
+              const desc = item.desc || '';
+              const logoMatch = desc.match(/<!-- LOGO_URL:\s*(.*?)\s*-->/);
+              const logoUrl = item.logo_url || (logoMatch ? logoMatch[1] : null);
+              const cleanDesc = desc.replace(/<!-- LOGO_URL:\s*(.*?)\s*-->/, '');
+
+              return (
+                <article 
+                  key={i} 
+                  className="grid grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)] gap-8 md:gap-0 border-t border-border-strong/40 pt-10 group"
+                >
+                  {/* Left Side: Date, Location & Logo */}
+                  <div className="md:pr-12 flex flex-row md:flex-col justify-between md:justify-start items-start gap-4">
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-bold text-body-muted/60 uppercase tracking-[0.2em] font-mono">
+                        {item.year}
+                      </p>
+                      <p className="text-[13px] text-body-muted/80 leading-relaxed font-sans font-medium">
+                        {item.location}
                       </p>
                     </div>
-                    {item.url && (
-                      <a 
-                        href={item.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-[10px] font-bold font-mono text-body-muted hover:text-primary transition-all flex items-center gap-2 pt-2 uppercase tracking-widest border border-border-subtle px-3 py-1 hover:border-primary/20 rounded-[3px]"
-                      >
-                        Visit
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
-                          <path d="M1 11L11 1M11 1H1M11 1V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </a>
-                    )}
+                    
+                    {/* Premium 1:1 Logo container */}
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl border border-white/5 bg-white/[0.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-md overflow-hidden flex items-center justify-center text-[#3ecf8e] group-hover:border-primary/30 group-hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all duration-500 shrink-0">
+                      {logoUrl ? (
+                        <img 
+                          src={logoUrl} 
+                          alt={`${item.company} logo`} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                      ) : (
+                        <Briefcase size={20} className="opacity-40 group-hover:opacity-80 group-hover:text-primary transition-all duration-500" />
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Right Side: Role, Company, Desc, Points */}
+                  <div className="space-y-8 md:border-l md:border-border-strong/40 md:pl-12 group-hover:border-primary/50 transition-colors">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
+                      <div className="space-y-1">
+                        <h3 className="font-heading text-2xl md:text-3xl font-medium tracking-[-0.04em] text-on-dark group-hover:text-primary transition-colors">
+                          {item.role}
+                        </h3>
+                        <p className="text-[11px] font-mono text-body-muted/70 uppercase tracking-widest font-bold">
+                          {item.company}
+                        </p>
+                      </div>
+                      {item.url && (
+                        <a 
+                          href={item.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold font-mono text-body-muted hover:text-primary transition-all flex items-center gap-2 pt-2 uppercase tracking-widest border border-border-subtle px-3 py-1 hover:border-primary/20 rounded-[3px]"
+                        >
+                          Visit
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
+                            <path d="M1 11L11 1M11 1H1M11 1V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </a>
+                      )}
+                    </div>
 
-                  <div 
-                    className="text-lg leading-relaxed text-body-muted font-sans font-light max-w-3xl"
-                    dangerouslySetInnerHTML={{ __html: item.desc }}
-                  />
+                    <div 
+                      className="text-lg leading-relaxed text-body-muted font-sans font-light max-w-3xl"
+                      dangerouslySetInnerHTML={{ __html: cleanDesc }}
+                    />
 
                   {item.points && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 pt-2">
@@ -178,7 +198,8 @@ export default function Experience() {
                   )}
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -153,7 +153,7 @@ function BentoCard({ project, index, isCategory }: { project: any, index: number
           <img
             src={project.img || project.image_url}
             alt={project.title}
-            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-canvas/40 group-hover:bg-transparent transition-colors duration-700" />
 

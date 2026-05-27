@@ -173,7 +173,7 @@ export default function FeaturedWork() {
                     <img
                       src={project.img}
                       alt={project.title}
-                      className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
                     />
                     <div className="absolute top-3 right-3">
                       <span className="px-3 py-1 bg-surface-200/90 backdrop-blur-md text-[0.55rem] font-bold tracking-[0.2em] text-on-dark uppercase border border-border-strong rounded-[2px]">
