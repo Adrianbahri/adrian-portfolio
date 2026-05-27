@@ -38,35 +38,37 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error("Error fetching site settings for metadata:", e);
   }
 
-  // Cool, premium title as requested ("Drian — Personal Portfolio")
-  const siteTitle = "Drian — Personal Portfolio";
+  // Cool, premium title as requested
+  const siteTitle = "Adrian Bahri | Creative Technologist & Full Stack Developer";
   
-  // Custom description using the first paragraph of the About section
-  const siteDescription = "I’m an Informatics Engineering student at Hasanuddin University passionate about creative technology, digital experiences, and building intelligent systems through code.";
+  // Custom description using the first paragraph of the About section and experience details
+  const siteDescription = "Adrian Bahri (Drian) — Creative Technologist & Full Stack Developer specializing in Next.js, Supabase, and Creative Technology. Developing digital systems, media platforms, and UI/UX design in Makassar, Indonesia. Google Student Ambassador & Informatics Engineering student at Hasanuddin University.";
+
+  const primaryUrl = "https://dri4n.com";
 
   return {
-    metadataBase: new URL('https://heyyan.vercel.app'),
+    metadataBase: new URL(primaryUrl),
     title: {
       default: siteTitle,
-      template: "%s | Drian"
+      template: "%s | Adrian Bahri"
     },
     description: siteDescription,
-    keywords: ["Drian", "Adrian Bahri", "Creative Technologist", "Creative Engineer", "Fullstack Developer", "Web Design", "Next.js", "Supabase", "UI/UX"],
-    authors: [{ name: "Drian", url: "https://heyyan.vercel.app" }],
-    creator: "Drian",
+    keywords: ["Drian", "Adrian Bahri", "Creative Technologist", "Creative Engineer", "Fullstack Developer", "Web Design", "Next.js", "Supabase", "UI/UX", "Hasanuddin University", "Makassar"],
+    authors: [{ name: "Adrian Bahri", url: primaryUrl }],
+    creator: "Adrian Bahri",
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: "https://heyyan.vercel.app",
+      url: primaryUrl,
       title: siteTitle,
       description: siteDescription,
-      siteName: "Drian Portfolio",
+      siteName: "Adrian Bahri Portfolio",
       images: [
         {
           url: "/opengraph-image",
           width: 1200,
           height: 630,
-          alt: "Drian Portfolio Preview",
+          alt: "Adrian Bahri Portfolio Preview",
         }
       ]
     },
@@ -103,8 +105,60 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Adrian Bahri",
+    "alternateName": ["Drian", "adrianbahri"],
+    "url": "https://dri4n.com",
+    "image": "https://dri4n.com/api/assets/uploads/profile-fallback.webp",
+    "jobTitle": "Creative Technologist & Full Stack Developer",
+    "worksFor": [
+      {
+        "@type": "Organization",
+        "name": "PK Identitas Unhas",
+        "role": "Research & Development (Data & Technology)"
+      },
+      {
+        "@type": "Organization",
+        "name": "SulawesiPos.com",
+        "role": "Media Production"
+      }
+    ],
+    "alumniOf": {
+      "@type": "EducationalOrganization",
+      "name": "Hasanuddin University",
+      "department": {
+        "@type": "Organization",
+        "name": "Informatics Engineering"
+      }
+    },
+    "knowsAbout": [
+      "Software Engineering",
+      "Full-stack Web Development",
+      "Creative Technology",
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Supabase",
+      "UI/UX Design",
+      "Motion Graphics"
+    ],
+    "sameAs": [
+      "https://github.com/Adrianbahri",
+      "https://linkedin.com/in/adrianbahri"
+    ],
+    "description": "Adrian Bahri (Drian) is an Informatics Engineering student at Hasanuddin University, Creative Technologist, and Full Stack Developer passionate about creative technology, digital experiences, and building intelligent systems through code."
+  };
+
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${firaCode.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={cn(GeistSans.variable, GeistMono.variable, firaCode.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
         {/* Global Background Layer */}
         <div className="fixed inset-0 z-[-1] pointer-events-none">
