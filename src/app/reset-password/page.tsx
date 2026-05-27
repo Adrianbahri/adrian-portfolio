@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Key, Loader2, ArrowRight, AlertCircle, CheckCircle2, Mail, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -261,5 +261,20 @@ export default function ResetPasswordPage() {
         </button>
       </motion.div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-canvas flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="text-center relative z-10">
+          <Loader2 className="animate-spin text-primary mx-auto mb-4" size={40} />
+          <p className="text-white/40 text-xs uppercase tracking-widest font-bold">Initializing Connection...</p>
+        </div>
+      </main>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
