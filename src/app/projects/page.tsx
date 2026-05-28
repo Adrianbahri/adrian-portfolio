@@ -144,7 +144,7 @@ function ProjectsPageContent() {
                     /* CINEMATIC CREATIVE PREVIEW CARD */
                     <div className="block relative aspect-[16/10] overflow-hidden group/card border border-border-subtle hover:border-white/20 transition-all duration-700 shadow-2xl">
                        <Link href={`/projects/${project.slug}`} className="absolute inset-0 z-0">
-                         <img src={project.image_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
+                         <img src={project.image_url || '/placeholder.png'} alt={project.title} loading="lazy" className="w-full h-full object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
                          <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent opacity-60 group-hover/card:opacity-90 transition-opacity duration-700" />
                        </Link>
                        
@@ -187,7 +187,7 @@ function ProjectsPageContent() {
                     /* TECHNICAL DEVELOPER CARD */
                     <div className="grid grid-cols-1 lg:grid-cols-[40%_60%]">
                       <div className="relative aspect-video lg:aspect-auto h-full min-h-[220px] overflow-hidden bg-canvas border-b lg:border-b-0 lg:border-r border-border-subtle">
-                        <img src={project.image_url || '/placeholder.png'} alt={project.title} className="relative w-full h-full object-cover group-hover:scale-105 transition-all duration-700 z-10" />
+                        <img src={project.image_url || '/placeholder.png'} alt={project.title} loading="lazy" className="relative w-full h-full object-cover group-hover:scale-105 transition-all duration-700 z-10" />
                         <div className="absolute inset-0 bg-gradient-to-r from-canvas/10 to-transparent z-20 pointer-events-none" />
                       </div>
                       <div className="p-6 lg:p-8 flex flex-col justify-between">

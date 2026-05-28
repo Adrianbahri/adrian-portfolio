@@ -140,6 +140,7 @@ export default function DesignShowcase() {
                     <img 
                       src={img} 
                       alt="Design Piece" 
+                      loading="lazy"
                       className={`absolute inset-0 w-full h-full object-cover grayscale-[0.5] transition-all duration-700 group-hover:grayscale-0 ${
                         i === expandedIndex ? "grayscale-0" : ""
                       }`}
@@ -343,6 +344,7 @@ function DesignLightboxModal({ imageUrl, title, currentIndex, totalImages, onClo
           <img 
             src={imageUrl} 
             alt="Fullscreen Design" 
+            loading="lazy"
             className="w-full h-full object-cover select-none pointer-events-none"
           />
         </div>

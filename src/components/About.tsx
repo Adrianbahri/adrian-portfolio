@@ -31,16 +31,13 @@ export default function About() {
   return (
     <section id="about" className="section-anchor py-20 bg-transparent">
       <div className="section-container">
-        <div className="max-w-2xl space-y-4">
-          <div className="space-y-3">
+        <div className="max-w-2xl">
+          <div>
             <h2 className="font-heading text-3xl font-medium tracking-[-0.05em] text-on-dark sm:text-[2.2rem]">About</h2>
-            <p className="max-w-2xl text-lg text-body-muted font-light leading-relaxed">
-              Where technology and creativity become experiences.
-            </p>
           </div>
         </div>
 
-        <div className="mt-16">
+        <div className="mt-6">
           <div className="grid gap-12 lg:gap-16 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
             <div className="space-y-6 text-lg leading-relaxed text-on-dark/80 font-sans font-light">
               <div className="whitespace-pre-wrap">

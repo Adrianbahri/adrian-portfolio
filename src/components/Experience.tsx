@@ -108,12 +108,9 @@ export default function Experience() {
       <div className="section-container space-y-20 relative z-10">
         
         {/* Tier 1: Work Experience (Minimalist Split Layout) */}
-        <div className="space-y-10">
-          <div className="max-w-2xl space-y-3">
+        <div className="space-y-6">
+          <div className="max-w-2xl">
             <h2 className="font-heading text-3xl font-medium tracking-[-0.05em] text-on-dark sm:text-[2.2rem]">Work Experience</h2>
-            <p className="text-lg text-body-muted font-light leading-relaxed">
-              Media production, research & development, and technical internships.
-            </p>
           </div>
 
           <div className="space-y-12">

@@ -59,7 +59,7 @@ export default function Contact() {
             © 2026 DRIAN. ALL RIGHTS RESERVED.
           </p>
           <p className="text-[10px] text-primary/40 uppercase tracking-[0.2em] font-mono font-bold">
-            I built this whole thing in only 2 days, btw.
+            Compiled with human logic & accelerated by Gemini Flash.
           </p>
         </div>
 

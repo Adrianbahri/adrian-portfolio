@@ -153,6 +153,7 @@ export default function PhotoGallery() {
               <img
                 src={photo.image_url}
                 alt="Gallery"
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             </div>

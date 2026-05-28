@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FileText, ArrowRight } from 'lucide-react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -58,10 +59,10 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="group bg-on-dark text-canvas w-full sm:w-48 py-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary transition-all font-heading rounded-[3px]">
+              <Link href="/projects" className="group bg-on-dark text-canvas w-full sm:w-48 py-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary transition-all font-heading rounded-[3px]">
                 View Projects
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
               <button 
                 onClick={() => {
                   if (settings.resume_url) {
