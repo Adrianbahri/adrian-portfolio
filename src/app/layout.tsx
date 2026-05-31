@@ -48,6 +48,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(primaryUrl),
+    alternates: {
+      canonical: "/",
+    },
     title: {
       default: siteTitle,
       template: "%s | Adrian Bahri"
