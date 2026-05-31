@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
  * Automatically queries Supabase to index all projects and blog posts for Google Search.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://adrianbahri.com'; // Change this to your production domain once ready
+  const baseUrl = 'https://dri4n.com'; // Change this to your production domain once ready
 
   // 1. Core Static Pages
   const staticRoutes = [

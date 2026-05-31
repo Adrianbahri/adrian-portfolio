@@ -5,7 +5,7 @@ import { MetadataRoute } from 'next';
  * Directs search crawlers to your sitemap while shielding backend paths.
  */
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://adrianbahri.com'; // Change to match your production domain
+  const baseUrl = 'https://dri4n.com'; // Change to match your production domain
 
   return {
     rules: {
