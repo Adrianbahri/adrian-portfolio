@@ -39,10 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   // Cool, premium title as requested
-  const siteTitle = "Adrian Bahri | Creative Technologist";
+  const siteTitle = "Adrian Bahri (Dri4n) | Creative Technologist & Web Developer";
 
   // Custom description using the first paragraph of the About section as requested
-  const siteDescription = "I’m an Informatics Engineering student at Hasanuddin University passionate about creative technology, digital experiences, and building intelligent systems through code.";
+  const siteDescription = "Portfolio of Adrian Bahri (Dri4n), an Informatics Engineering student at Hasanuddin University passionate about creative technology, full-stack web development, and digital experiences.";
 
   const primaryUrl = "https://dri4n.com";
 
@@ -56,9 +56,16 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | Adrian Bahri"
     },
     description: siteDescription,
-    keywords: ["Drian", "Adrian Bahri", "Creative Technologist", "Creative Engineer", "Fullstack Developer", "Web Design", "Next.js", "Supabase", "UI/UX", "Hasanuddin University", "Makassar"],
+    keywords: ["Dri4n", "Drian", "Adrian Bahri", "Creative Technologist", "Creative Engineer", "Fullstack Developer", "Web Design", "Next.js", "Supabase", "UI/UX", "Hasanuddin University", "Makassar"],
     authors: [{ name: "Adrian Bahri", url: primaryUrl }],
     creator: "Adrian Bahri",
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon.png", type: "image/png" }
+      ],
+      apple: "/favicon.png",
+    },
     openGraph: {
       type: "website",
       locale: "en_US",
@@ -112,7 +119,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Person",
     "name": "Adrian Bahri",
-    "alternateName": ["Drian", "adrianbahri"],
+    "alternateName": ["Dri4n", "Drian", "adrianbahri"],
     "url": "https://dri4n.com",
     "image": "https://dri4n.com/api/assets/uploads/profile-fallback.webp",
     "jobTitle": "Creative Technologist & Full Stack Developer",
@@ -151,12 +158,15 @@ export default function RootLayout({
       "https://github.com/Adrianbahri",
       "https://linkedin.com/in/adrianbahri"
     ],
-    "description": "Adrian Bahri (Drian) is an Informatics Engineering student at Hasanuddin University, Creative Technologist, and Full Stack Developer passionate about creative technology, digital experiences, and building intelligent systems through code."
+    "description": "Adrian Bahri (Dri4n) is an Informatics Engineering student at Hasanuddin University, Creative Technologist, and Full Stack Developer passionate about creative technology, digital experiences, and building intelligent systems through code."
   };
 
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${firaCode.variable}`}>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

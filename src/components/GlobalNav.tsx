@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const navLinks = [
+  { name: 'About', href: '/about' },
   { name: 'Blog', href: '/blog' },
   { name: 'Projects', href: '/projects' },
   { name: 'Contact', href: '/contact' },
