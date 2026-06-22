@@ -7,8 +7,12 @@ import { FileText, ArrowRight } from 'lucide-react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { cn } from '@/lib/utils';
 
-export default function Hero() {
-  const { settings } = useSiteSettings();
+interface HeroProps {
+  initialSettings?: Record<string, string>;
+}
+
+export default function Hero({ initialSettings }: HeroProps) {
+  const { settings } = useSiteSettings(initialSettings);
 
   const statusText = settings.site_status || 'Open for Collaboration';
   const isBusy = statusText.toLowerCase().includes('busy') || statusText.toLowerCase().includes('full') || statusText.toLowerCase().includes('closed');

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export function useSiteSettings() {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+export function useSiteSettings(initialSettings?: Record<string, string>) {
+  const [settings, setSettings] = useState<Record<string, string>>(initialSettings || {});
+  const [loading, setLoading] = useState(!initialSettings || Object.keys(initialSettings).length === 0);
 
   useEffect(() => {
+    if (initialSettings && Object.keys(initialSettings).length > 0) {
+      return;
+    }
+
     async function fetchSettings() {
       try {
         const { data, error } = await supabase
@@ -32,7 +36,7 @@ export function useSiteSettings() {
     }
 
     fetchSettings();
-  }, []);
+  }, [initialSettings]);
 
   return { settings, loading };
 }

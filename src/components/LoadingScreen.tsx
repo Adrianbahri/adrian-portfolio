@@ -7,7 +7,7 @@ export default function LoadingScreen() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(false), 2500);
+    const timer = setTimeout(() => setIsVisible(false), 1200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -49,7 +49,7 @@ export default function LoadingScreen() {
       <motion.div 
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
-        transition={{ delay: 0.2, duration: 2.8, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ delay: 0.1, duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
         className="absolute bottom-0 left-0 w-full h-[1px] bg-primary origin-left opacity-30"
       />
     </motion.div>
