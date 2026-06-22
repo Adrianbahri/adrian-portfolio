@@ -10,6 +10,7 @@ import GlobalNav from "@/components/GlobalNav";
 import GlobalPdfModal from "@/components/GlobalPdfModal";
 import { supabase } from "@/lib/supabase";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const firaCode = Fira_Code({
   subsets: ["latin"],
@@ -186,6 +187,7 @@ export default function RootLayout({
           <GlobalPdfModal />
           {children}
           <Analytics />
+          <SpeedInsights />
         </SmoothScrolling>
       </body>
     </html>
