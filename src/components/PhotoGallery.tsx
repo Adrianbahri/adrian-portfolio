@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 
 export default function PhotoGallery() {
@@ -149,12 +150,13 @@ export default function PhotoGallery() {
             className="snake-photo absolute top-0 left-0 w-[216px] sm:w-[288px] md:w-[342px] will-change-transform"
             style={{ display: 'none' }} // Hidden by default, animation loop will show it
           >
-            <div className="w-full h-full aspect-[3/2] overflow-hidden border border-border-strong bg-surface-50">
-              <img
+            <div className="w-full h-full aspect-[3/2] overflow-hidden border border-border-strong bg-surface-50 relative">
+              <Image
                 src={photo.image_url}
                 alt="Gallery"
-                loading="lazy"
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 640px) 216px, (max-width: 768px) 288px, 342px"
+                className="object-cover"
               />
             </div>
           </div>

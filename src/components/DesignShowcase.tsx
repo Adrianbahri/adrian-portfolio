@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Layout, X, Download, ZoomIn, ZoomOut } from 'lucide-react';
@@ -59,14 +60,18 @@ export default function DesignShowcase() {
           <div className="flex items-center gap-4">
             <button 
               onClick={prevSlide}
+              aria-label="Previous slide"
               className="w-12 h-12 border border-border-strong flex items-center justify-center hover:bg-surface-100 transition-colors text-on-dark"
             >
+              <span className="sr-only">Previous Slide</span>
               <ChevronLeft size={20} />
             </button>
             <button 
               onClick={nextSlide}
+              aria-label="Next slide"
               className="w-12 h-12 border border-border-strong flex items-center justify-center hover:bg-surface-100 transition-colors text-on-dark"
             >
+              <span className="sr-only">Next Slide</span>
               <ChevronRight size={20} />
             </button>
           </div>
@@ -137,11 +142,12 @@ export default function DesignShowcase() {
                           : "w-[calc(55%/(var(--total)-1))]"
                     }`}
                   >
-                    <img 
+                    <Image 
                       src={img} 
                       alt="Design Piece" 
-                      loading="lazy"
-                      className={`absolute inset-0 w-full h-full object-cover grayscale-[0.5] transition-all duration-700 group-hover:grayscale-0 ${
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className={`object-cover grayscale-[0.5] transition-all duration-700 group-hover:grayscale-0 ${
                         i === expandedIndex ? "grayscale-0" : ""
                       }`}
                     />
@@ -288,9 +294,11 @@ function DesignLightboxModal({ imageUrl, title, currentIndex, totalImages, onClo
           <button
             type="button"
             onClick={zoomOut}
+            aria-label="Zoom out"
             disabled={scale <= 0.5}
             className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
           >
+            <span className="sr-only">Zoom Out</span>
             <ZoomOut size={16} />
           </button>
           <span className="text-[10px] font-mono text-white/80 min-w-[38px] sm:min-w-[45px] text-center select-none font-bold">
@@ -299,9 +307,11 @@ function DesignLightboxModal({ imageUrl, title, currentIndex, totalImages, onClo
           <button
             type="button"
             onClick={zoomIn}
+            aria-label="Zoom in"
             disabled={scale >= 2.0}
             className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
           >
+            <span className="sr-only">Zoom In</span>
             <ZoomIn size={16} />
           </button>
         </div>
@@ -320,9 +330,11 @@ function DesignLightboxModal({ imageUrl, title, currentIndex, totalImages, onClo
           </a>
           <button
             onClick={onClose}
+            aria-label="Close viewer"
             className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
             title="Close Viewer"
           >
+            <span className="sr-only">Close Viewer</span>
             <X size={16} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
@@ -341,11 +353,12 @@ function DesignLightboxModal({ imageUrl, title, currentIndex, totalImages, onClo
           style={{ transform: `scale(${scale})`, transition: 'transform 0.1s ease-out' }}
           className="relative w-full max-w-[420px] aspect-[4/5] bg-[#0a0a0a] border border-white/10 shadow-2xl overflow-hidden z-10 rounded-none flex items-center justify-center"
         >
-          <img 
+          <Image 
             src={imageUrl} 
             alt="Fullscreen Design" 
-            loading="lazy"
-            className="w-full h-full object-cover select-none pointer-events-none"
+            fill
+            sizes="(max-width: 450px) 100vw, 420px"
+            className="object-cover select-none pointer-events-none"
           />
         </div>
       </div>

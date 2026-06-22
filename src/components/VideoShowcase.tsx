@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Play, ExternalLink } from 'lucide-react';
@@ -76,10 +77,12 @@ export default function VideoShowcase() {
                   ></iframe>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a] relative group/ig">
-                    <img 
+                    <Image 
                       src={video.thumbnail_url || `https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=2000&auto=format&fit=crop`} 
                       alt="Thumbnail"
-                      className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale group-hover/ig:grayscale-0 group-hover/ig:opacity-50 transition-all duration-700"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover opacity-30 grayscale group-hover/ig:grayscale-0 group-hover/ig:opacity-50 transition-all duration-700"
                     />
                     <a 
                       href={video.video_url} 

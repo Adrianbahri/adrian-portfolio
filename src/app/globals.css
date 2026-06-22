@@ -106,7 +106,7 @@
   
   .grain {
     @apply pointer-events-none fixed inset-0 z-50 opacity-[0.02];
-    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    background-image: url("/noise.svg");
   }
 
   .glow-subtle {
@@ -124,7 +124,7 @@
   }
 
   .photo-label {
-    @apply mt-4 px-2 flex justify-between items-center font-mono text-[9px] uppercase tracking-widest text-on-dark/40;
+    @apply mt-4 px-2 flex justify-between items-center font-mono text-[9px] uppercase tracking-widest text-body-muted;
   }
 
   .content-prose {

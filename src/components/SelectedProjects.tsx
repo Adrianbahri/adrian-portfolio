@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ExternalLink, Code2, ArrowRight, Video, Palette, Camera, ArrowUpRight } from 'lucide-react';
 import { projects } from '@/data/projects';
@@ -150,10 +151,12 @@ function BentoCard({ project, index, isCategory }: { project: any, index: number
         </div>
 
         <div className="mt-auto relative overflow-hidden aspect-[16/10] border border-border-subtle group-hover:border-primary/20 transition-all duration-700 shadow-2xl">
-          <img
+          <Image
             src={project.img || project.image_url}
             alt={project.title}
-            className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-all duration-1000 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-canvas/40 group-hover:bg-transparent transition-colors duration-700" />
 

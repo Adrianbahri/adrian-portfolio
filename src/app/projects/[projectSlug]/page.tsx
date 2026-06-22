@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, ChevronRight, Loader2, LayoutGrid } from 'lucide-react';
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -120,7 +121,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                               />
                             </div>
                           ) : (
-                            <img src={media.url} alt={`${project.title} asset ${i}`} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
+                            <Image src={media.url} alt={`${project.title} asset ${i}`} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
                           )}
                           <div className="absolute top-4 right-4 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[0.5rem] font-bold uppercase tracking-widest text-white/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                             {isVideo ? 'Video Production' : isPdf ? 'Magazine PDF Reader' : 'Design Asset'}
@@ -142,8 +143,8 @@ export default async function ProjectDetailPage({ params }: Props) {
             <div className="space-y-8">
               {/* Hero Image / Fallback Hero if no media at all */}
               {!markdown.includes('![Image]') && gallery.length === 0 && (
-                <div className="aspect-[16/10] bg-surface-100 border border-border-strong overflow-hidden rounded-sm group shadow-2xl">
-                  <img src={project.image_url || '/placeholder.png'} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <div className="relative aspect-[16/10] bg-surface-100 border border-border-strong overflow-hidden rounded-sm group shadow-2xl">
+                  <Image src={project.image_url || '/placeholder.png'} alt={project.title} fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover transition-transform duration-1000 group-hover:scale-105" />
                 </div>
               )}
 

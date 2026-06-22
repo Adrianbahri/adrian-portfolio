@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Search, ArrowLeft, Calendar, User, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,8 +60,8 @@ export default function BlogPage() {
             {filteredArticles.map((article, idx) => (
               <motion.article key={article.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="group">
                 <Link href={`/blog/${article.slug}`} className="block space-y-6">
-                  <div className="aspect-[16/10] overflow-hidden bg-surface-100 border border-border-subtle rounded-sm">
-                    <img src={article.img || `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80`} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-100" />
+                  <div className="relative aspect-[16/10] overflow-hidden bg-surface-100 border border-border-subtle rounded-sm">
+                    <Image src={article.img || `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80`} alt={article.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-100" />
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-4 text-[0.6rem] font-bold uppercase tracking-widest text-primary">

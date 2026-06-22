@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FileText, ArrowRight } from 'lucide-react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -94,10 +95,13 @@ export default function Hero() {
         >
           <div className="photo-frame w-full max-w-[340px] sm:max-w-[380px] group rounded-[5px]">
             <div className="relative aspect-[4/5] overflow-hidden bg-canvas rounded-[2px]">
-              <img
+              <Image
                 src={settings.hero_image || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80"}
                 alt="Adrian Visual"
-                className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+                fill
+                priority
+                sizes="(max-width: 768px) 340px, (max-width: 1024px) 380px, 400px"
+                className="object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/10 mix-blend-overlay pointer-events-none" />
             </div>

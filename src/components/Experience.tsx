@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { workData, organizationData, volunteerData } from '@/data/experience';
 import { Briefcase } from 'lucide-react';
@@ -128,21 +129,23 @@ export default function Experience() {
                   {/* Left Side: Date, Location & Logo */}
                   <div className="md:pr-12 flex flex-row md:flex-col justify-between md:justify-start items-start gap-4">
                     <div className="space-y-2">
-                      <p className="text-[11px] font-bold text-body-muted/60 uppercase tracking-[0.2em] font-mono">
+                      <p className="text-[11px] font-bold text-body-muted uppercase tracking-[0.2em] font-mono">
                         {item.year}
                       </p>
-                      <p className="text-[13px] text-body-muted/80 leading-relaxed font-sans font-medium">
+                      <p className="text-[13px] text-body-muted leading-relaxed font-sans font-medium">
                         {item.location}
                       </p>
                     </div>
                     
                     {/* Premium 1:1 Logo container */}
-                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl border border-white/5 bg-white/[0.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-md overflow-hidden flex items-center justify-center text-[#3ecf8e] group-hover:border-primary/30 group-hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all duration-500 shrink-0">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl border border-white/5 bg-white/[0.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-md overflow-hidden flex items-center justify-center text-[#3ecf8e] group-hover:border-primary/30 group-hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all duration-500 shrink-0 relative">
                       {logoUrl ? (
-                        <img 
+                        <Image 
                           src={logoUrl} 
                           alt={`${item.company} logo`} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          fill
+                          sizes="64px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
                       ) : (
                         <Briefcase size={20} className="opacity-40 group-hover:opacity-80 group-hover:text-primary transition-all duration-500" />
@@ -157,7 +160,7 @@ export default function Experience() {
                         <h3 className="font-heading text-2xl md:text-3xl font-medium tracking-[-0.04em] text-on-dark group-hover:text-primary transition-colors">
                           {item.role}
                         </h3>
-                        <p className="text-[11px] font-mono text-body-muted/70 uppercase tracking-widest font-bold">
+                        <p className="text-[11px] font-mono text-body-muted uppercase tracking-widest font-bold">
                           {item.company}
                         </p>
                       </div>
@@ -186,7 +189,7 @@ export default function Experience() {
                       {item.points.map((point: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-2 shrink-0" />
-                          <p className="text-sm leading-relaxed text-body-muted/80 font-sans">
+                          <p className="text-sm leading-relaxed text-body-muted font-sans">
                             {point}
                           </p>
                         </div>
@@ -210,17 +213,17 @@ export default function Experience() {
             <div className="space-y-8">
               {sortedOrg.map((item, i) => (
                 <article key={i} className="group space-y-3">
-                  <p className="text-[10px] font-mono text-body-muted/60 uppercase tracking-[0.2em] font-bold">{item.year}</p>
+                  <p className="text-[10px] font-mono text-body-muted uppercase tracking-[0.2em] font-bold">{item.year}</p>
                   <div className="space-y-1">
                     <h4 className="font-heading text-xl font-medium text-on-dark group-hover:text-primary transition-colors tracking-tight">
                       {item.role}
                     </h4>
-                    <p className="text-[10px] font-mono text-body-muted/70 uppercase tracking-widest font-bold">
+                    <p className="text-[10px] font-mono text-body-muted uppercase tracking-widest font-bold">
                       {item.company}
                     </p>
                   </div>
                   <div 
-                    className="text-sm leading-relaxed text-body-muted/80 max-w-md font-sans font-light"
+                    className="text-sm leading-relaxed text-body-muted max-w-md font-sans font-light"
                     dangerouslySetInnerHTML={{ __html: item.desc }}
                   />
                 </article>
@@ -235,17 +238,17 @@ export default function Experience() {
             <div className="space-y-12">
               {sortedVol.map((item, i) => (
                 <article key={i} className="group space-y-3">
-                  <p className="text-[10px] font-mono text-body-muted/60 uppercase tracking-[0.2em] font-bold">{item.year}</p>
+                  <p className="text-[10px] font-mono text-body-muted uppercase tracking-[0.2em] font-bold">{item.year}</p>
                   <div className="space-y-1">
                     <h4 className="font-heading text-xl font-medium text-on-dark group-hover:text-primary transition-colors tracking-tight">
                       {item.role}
                     </h4>
-                    <p className="text-[10px] font-mono text-body-muted/70 uppercase tracking-widest font-bold">
+                    <p className="text-[10px] font-mono text-body-muted uppercase tracking-widest font-bold">
                       {item.company}
                     </p>
                   </div>
                   <div 
-                    className="text-sm leading-relaxed text-body-muted/80 max-w-md font-sans font-light"
+                    className="text-sm leading-relaxed text-body-muted max-w-md font-sans font-light"
                     dangerouslySetInnerHTML={{ __html: item.desc }}
                   />
                 </article>

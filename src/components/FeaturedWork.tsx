@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ExternalLink, GitBranch, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -120,7 +121,7 @@ export default function FeaturedWork() {
               onClick={() => setMode('developer')}
               className={cn(
                 "relative z-10 flex-1 px-4 sm:px-8 py-2 text-[10px] font-heading font-bold uppercase tracking-[0.2em] transition-colors duration-300 rounded-[3px]",
-                mode === 'developer' ? "text-canvas" : "text-body-muted hover:text-on-dark"
+                mode === 'developer' ? "text-canvas bg-on-dark md:bg-transparent" : "text-body-muted hover:text-on-dark"
               )}
             >
               Developer
@@ -129,7 +130,7 @@ export default function FeaturedWork() {
               onClick={() => setMode('creative')}
               className={cn(
                 "relative z-10 flex-1 px-4 sm:px-8 py-2 text-[10px] font-heading font-bold uppercase tracking-[0.2em] transition-colors duration-300 rounded-[3px]",
-                mode === 'creative' ? "text-canvas" : "text-body-muted hover:text-on-dark"
+                mode === 'creative' ? "text-canvas bg-on-dark md:bg-transparent" : "text-body-muted hover:text-on-dark"
               )}
             >
               Creative
@@ -170,11 +171,12 @@ export default function FeaturedWork() {
                   className="group block p-4"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-canvas border border-border-subtle rounded-[3px]">
-                    <img
+                    <Image
                       src={project.img}
                       alt={project.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition-all duration-1000 group-hover:scale-105"
                     />
                     <div className="absolute top-3 right-3">
                       <span className="px-3 py-1 bg-surface-200/90 backdrop-blur-md text-[0.55rem] font-bold tracking-[0.2em] text-on-dark uppercase border border-border-strong rounded-[2px]">
@@ -199,7 +201,7 @@ export default function FeaturedWork() {
                     {mode === 'developer' && project.tags && (
                       <div className="flex flex-wrap gap-2 pt-2">
                         {project.tags.slice(0, 3).map((tag: string, i: number) => (
-                          <span key={i} className="text-[7px] text-on-dark/30 font-bold uppercase tracking-widest border border-border-subtle px-2 py-0.5 rounded-[2px]">
+                          <span key={i} className="text-[7px] text-body-muted font-bold uppercase tracking-widest border border-border-subtle px-2 py-0.5 rounded-[2px]">
                             {tag}
                           </span>
                         ))}

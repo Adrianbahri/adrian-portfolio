@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
+import Image from 'next/image';
 import { Play } from 'lucide-react';
 
 export default function CreativeReel() {
@@ -28,10 +29,12 @@ export default function CreativeReel() {
         style={{ scale }}
         className="relative w-full max-w-[1200px] aspect-[21/9] bg-[var(--color-tile-3)] group cursor-pointer"
       >
-        <img 
+        <Image 
           src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80" 
           alt="Creative Reel Thumbnail" 
-          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+          fill
+          sizes="(max-width: 1200px) 100vw, 1200px"
+          className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
         />
         
         {/* Play Button Overlay */}

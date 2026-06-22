@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react';
 import { Metadata } from 'next';
+import Image from 'next/image';
 
 interface Props {
   params: Promise<{ postSlug: string }>;
@@ -57,8 +58,8 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
           </header>
 
-          <div className="aspect-[21/9] mb-20 bg-surface-100 border border-border-subtle rounded-sm overflow-hidden shadow-2xl">
-             <img src={article.img || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=2000&q=80'} alt={article.title} className="w-full h-full object-cover" />
+          <div className="relative aspect-[21/9] mb-20 bg-surface-100 border border-border-subtle rounded-sm overflow-hidden shadow-2xl">
+             <Image src={article.img || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=2000&q=80'} alt={article.title} fill sizes="(max-width: 1024px) 100vw, 800px" className="object-cover" />
           </div>
 
           <div className="mx-auto content-prose">
@@ -89,7 +90,7 @@ export default async function BlogPostPage({ params }: Props) {
 
           <footer className="mt-24 pt-12 border-t border-border-subtle flex items-center justify-between">
             <div className="flex gap-4">
-              <button className="p-3 bg-surface-50 border border-border-subtle rounded-full text-body-muted hover:text-primary hover:border-primary/40 transition-all"><Share2 size={18} /></button>
+              <button aria-label="Share article" className="p-3 bg-surface-50 border border-border-subtle rounded-full text-body-muted hover:text-primary hover:border-primary/40 transition-all"><Share2 size={18} /></button>
             </div>
             <Link href="/blog" className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-dark hover:text-primary transition-colors flex items-center gap-2">
               Next Article <ArrowLeft size={14} className="rotate-180" />

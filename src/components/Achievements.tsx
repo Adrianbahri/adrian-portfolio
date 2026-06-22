@@ -108,7 +108,7 @@ export default function Achievements() {
                     
                     {/* Mobile Hint */}
                     <div className="lg:hidden mt-4 pt-4 border-t border-border-subtle/30 flex items-center justify-between">
-                      <span className="text-[8px] uppercase tracking-widest text-primary/40 font-bold">
+                      <span className="text-[8px] uppercase tracking-widest text-primary/70 font-bold">
                         {isExpanded ? 'Close Detail' : 'Tap for Detail'}
                       </span>
                     </div>

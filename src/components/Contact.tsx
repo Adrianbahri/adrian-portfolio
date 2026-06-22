@@ -58,7 +58,7 @@ export default function Contact() {
           <p className="text-[10px] text-body-muted uppercase tracking-[0.3em] font-mono font-bold">
             © 2026 DRIAN. ALL RIGHTS RESERVED.
           </p>
-          <p className="text-[10px] text-primary/40 uppercase tracking-[0.2em] font-mono font-bold">
+          <p className="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-mono font-bold">
             Compiled with human logic & accelerated by Gemini Flash.
           </p>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Download, ExternalLink, Tag, X, ZoomIn, ZoomOut } from 'lucide-react';
@@ -74,10 +75,12 @@ export default function PrintShowcase() {
                   {/* 1. Ambient Blurred Background Layer (Creates the gorgeous floating depth glow) */}
                   <div className="absolute inset-0 scale-125 blur-2xl opacity-40 pointer-events-none select-none overflow-hidden rounded-none z-0">
                     {isImageUrl ? (
-                      <img 
+                      <Image 
                         src={pub.pdf_url} 
                         alt="Blur Backdrop" 
-                        className="w-full h-full object-cover" 
+                        fill
+                        sizes="100px"
+                        className="object-cover" 
                       />
                     ) : (
                       pub.pdf_url && (
@@ -92,11 +95,15 @@ export default function PrintShowcase() {
                   {/* 2. Sharp Front Floating Mockup Layer - Centered and Floating on top of the ambient glow */}
                   <div className="absolute inset-0 flex items-center justify-center p-4 z-10">
                     {isImageUrl ? (
-                      <img 
-                        src={pub.pdf_url} 
-                        alt={pub.title} 
-                        className="max-w-full max-h-full object-contain shadow-2xl border border-white/5 rounded-none transition-transform duration-[1.2s] group-hover:scale-[1.03]" 
-                      />
+                      <div className="relative w-full h-full">
+                        <Image 
+                          src={pub.pdf_url} 
+                          alt={pub.title} 
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-contain shadow-2xl border border-white/5 rounded-none transition-transform duration-[1.2s] group-hover:scale-[1.03]" 
+                        />
+                      </div>
                     ) : (
                       pub.pdf_url && (
                         <PdfThumbnail 
@@ -280,10 +287,12 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
             <button
               type="button"
               onClick={zoomOut}
+              aria-label="Zoom out"
               disabled={scale <= 0.5}
               className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
               title="Resize Smaller"
             >
+              <span className="sr-only">Zoom Out</span>
               <ZoomOut size={16} />
             </button>
             
@@ -305,10 +314,12 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
             <button
               type="button"
               onClick={zoomIn}
+              aria-label="Zoom in"
               disabled={scale >= 2.0}
               className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
               title="Resize Larger"
             >
+              <span className="sr-only">Zoom In</span>
               <ZoomIn size={16} />
             </button>
           </div>
@@ -327,9 +338,11 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
             </a>
             <button
               onClick={onClose}
+              aria-label="Close viewer"
               className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
               title="Close Reader"
             >
+              <span className="sr-only">Close Viewer</span>
               <X size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
           </div>
@@ -343,7 +356,7 @@ function FlipbookWrapper({ pdfUrl, title, onClose }: { pdfUrl: string; title: st
           
           {/* Ambient background blur that matches the image */}
           <div className="absolute inset-0 scale-125 blur-3xl opacity-25 select-none pointer-events-none z-0">
-            <img src={pdfUrl} className="w-full h-full object-cover" alt="Blur Background" />
+            <Image src={pdfUrl} fill sizes="100px" className="object-cover" alt="Blur Background" />
           </div>
           
           {/* Sharp Mockup Image - Scrollable and sized dynamically based on Scale! */}

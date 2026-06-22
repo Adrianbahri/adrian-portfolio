@@ -156,11 +156,13 @@ export default function GlobalNav() {
 
               <button 
                 onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Toggle navigation menu"
                 className={cn(
                   "md:hidden p-2.5 text-on-dark rounded-[3px] transition-colors",
                   menuOpen ? "bg-primary/20 text-primary" : "hover:bg-on-dark/5"
                 )}
               >
+                <span className="sr-only">Menu</span>
                 <Menu size={16} />
               </button>
             </div>
