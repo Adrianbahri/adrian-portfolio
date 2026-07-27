@@ -28,8 +28,28 @@ function ResetPasswordContent() {
     // Check if we are in update mode
     if (type === 'recovery' || code || window.location.hash.includes('access_token')) {
       setMode('update');
+
+      // Explicitly extract tokens from URL hash if present (Implicit Flow)
+      // This guarantees the session is established before updateUser is called.
+      if (window.location.hash.includes('access_token')) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          }).catch(err => {
+            console.error('Error setting session:', err);
+          });
+        }
+      } else {
+        // For PKCE or standard flow, just ensure session is initialized
+        supabase.auth.getSession();
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, supabase.auth]);
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
