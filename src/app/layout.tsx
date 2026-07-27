@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import SmoothScrolling from "@/components/SmoothScrolling";
 import GlobalNav from "@/components/GlobalNav";
 import GlobalPdfModal from "@/components/GlobalPdfModal";
+import AuthRecoveryHandler from "@/components/AuthRecoveryHandler";
 import { supabase } from "@/lib/supabase";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -182,6 +183,7 @@ export default function RootLayout({
 
         <SmoothScrolling>
           <Suspense fallback={null}>
+            <AuthRecoveryHandler />
             <GlobalNav />
           </Suspense>
           <GlobalPdfModal />

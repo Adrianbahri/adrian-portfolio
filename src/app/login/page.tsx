@@ -97,6 +97,16 @@ export default function LoginPage() {
               </motion.div>
             )}
 
+            <div className="flex justify-end mt-1">
+              <button
+                type="button"
+                onClick={() => router.push('/reset-password')}
+                className="text-[0.65rem] text-primary/80 hover:text-primary uppercase tracking-widest font-bold transition-colors"
+              >
+                Forgot Access Key?
+              </button>
+            </div>
+
             <button 
               type="submit" 
               disabled={loading}
