@@ -14,10 +14,11 @@ export default function AuthRecoveryHandler() {
 
     // Only redirect if not already on the reset password page
     if ((hasRecoveryHash || isRecoveryQuery) && !window.location.pathname.includes('/reset-password')) {
-      // Forward all search params and hash to the reset-password page
-      router.push(`/reset-password${window.location.search}${window.location.hash}`);
+      // Forward all search params and hash to the reset-password page using a hard redirect
+      // to ensure Supabase auth listener catches the hash on page load
+      window.location.replace(`/reset-password${window.location.search}${window.location.hash}`);
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   return null;
 }
