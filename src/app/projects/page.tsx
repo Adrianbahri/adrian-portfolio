@@ -128,7 +128,7 @@ function ProjectsPageContent() {
             <AnimatePresence mode="popLayout">
               {filteredProjects.map((project, idx) => (
                 <motion.div 
-                  key={project.id} 
+                  key={`project-${filter}-${project.id || project.slug || 'item'}-${idx}`} 
                   layout 
                   initial={{ opacity: 0, y: 20 }} 
                   animate={{ opacity: 1, y: 0 }} 

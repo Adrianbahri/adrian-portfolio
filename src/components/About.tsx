@@ -31,40 +31,55 @@ export default function About() {
   return (
     <section id="about" className="section-anchor py-20 bg-transparent">
       <div className="section-container">
-        <div className="max-w-2xl">
-          <div>
-            <h2 className="font-heading text-3xl font-medium tracking-[-0.05em] text-on-dark sm:text-[2.2rem]">About</h2>
-          </div>
+        <div className="max-w-2xl mb-12 space-y-3">
+          <p className="eyebrow">About</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal text-on-dark tracking-tight font-heading leading-tight">
+            Developer. Creator. <br className="hidden sm:inline" />
+            <span className="text-primary font-normal">Lifelong learner.</span>
+          </h2>
         </div>
 
-        <div className="mt-6">
-          <div className="grid gap-12 lg:gap-16 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
-            <div className="space-y-6 text-lg leading-relaxed text-on-dark/80 font-sans font-light">
-              <div className="whitespace-pre-wrap">
+        <div>
+          <div className="grid gap-10 lg:gap-14 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.85fr)]">
+            <div className="space-y-8">
+              <div className="text-base sm:text-lg leading-relaxed text-body-muted font-sans font-normal whitespace-pre-wrap">
                 {mainBio}
               </div>
 
               <div className="space-y-4 border-t border-border-subtle pt-6">
                 <p className="eyebrow">Working principles</p>
-                <ul className="space-y-3 text-body-muted">
+                <ul className="space-y-3">
                   {principles.map((principle: string, i: number) => (
-                    <li key={i}>— {principle}</li>
+                    <li 
+                      key={i} 
+                      className="text-sm font-sans text-body-muted leading-relaxed flex items-start gap-3"
+                    >
+                      <span className="text-primary font-mono text-xs font-semibold mt-0.5">0{i + 1}.</span>
+                      <span>{principle}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            <div className="space-y-4 border-t border-border-subtle pt-6 lg:border-t-0 lg:border-l lg:pl-8">
+            <div className="space-y-4 lg:border-l lg:border-border-subtle lg:pl-10">
               <p className="eyebrow">Creative Focus</p>
 
-              {focus.map((item: any, i: number) => (
-                <article key={i} className={cn("space-y-2", i > 0 && "border-t border-border-subtle pt-4")}>
-                  <h3 className="font-heading text-lg font-medium tracking-[-0.04em] text-on-dark">{item.title}</h3>
-                  <p className="text-sm leading-7 text-body-muted">
-                    {item.desc}
-                  </p>
-                </article>
-              ))}
+              <div className="space-y-5">
+                {focus.map((item: any, i: number) => (
+                  <article 
+                    key={i} 
+                    className={cn("space-y-1.5 group", i > 0 && "border-t border-border-subtle pt-5")}
+                  >
+                    <h3 className="font-heading text-lg sm:text-xl font-normal tracking-tight text-on-dark group-hover:text-primary transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-body-muted font-sans font-normal">
+                      {item.desc}
+                    </p>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </div>

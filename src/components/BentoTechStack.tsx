@@ -5,50 +5,46 @@ import { techStack } from '@/data/techstack';
 
 export default function BentoTechStack() {
   return (
-    <section className="w-full py-10 sm:py-12 bg-transparent">
+    <section className="w-full py-16 sm:py-20 bg-transparent">
       <div className="section-container">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1.1fr] items-center gap-12 lg:gap-24">
+        <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] items-center gap-10 lg:gap-16">
           
           {/* Left: Text Content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <p className="eyebrow">The Stack</p>
-              <h2 className="text-3xl md:text-[2.2rem] font-medium text-on-dark tracking-[-0.05em] font-heading leading-tight">
-                Crafting with the <br className="hidden sm:block" />
-                <span className="text-body-muted/40 italic">best tools.</span>
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <p className="eyebrow">My Stack</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal text-on-dark tracking-tight font-heading leading-tight">
+                Crafting with the <br className="hidden sm:inline" />
+                <span className="text-primary font-normal">finest tools.</span>
               </h2>
             </div>
-            <p className="text-lg text-body-muted font-light leading-relaxed font-sans max-w-xl">
-              I leverage modern frameworks and professional creative software to build high-performance digital products and cinematic visual experiences.
+            <p className="text-base sm:text-lg text-body-muted font-normal leading-relaxed font-sans max-w-xl">
+              I leverage modern frameworks, cloud architectures, and professional creative suites to build high-performance digital products and memorable experiences.
             </p>
           </div>
 
-          {/* Right: Icon Grid with Full Intersecting Lines */}
+          {/* Right: Grid of Tech Badges with Intersecting Grid Lines */}
           <div className="relative p-4 sm:p-8">
-            {/* Divider Lines (Fully Intersecting) */}
-            {/* Vertical Line - Extended from very top to very bottom */}
-            <div className="absolute top-[-20%] bottom-[-20%] left-[79.6%] w-[1px] bg-on-dark/10 hidden sm:block z-0" />
-            
-            {/* Horizontal Line - Extended from very left to very right */}
-            <div className="absolute top-[66.6%] left-[-20%] right-[-20%] h-[1px] bg-on-dark/10 hidden sm:block z-0" />
+            {/* Architectural Intersecting Lines */}
+            <div className="absolute top-[-15%] bottom-[-15%] left-[74.5%] w-[1px] bg-border-strong/30 hidden sm:block z-0 pointer-events-none" />
+            <div className="absolute top-[50%] left-[-10%] right-[-10%] h-[1px] bg-border-strong/30 hidden sm:block z-0 pointer-events-none" />
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 sm:gap-y-16 gap-x-4 sm:gap-x-8 items-center justify-items-center relative z-10">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-y-8 sm:gap-y-10 gap-x-4 sm:gap-x-6 items-center justify-items-center relative z-10">
               {techStack.map((item, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.1 }}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -3, scale: 1.06 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="flex flex-col items-center gap-3 group relative"
+                  transition={{ duration: 0.3, delay: i * 0.025 }}
+                  className="flex flex-col items-center gap-2.5 group cursor-default"
                 >
-                  <div className="text-3xl lg:text-4xl transition-all duration-300">
+                  <div className="text-3xl sm:text-4xl text-on-dark/60 group-hover:text-primary transition-all duration-300 flex items-center justify-center">
                     <item.icon />
                   </div>
                   
-                  {/* Tooltip Name */}
-                  <span className="absolute -bottom-8 text-[10px] font-mono text-on-dark/40 lg:text-on-dark/0 lg:group-hover:text-on-dark/40 transition-all uppercase tracking-tighter whitespace-nowrap pointer-events-none">
+                  <span className="text-[11px] font-mono text-body-muted group-hover:text-on-dark transition-colors tracking-tight">
                     {item.name}
                   </span>
                 </motion.div>

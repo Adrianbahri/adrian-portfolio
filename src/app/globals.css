@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Pixel&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -12,21 +13,22 @@
   --color-on-dark: var(--on-dark);
   --color-body-muted: var(--body-muted);
   
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
-  --font-heading: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-fira: var(--font-fira-code), monospace;
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-heading: 'Geist Pixel', monospace, sans-serif;
+  --font-display: 'Geist Pixel', monospace, sans-serif;
+  --font-pixel: 'Geist Pixel', monospace, sans-serif;
 
   --animate-float: float 6s ease-in-out infinite;
   --animate-grain: grain 8s steps(10) infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
   /* Force dark mode to use the .dark class instead of system preference */
   --variant-dark: (&:where(.dark, .dark *));
 
   @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
+    50% { transform: translateY(-16px); }
   }
 
   @keyframes grain {
@@ -46,41 +48,41 @@
 @layer base {
   :root {
     --canvas: #ffffff;
-    --studio: #f9fafb;
+    --studio: #fbfbfb;
     --surface-75: #f9fafb;
-    --surface-100: #f3f4f6;
-    --surface-200: #e5e7eb;
-    --border-subtle: #e5e7eb;
-    --border-strong: #d1d5db;
-    --on-dark: #171717;
-    --body-muted: #71717a;
-    --grid-line: rgba(0, 0, 0, 0.03);
-    --grid-line-strong: rgba(0, 0, 0, 0.06);
-    --shadow-main: rgba(0, 0, 0, 0.03);
-    --primary: #24b47e;
-    --primary-hover: #1e8a60;
+    --surface-100: #f4f5f7;
+    --surface-200: #ebecef;
+    --border-subtle: #e8e9ed;
+    --border-strong: #d5d7de;
+    --on-dark: #121212;
+    --body-muted: #64748b;
+    --grid-line: rgba(0, 0, 0, 0.035);
+    --grid-line-strong: rgba(0, 0, 0, 0.07);
+    --shadow-main: rgba(0, 0, 0, 0.04);
+    --primary: #ea580c;
+    --primary-hover: #c2410c;
   }
 
   .dark {
-    --canvas: #000000;
-    --studio: #1c1c1c;
-    --surface-75: #0a0a0a;
-    --surface-100: #111111;
-    --surface-200: #171717;
-    --border-subtle: #1f1f1f;
-    --border-strong: #2e2e2e;
-    --on-dark: #ededed;
+    --canvas: #09090b;
+    --studio: #101012;
+    --surface-75: #0e0e10;
+    --surface-100: #121215;
+    --surface-200: #17171b;
+    --border-subtle: rgba(255, 255, 255, 0.065);
+    --border-strong: rgba(255, 255, 255, 0.13);
+    --on-dark: #f4f4f5;
     --body-muted: #a1a1aa;
     --grid-line: rgba(255, 255, 255, 0.03);
-    --grid-line-strong: rgba(255, 255, 255, 0.08);
-    --shadow-main: rgba(0, 0, 0, 0.8);
-    --primary: #3ecf8e;
-    --primary-hover: #34b27b;
+    --grid-line-strong: rgba(255, 255, 255, 0.065);
+    --shadow-main: rgba(0, 0, 0, 0.7);
+    --primary: #ff5522;
+    --primary-hover: #ff6b3d;
   }
 
   * { @apply border-border-subtle; }
   body {
-    @apply bg-canvas text-on-dark antialiased;
+    @apply bg-canvas text-on-dark antialiased font-sans;
     transition: background-color 0.3s ease, color 0.3s ease;
     font-feature-settings: "ss01", "ss02", "cv01", "cv11";
   }
@@ -92,7 +94,15 @@
   }
 
   .eyebrow {
-    @apply text-[0.65rem] font-mono uppercase tracking-[0.2em] text-body-muted mb-3 block;
+    @apply text-[11px] font-mono uppercase tracking-[0.25em] text-body-muted mb-3 block;
+  }
+
+  .framer-card {
+    @apply bg-surface-100/25 backdrop-blur-sm border border-border-subtle hover:border-border-strong transition-all duration-500 rounded-[4px];
+  }
+
+  .framer-pill {
+    @apply inline-flex items-center gap-2 border border-border-subtle bg-surface-100/40 backdrop-blur-sm rounded-[3px] px-3 py-1 text-xs font-mono text-body-muted;
   }
 
   .blueprint-grid {
@@ -114,17 +124,17 @@
   }
 
   .photo-frame {
-    @apply relative p-4 bg-surface-100 border border-border-strong;
-    box-shadow: 0 30px 60px -15px var(--shadow-main);
-  }
-  
-  .photo-frame::after {
-    content: "";
-    @apply absolute inset-4 border border-border-subtle pointer-events-none;
+    @apply relative p-3.5 bg-surface-100 border border-border-strong rounded-[4px] transition-all duration-700 hover:border-primary/50;
+    box-shadow: 0 25px 50px -12px var(--shadow-main);
   }
 
+  .photo-frame::after {
+    content: "";
+    @apply absolute inset-3 border border-border-subtle pointer-events-none rounded-[2px];
+  }
+  
   .photo-label {
-    @apply mt-4 px-2 flex justify-between items-center font-mono text-[9px] uppercase tracking-widest text-body-muted;
+    @apply mt-3 px-1 flex justify-between items-center font-mono text-[10px] uppercase tracking-widest text-body-muted;
   }
 
   .content-prose {

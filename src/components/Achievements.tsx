@@ -42,21 +42,22 @@ export default function Achievements() {
   });
 
   return (
-    <section id="achievements" className="w-full py-10 sm:py-12 bg-transparent">
-      <div className="section-container border-t border-border-strong/40">
-        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-0">
+    <section id="achievements" className="w-full py-16 sm:py-20 bg-transparent">
+      <div className="section-container border-t border-border-subtle pt-16">
+        <div className="space-y-10">
           {/* Title Section */}
-          <div className="pt-10 pb-8 md:pb-0">
-            <div className="space-y-4">
-              <h2 className="font-heading text-xl font-bold text-on-dark leading-tight tracking-widest uppercase text-[0.8rem]">Achievements</h2>
-              <p className="text-sm text-body-muted font-sans font-light">
-                National awards & recognitions.
-              </p>
-            </div>
+          <div className="space-y-3">
+            <p className="eyebrow">Recognition</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal text-on-dark tracking-tight font-heading leading-tight">
+              Selected <span className="text-primary font-normal">Honors</span>
+            </h2>
+            <p className="text-base sm:text-lg text-body-muted font-sans font-normal">
+              National competitions, awards, and recognitions.
+            </p>
           </div>
 
-          {/* Items Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Items Section: Flush Architectural Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-border-subtle rounded-[4px] divide-y sm:divide-y-0 sm:divide-x divide-border-subtle overflow-hidden">
             {sortedAchievements.map((item, i) => {
               const isExpanded = expandedId === item.id;
               
@@ -64,54 +65,49 @@ export default function Achievements() {
                 <div
                   key={item.id}
                   onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  className="group relative p-6 pt-10 border-t border-border-subtle md:border-t-0 md:border-l border-border-subtle transition-all duration-500 min-h-[120px] cursor-pointer bg-transparent hover:bg-surface-75/50"
+                  className="group relative p-6 bg-transparent hover:bg-surface-100/15 transition-all duration-300 cursor-pointer flex flex-col justify-between"
                 >
-                  {/* Dynamic Expanding Line Overlay */}
-                  <div className="absolute left-0 top-0 w-[1px] h-6 group-hover:h-full bg-primary/40 transition-all duration-500 hidden md:block" />
-                  
+                  {/* Dynamic Expanding Line Indicator */}
+                  <div className="absolute left-0 top-0 w-[2px] h-5 group-hover:h-full bg-primary/60 transition-all duration-300 hidden md:block" />
+
                   <div className="space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[10px] font-mono text-primary font-bold tracking-wider">
-                          {item.year}
-                        </p>
-                        <item.icon size={14} className="text-primary/40 group-hover:text-primary transition-colors" />
-                      </div>
-                      <h3 className="text-[0.95rem] font-bold text-on-dark leading-snug tracking-tight group-hover:text-primary transition-colors">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-mono text-primary font-medium tracking-wider">
+                        {item.year}
+                      </span>
+                      <item.icon size={15} className="text-body-muted group-hover:text-primary transition-colors" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <h3 className="font-heading text-base sm:text-lg font-normal text-on-dark leading-snug group-hover:text-primary transition-colors tracking-tight">
                         {item.title}
                       </h3>
-                      <p className="text-[10px] font-mono text-body-muted uppercase tracking-widest font-bold">
+                      <p className="text-xs font-mono text-body-muted uppercase tracking-wider font-medium">
                         {item.event}
                       </p>
                     </div>
-                    
-                    <AnimatePresence>
+                  </div>
+                  
+                  <AnimatePresence>
+                    {isExpanded && (
                       <motion.div 
-                        initial={false}
-                        animate={{ 
-                          height: isExpanded ? "auto" : (typeof window !== 'undefined' && window.innerWidth >= 1024 ? "auto" : 0),
-                          opacity: isExpanded ? 1 : (typeof window !== 'undefined' && window.innerWidth >= 1024 ? 0 : 0),
-                        }}
-                        className={cn(
-                          "overflow-hidden transition-all duration-500 lg:!opacity-0 lg:group-hover:!opacity-100 lg:!h-auto",
-                          isExpanded ? "opacity-100 h-auto" : "opacity-0 h-0"
-                        )}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden pt-3 border-t border-border-subtle mt-3"
                       >
-                        <div className="pt-4 border-t border-border-subtle/50 mt-4">
-                          <div 
-                            className="text-[11px] leading-relaxed text-body-muted font-sans prose-sm prose-invert"
-                            dangerouslySetInnerHTML={{ __html: item.desc }}
-                          />
-                        </div>
+                        <div 
+                          className="text-xs leading-relaxed text-body-muted font-sans"
+                          dangerouslySetInnerHTML={{ __html: item.desc }}
+                        />
                       </motion.div>
-                    </AnimatePresence>
-                    
-                    {/* Mobile Hint */}
-                    <div className="lg:hidden mt-4 pt-4 border-t border-border-subtle/30 flex items-center justify-between">
-                      <span className="text-[8px] uppercase tracking-widest text-primary/70 font-bold">
-                        {isExpanded ? 'Close Detail' : 'Tap for Detail'}
-                      </span>
-                    </div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="mt-4 pt-3 border-t border-border-subtle/40 flex items-center justify-between text-[11px] font-mono text-body-muted">
+                    <span>{isExpanded ? 'Less info' : 'Details'}</span>
+                    <span className="text-primary group-hover:translate-x-0.5 transition-transform">→</span>
                   </div>
                 </div>
               );

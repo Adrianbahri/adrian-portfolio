@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import { Fira_Code } from "next/font/google";
+import { DM_Mono, Inter } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -12,10 +10,19 @@ import AuthRecoveryHandler from "@/components/AuthRecoveryHandler";
 import { supabase } from "@/lib/supabase";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ProjectModeProvider } from "@/context/ProjectModeContext";
 
-const firaCode = Fira_Code({
+const dmMono = DM_Mono({
+  weight: ["400", "500"],
   subsets: ["latin"],
-  variable: "--font-fira-code"
+  variable: "--font-dm-mono",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -164,17 +171,20 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${firaCode.variable}`}>
+    <html lang="en" className={`${inter.variable} ${dmMono.variable} font-sans`}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Geist+Pixel&display=swap" rel="stylesheet" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={cn(GeistSans.variable, GeistMono.variable, firaCode.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
+      <body className={cn(inter.variable, dmMono.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] font-sans antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
         {/* Global Background Layer */}
         <div className="fixed inset-0 z-[-1] pointer-events-none">
           <div className="absolute inset-0 blueprint-grid" />
@@ -182,14 +192,16 @@ export default function RootLayout({
         </div>
 
         <SmoothScrolling>
-          <Suspense fallback={null}>
-            <AuthRecoveryHandler />
-            <GlobalNav />
-          </Suspense>
-          <GlobalPdfModal />
-          {children}
-          <Analytics />
-          <SpeedInsights />
+          <ProjectModeProvider>
+            <Suspense fallback={null}>
+              <AuthRecoveryHandler />
+              <GlobalNav />
+            </Suspense>
+            <GlobalPdfModal />
+            {children}
+            <Analytics />
+            <SpeedInsights />
+          </ProjectModeProvider>
         </SmoothScrolling>
       </body>
     </html>
