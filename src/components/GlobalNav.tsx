@@ -7,7 +7,8 @@ import { Menu, Sun, Moon, Code2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { portfolioModeForPath, portfolioPath } from '@/lib/portfolio';
 
 import { useProjectMode, ProjectMode } from '@/context/ProjectModeContext';
 
@@ -21,25 +22,23 @@ const navLinks = [
 export default function GlobalNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { mode, setMode } = useProjectMode();
+  const { mode } = useProjectMode();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  const activeMode = isMounted ? mode : 'developer';
+  const activeMode = portfolioModeForPath(pathname) || (isMounted ? mode : 'developer');
 
-  if (pathname?.startsWith('/admin')) return null;
-  
+
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
     // Initial theme setup
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     if (savedTheme === 'light') {
       setIsDark(false);
       document.documentElement.classList.remove('dark');
@@ -62,15 +61,13 @@ export default function GlobalNav() {
   };
 
   const handleModeSwitch = (newMode: ProjectMode) => {
-    setMode(newMode);
-    if (pathname === '/projects') {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('mode', newMode);
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    }
+    setMenuOpen(false);
+    router.push(portfolioPath(newMode));
   };
 
   const [menuOpen, setMenuOpen] = useState(false);
+
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <>
@@ -81,7 +78,7 @@ export default function GlobalNav() {
         className="fixed top-6 inset-x-0 z-[100] pointer-events-none"
       >
         <nav className="max-w-5xl mx-auto px-6 lg:px-12 flex items-center justify-between relative">
-          
+
           {/* 1. KIRI: Logo Kotak Solid + Tombol Tema */}
           <div className="pointer-events-auto flex items-center gap-1.5 h-12 px-3.5 sm:px-4 bg-canvas/85 backdrop-blur-2xl border border-border-strong rounded-[5px] shadow-2xl shadow-black/20 transition-all duration-300 hover:border-primary/40">
             <Link href="/" className="font-heading text-sm sm:text-base font-normal tracking-tight text-on-dark hover:text-primary transition-colors pl-1">
@@ -91,7 +88,7 @@ export default function GlobalNav() {
             <div className="h-4 w-px bg-border-strong/60 mx-1" />
 
             {/* Theme Toggle di dekat nama */}
-            <button 
+            <button
               onClick={toggleTheme}
               className="p-1.5 text-body-muted hover:text-on-dark transition-colors rounded-[3px] hover:bg-surface-100 cursor-pointer"
               aria-label="Toggle theme"
@@ -107,11 +104,11 @@ export default function GlobalNav() {
               return (
                 <Link
                   key={link.name}
-                  href={link.href}
+                  href={link.name === 'Projects' && isMounted ? portfolioPath(activeMode) : link.href}
                   className={cn(
                     "px-3.5 sm:px-4 py-2 text-xs font-mono uppercase tracking-wider transition-all duration-300 rounded-[3px]",
-                    isActive 
-                      ? "bg-surface-200 text-on-dark shadow-sm border border-border-subtle" 
+                    isActive
+                      ? "bg-surface-200 text-on-dark shadow-sm border border-border-subtle"
                       : "text-body-muted hover:text-on-dark hover:bg-surface-100"
                   )}
                 >
@@ -172,7 +169,7 @@ export default function GlobalNav() {
             </div>
 
             {/* Mobile Menu Button */}
-            <button 
+            <button
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle navigation menu"
               className={cn(
@@ -206,7 +203,7 @@ export default function GlobalNav() {
                 transition={{ delay: i * 0.1 }}
               >
                 <Link
-                  href={link.href}
+                  href={link.name === 'Projects' && isMounted ? portfolioPath(activeMode) : link.href}
                   onClick={() => setMenuOpen(false)}
                   className="text-4xl font-heading font-medium text-on-dark hover:text-primary transition-colors tracking-tight"
                 >

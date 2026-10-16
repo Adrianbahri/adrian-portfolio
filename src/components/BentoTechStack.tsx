@@ -2,10 +2,12 @@
 
 import { motion } from 'framer-motion';
 import { techStack } from '@/data/techstack';
+import type { ProjectMode } from '@/lib/portfolio';
 
-export default function BentoTechStack() {
+export default function BentoTechStack({ mode }: { mode?: ProjectMode }) {
+  const tools = mode ? techStack.filter(tool => tool.mode === mode) : techStack;
   return (
-    <section className="w-full py-16 sm:py-20 bg-transparent">
+    <section id="tools" className="w-full py-16 sm:py-20 bg-transparent">
       <div className="section-container">
         <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] items-center gap-10 lg:gap-16">
           
@@ -30,7 +32,7 @@ export default function BentoTechStack() {
             <div className="absolute top-[50%] left-[-10%] right-[-10%] h-[1px] bg-border-strong/30 hidden sm:block z-0 pointer-events-none" />
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-y-8 sm:gap-y-10 gap-x-4 sm:gap-x-6 items-center justify-items-center relative z-10">
-              {techStack.map((item, i) => (
+              {tools.map((item, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 12 }}

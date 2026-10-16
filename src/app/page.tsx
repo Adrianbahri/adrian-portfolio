@@ -1,16 +1,11 @@
 import LoadingScreen from '@/components/LoadingScreen';
 import Hero from '@/components/Hero';
-import FeaturedWork from '@/components/FeaturedWork';
 import About from '@/components/About';
 import Experience from '@/components/Experience';
 import Achievements from '@/components/Achievements';
-import BentoTechStack from '@/components/BentoTechStack';
 import Contact from '@/components/Contact';
 import SmoothScrolling from '@/components/SmoothScrolling';
 
-import PhotoGallery from '@/components/PhotoGallery';
-import VideoShowcase from '@/components/VideoShowcase';
-import DesignShowcase from '@/components/DesignShowcase';
 
 import { supabase } from '@/lib/supabase';
 
@@ -34,11 +29,9 @@ export default async function Home() {
       <main className="min-h-screen">
         <LoadingScreen />
         <Hero initialSettings={initialSettings} />
-        <FeaturedWork />
         <About />
         <Experience />
         <Achievements />
-        <BentoTechStack />
         <Contact />
       </main>
     </SmoothScrolling>

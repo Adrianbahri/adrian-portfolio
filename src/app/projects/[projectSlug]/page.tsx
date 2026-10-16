@@ -49,7 +49,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       <div className="section-container relative z-10">
         {/* Header Section */}
         <header className="max-w-4xl space-y-6 mb-16 border-t border-border-subtle pt-8">
-          <Link href="/projects" className="group inline-flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-body-muted hover:text-on-dark transition-colors mb-4">
+          <Link href={project.mode === 'creative' ? '/creative' : '/dev'} className="group inline-flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-body-muted hover:text-on-dark transition-colors mb-4">
             <ArrowLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
             Back to projects
           </Link>
