@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
-import { Menu, Sun, Moon, Code2, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-import { useRouter } from 'next/navigation';
 import { portfolioModeForPath, portfolioPath } from '@/lib/portfolio';
 
-import { useProjectMode, ProjectMode } from '@/context/ProjectModeContext';
+import { useProjectMode } from '@/context/ProjectModeContext';
 
 const navLinks = [
   { name: 'About', href: '/about' },
@@ -21,7 +20,6 @@ const navLinks = [
 
 export default function GlobalNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { mode } = useProjectMode();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -58,11 +56,6 @@ export default function GlobalNav() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
-  };
-
-  const handleModeSwitch = (newMode: ProjectMode) => {
-    setMenuOpen(false);
-    router.push(portfolioPath(newMode));
   };
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -118,56 +111,7 @@ export default function GlobalNav() {
             })}
           </div>
 
-          {/* 3. KANAN: Mode Switcher Kotak Solid */}
           <div className="pointer-events-auto flex items-center gap-2 h-12">
-            <div className="relative grid grid-cols-2 items-center h-12 p-1 w-[188px] sm:w-[230px] md:w-[244px] bg-canvas/85 backdrop-blur-2xl border border-primary/45 rounded-[5px] shadow-2xl shadow-primary/20 ring-1 ring-primary/25">
-              <button
-                onClick={() => handleModeSwitch('developer')}
-                suppressHydrationWarning
-                className={cn(
-                  "relative flex items-center justify-center h-full text-xs font-mono uppercase tracking-wide transition-colors duration-200 rounded-[3px] font-bold cursor-pointer select-none",
-                  activeMode === 'developer' ? "text-white drop-shadow-sm" : "text-body-muted hover:text-on-dark"
-                )}
-                title="Developer Portfolio"
-              >
-                {activeMode === 'developer' && (
-                  isMounted ? (
-                    <motion.div
-                      layoutId="activeModePill"
-                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                      className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none" />
-                  )
-                )}
-                <span className="relative z-10 pointer-events-none">Dev</span>
-              </button>
-
-              <button
-                onClick={() => handleModeSwitch('creative')}
-                suppressHydrationWarning
-                className={cn(
-                  "relative flex items-center justify-center h-full text-xs font-mono uppercase tracking-wide transition-colors duration-200 rounded-[3px] font-bold cursor-pointer select-none",
-                  activeMode === 'creative' ? "text-white drop-shadow-sm" : "text-body-muted hover:text-on-dark"
-                )}
-                title="Creative Portfolio"
-              >
-                {activeMode === 'creative' && (
-                  isMounted ? (
-                    <motion.div
-                      layoutId="activeModePill"
-                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                      className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none" />
-                  )
-                )}
-                <span className="relative z-10 pointer-events-none">Creative</span>
-              </button>
-            </div>
-
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}

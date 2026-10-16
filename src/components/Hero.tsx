@@ -69,10 +69,17 @@ export default function Hero({ initialSettings }: HeroProps) {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
               <Link 
-                href="/projects" 
+                href="/dev"
                 className="group bg-on-dark text-canvas px-8 py-3.5 font-heading font-medium text-xs uppercase tracking-[0.2em] rounded-[3px] flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all duration-300 shadow-lg shadow-black/10 hover:-translate-y-0.5"
               >
-                View Selected Works
+                Dev
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/creative"
+                className="group px-7 py-3.5 border border-border-strong text-on-dark font-heading font-medium text-xs uppercase tracking-[0.2em] rounded-[3px] flex items-center justify-center gap-2 hover:bg-surface-100 transition-all duration-300 hover:-translate-y-0.5"
+              >
+                Creative
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               <button 
