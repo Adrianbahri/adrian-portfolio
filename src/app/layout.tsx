@@ -7,10 +7,10 @@ import SmoothScrolling from "@/components/SmoothScrolling";
 import GlobalNav from "@/components/GlobalNav";
 import GlobalPdfModal from "@/components/GlobalPdfModal";
 import AuthRecoveryHandler from "@/components/AuthRecoveryHandler";
+import { supabase } from "@/lib/supabase";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ProjectModeProvider } from "@/context/ProjectModeContext";
-import { getSiteSettings } from "@/lib/site-settings";
 
 const dmMono = DM_Mono({
   weight: ["400", "500"],
@@ -28,8 +28,24 @@ const inter = Inter({
 export async function generateMetadata(): Promise<Metadata> {
   let heroImage = "/api/assets/uploads/profile-fallback.webp";
 
-  const settingsMap = await getSiteSettings();
-  if (settingsMap.hero_image) heroImage = settingsMap.hero_image;
+  try {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('key, value');
+
+    if (data) {
+      const settingsMap = data.reduce((acc: any, item: any) => {
+        acc[item.key] = item.value;
+        return acc;
+      }, {});
+
+      if (settingsMap.hero_image) {
+        heroImage = settingsMap.hero_image;
+      }
+    }
+  } catch (e) {
+    console.error("Error fetching site settings for metadata:", e);
+  }
 
   // Cool, premium title as requested
   const siteTitle = "Adrian Bahri (Dri4n) | Creative Technologist & Web Developer";
@@ -169,7 +185,6 @@ export default function RootLayout({
         />
       </head>
       <body className={cn(inter.variable, dmMono.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] font-sans antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
-        <a href="#main-content" className="portfolio-skip-link">Skip to content</a>
         {/* Global Background Layer */}
         <div className="fixed inset-0 z-[-1] pointer-events-none">
           <div className="absolute inset-0 blueprint-grid" />
@@ -183,7 +198,7 @@ export default function RootLayout({
               <GlobalNav />
             </Suspense>
             <GlobalPdfModal />
-            <div id="main-content" tabIndex={-1}>{children}</div>
+            {children}
             <Analytics />
             <SpeedInsights />
           </ProjectModeProvider>

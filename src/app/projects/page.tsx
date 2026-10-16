@@ -1,5 +1,8 @@
-import ProjectArchive from '@/components/ProjectArchive';
+import { redirect } from 'next/navigation';
 
-export default function ProjectsPage() {
-  return <main className="min-h-screen"><ProjectArchive /></main>;
+export default async function ProjectsPage({ searchParams }: {
+  searchParams: Promise<{ mode?: string }>;
+}) {
+  const { mode } = await searchParams;
+  redirect(mode === 'creative' ? '/creative' : '/dev');
 }

@@ -6,7 +6,6 @@ import type { ProjectMode } from '@/lib/portfolio';
 
 export default function BentoTechStack({ mode }: { mode?: ProjectMode }) {
   const tools = mode ? techStack.filter(tool => tool.mode === mode) : techStack;
-  const isCreative = mode === 'creative';
   return (
     <section id="tools" className="w-full py-16 sm:py-20 bg-transparent">
       <div className="section-container">
@@ -15,14 +14,14 @@ export default function BentoTechStack({ mode }: { mode?: ProjectMode }) {
           {/* Left: Text Content */}
           <div className="space-y-6">
             <div className="space-y-3">
-              <p className="eyebrow">{isCreative ? 'Creative toolkit' : 'Development toolkit'}</p>
+              <p className="eyebrow">My Stack</p>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal text-on-dark tracking-tight font-heading leading-tight">
-                {isCreative ? 'Tools for a' : 'Built with the'}{' '}<br className="hidden sm:inline" />
-                <span className="text-primary font-normal">{isCreative ? 'different perspective.' : 'right tools.'}</span>
+                Crafting with the <br className="hidden sm:inline" />
+                <span className="text-primary font-normal">finest tools.</span>
               </h2>
             </div>
             <p className="text-base sm:text-lg text-body-muted font-normal leading-relaxed font-sans max-w-xl">
-              {isCreative ? 'My tools for visual design, editorial layouts, photography, and video. Each one has a place in turning an idea into a finished piece.' : 'The frameworks and platforms I use to build web applications, mobile experiences, and useful digital systems.'}
+              I leverage modern frameworks, cloud architectures, and professional creative suites to build high-performance digital products and memorable experiences.
             </p>
           </div>
 

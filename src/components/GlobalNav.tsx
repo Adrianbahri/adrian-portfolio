@@ -1,67 +1,235 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
+import { Menu, Sun, Moon, Code2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { portfolioModeForPath } from '@/lib/portfolio';
+import Link from 'next/link';
+
+import { useRouter } from 'next/navigation';
+import { portfolioModeForPath, portfolioPath } from '@/lib/portfolio';
+
+import { useProjectMode, ProjectMode } from '@/context/ProjectModeContext';
+
+const navLinks = [
+  { name: 'About', href: '/about' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'Projects', href: '/projects' },
+  { name: 'Contact', href: '/contact' },
+];
 
 export default function GlobalNav() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isDark, setIsDark] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const routeMode = portfolioModeForPath(pathname);
-  const queryMode = searchParams.get('mode');
-  const archiveMode = queryMode === 'creative' ? 'creative' : queryMode === 'developer' ? 'developer' : pathname === '/projects' ? 'developer' : null;
-  const activeMode = routeMode || (pathname.startsWith('/projects') ? archiveMode : null);
-  // URL-derived links must match during SSR and hydration, regardless of storage.
-  const projectsMode = activeMode || 'developer';
-  const navLinks = [
-    { name: 'About', href: '/about' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Projects', href: routeMode ? `${pathname}#work` : `/projects?mode=${projectsMode}` },
-    { name: 'Contact', href: '/contact' },
-  ];
+  const router = useRouter();
+  const { mode } = useProjectMode();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    let savedTheme: string | null = null;
-    try { savedTheme = localStorage.getItem('theme'); } catch { /* Storage is optional. */ }
-    const dark = savedTheme === 'dark' || (savedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.classList.toggle('dark', dark);
-    setIsDark(dark);
+    setIsMounted(true);
+  }, []);
+
+  const activeMode = portfolioModeForPath(pathname) || (isMounted ? mode : 'developer');
+
+
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    // Initial theme setup
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'light') {
+      setIsDark(false);
+      document.documentElement.classList.remove('dark');
+    } else if (savedTheme === 'dark' || systemPrefersDark) {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
   }, []);
 
   const toggleTheme = () => {
-    const dark = !isDark;
-    setIsDark(dark);
-    document.documentElement.classList.toggle('dark', dark);
-    try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch { /* Storage is optional. */ }
+    const newDark = !isDark;
+    setIsDark(newDark);
+    if (newDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   };
 
-  // All hooks stay above this return, including when navigating to/from admin.
-  if (pathname.startsWith('/admin')) return null;
+  const handleModeSwitch = (newMode: ProjectMode) => {
+    setMenuOpen(false);
+    router.push(portfolioPath(newMode));
+  };
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <header className="portfolio-nav-shell">
-      <nav className="portfolio-nav" aria-label="Main navigation">
-        <div className="flex items-center gap-2 shrink-0">
-          <Link href="/" onClick={() => setMenuOpen(false)} className="portfolio-wordmark" aria-label="DRI4N home">Dri4n<span>.</span></Link>
-          <button onClick={toggleTheme} className="portfolio-theme-toggle" aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}>{isDark ? <Sun size={16} /> : <Moon size={16} />}</button>
-        </div>
-        <div className="hidden lg:flex items-center gap-5">
-          {navLinks.map(link => <Link key={link.name} href={link.href} className={cn('portfolio-nav-link', pathname === link.href.split('?')[0] && 'is-current')}>{link.name}</Link>)}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="portfolio-mode-links" aria-label="Choose portfolio">
-            <Link href="/dev" aria-current={activeMode === 'developer' ? 'page' : undefined} onClick={() => setMenuOpen(false)} className={activeMode === 'developer' ? 'is-active' : ''}>Dev</Link>
-            <Link href="/creative" aria-current={activeMode === 'creative' ? 'page' : undefined} onClick={() => setMenuOpen(false)} className={activeMode === 'creative' ? 'is-active' : ''}>Creative</Link>
+    <>
+      <motion.header
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-6 inset-x-0 z-[100] pointer-events-none"
+      >
+        <nav className="max-w-5xl mx-auto px-6 lg:px-12 flex items-center justify-between relative">
+
+          {/* 1. KIRI: Logo Kotak Solid + Tombol Tema */}
+          <div className="pointer-events-auto flex items-center gap-1.5 h-12 px-3.5 sm:px-4 bg-canvas/85 backdrop-blur-2xl border border-border-strong rounded-[5px] shadow-2xl shadow-black/20 transition-all duration-300 hover:border-primary/40">
+            <Link href="/" className="font-heading text-sm sm:text-base font-normal tracking-tight text-on-dark hover:text-primary transition-colors pl-1">
+              Dri4n<span className="text-primary font-bold">.</span>
+            </Link>
+
+            <div className="h-4 w-px bg-border-strong/60 mx-1" />
+
+            {/* Theme Toggle di dekat nama */}
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 text-body-muted hover:text-on-dark transition-colors rounded-[3px] hover:bg-surface-100 cursor-pointer"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
           </div>
-          <button onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menuOpen} aria-controls="mobile-navigation" className="portfolio-menu-toggle lg:hidden">{menuOpen ? <X size={19} /> : <Menu size={19} />}</button>
-        </div>
-      </nav>
-      {menuOpen && <nav id="mobile-navigation" aria-label="Mobile navigation" className="portfolio-mobile-nav lg:hidden">{navLinks.map(link => <Link key={link.name} href={link.href} onClick={() => setMenuOpen(false)}>{link.name}</Link>)}</nav>}
-    </header>
+
+          {/* 2. TENGAH: Menu Navigasi Kotak Solid */}
+          <div className="pointer-events-auto hidden md:flex items-center gap-1 h-12 px-4 bg-canvas/85 backdrop-blur-2xl border border-border-strong rounded-[5px] shadow-2xl shadow-black/20 transition-all duration-300 hover:border-primary/40 absolute left-1/2 -translate-x-1/2">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.name}
+                  href={link.name === 'Projects' && isMounted ? portfolioPath(activeMode) : link.href}
+                  className={cn(
+                    "px-3.5 sm:px-4 py-2 text-xs font-mono uppercase tracking-wider transition-all duration-300 rounded-[3px]",
+                    isActive
+                      ? "bg-surface-200 text-on-dark shadow-sm border border-border-subtle"
+                      : "text-body-muted hover:text-on-dark hover:bg-surface-100"
+                  )}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* 3. KANAN: Mode Switcher Kotak Solid */}
+          <div className="pointer-events-auto flex items-center gap-2 h-12">
+            <div className="relative grid grid-cols-2 items-center h-12 p-1 w-[188px] sm:w-[230px] md:w-[244px] bg-canvas/85 backdrop-blur-2xl border border-primary/45 rounded-[5px] shadow-2xl shadow-primary/20 ring-1 ring-primary/25">
+              <button
+                onClick={() => handleModeSwitch('developer')}
+                suppressHydrationWarning
+                className={cn(
+                  "relative flex items-center justify-center h-full text-xs font-mono uppercase tracking-wide transition-colors duration-200 rounded-[3px] font-bold cursor-pointer select-none",
+                  activeMode === 'developer' ? "text-white drop-shadow-sm" : "text-body-muted hover:text-on-dark"
+                )}
+                title="Developer Portfolio"
+              >
+                {activeMode === 'developer' && (
+                  isMounted ? (
+                    <motion.div
+                      layoutId="activeModePill"
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none" />
+                  )
+                )}
+                <span className="relative z-10 pointer-events-none">Dev</span>
+              </button>
+
+              <button
+                onClick={() => handleModeSwitch('creative')}
+                suppressHydrationWarning
+                className={cn(
+                  "relative flex items-center justify-center h-full text-xs font-mono uppercase tracking-wide transition-colors duration-200 rounded-[3px] font-bold cursor-pointer select-none",
+                  activeMode === 'creative' ? "text-white drop-shadow-sm" : "text-body-muted hover:text-on-dark"
+                )}
+                title="Creative Portfolio"
+              >
+                {activeMode === 'creative' && (
+                  isMounted ? (
+                    <motion.div
+                      layoutId="activeModePill"
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-primary rounded-[3px] z-0 shadow-md shadow-primary/40 pointer-events-none" />
+                  )
+                )}
+                <span className="relative z-10 pointer-events-none">Creative</span>
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle navigation menu"
+              className={cn(
+                "md:hidden h-12 w-12 flex items-center justify-center bg-canvas/85 backdrop-blur-2xl border border-border-strong rounded-[5px] text-on-dark transition-colors cursor-pointer shadow-2xl",
+                menuOpen ? "bg-primary/20 text-primary border-primary" : "hover:bg-surface-100"
+              )}
+            >
+              <span className="sr-only">Menu</span>
+              <Menu size={16} />
+            </button>
+          </div>
+
+        </nav>
+      </motion.header>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            animate={{ opacity: 1, backdropFilter: "blur(12px)" }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            className="fixed inset-0 z-[90] bg-canvas/60 md:hidden flex flex-col items-center justify-center gap-8"
+          >
+            {navLinks.map((link, i) => (
+              <motion.div
+                key={link.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Link
+                  href={link.name === 'Projects' && isMounted ? portfolioPath(activeMode) : link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="text-4xl font-heading font-medium text-on-dark hover:text-primary transition-colors tracking-tight"
+                >
+                  {link.name}
+                </Link>
+              </motion.div>
+            ))}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ delay: navLinks.length * 0.1 }}
+              className="pt-4 border-t border-border-strong/40"
+            >
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2.5 px-5 py-2.5 bg-surface-100/90 border border-border-strong rounded-[4px] text-xs font-mono uppercase tracking-wider text-on-dark hover:border-primary/40 transition-colors"
+              >
+                {isDark ? <Sun size={17} strokeWidth={2} /> : <Moon size={17} strokeWidth={2} />}
+                <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

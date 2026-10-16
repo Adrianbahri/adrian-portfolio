@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, ExternalLink, Code2, Globe, Loader2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Code2, Globe, Search, Filter, Loader2, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,10 +14,12 @@ import DesignShowcase from '@/components/DesignShowcase';
 import PrintShowcase from '@/components/PrintShowcase';
 
 import { Suspense } from 'react';
-import type { ProjectMode } from '@/lib/portfolio';
+import BentoTechStack from '@/components/BentoTechStack';
+import { portfolioPath, type ProjectMode } from '@/lib/portfolio';
 
 interface ProjectArchiveProps {
   portfolioMode?: ProjectMode;
+  includeTools?: boolean;
 }
 
 export default function ProjectArchive(props: ProjectArchiveProps) {
@@ -28,17 +30,21 @@ export default function ProjectArchive(props: ProjectArchiveProps) {
   );
 }
 
-function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
+function ProjectsPageContent({ portfolioMode, includeTools }: ProjectArchiveProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const filter = portfolioMode || (searchParams.get('mode') === 'creative' ? 'creative' : 'developer');
+  const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
 
   // Function to update the mode in URL
-  const setFilter = (mode: string) => {
+  const setFilter = (mode: ProjectMode) => {
+    if (portfolioMode) {
+      router.push(portfolioPath(mode));
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set('mode', mode);
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
@@ -46,39 +52,36 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (error) setLoadError(true);
-        if (data) setProjects(data);
-      } catch {
-        setLoadError(true);
-      } finally {
-        setLoading(false);
-      }
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data) setProjects(data);
+      setLoading(false);
     };
     fetchProjects();
   }, []);
 
   const filteredProjects = projects.filter(project => {
     const matchesFilter = (project.mode?.toLowerCase() || 'developer') === filter.toLowerCase();
-    return matchesFilter;
+    const matchesSearch = project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (project.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
   return (
-    <section id="work" aria-label={filter === 'creative' ? 'Creative projects' : 'Development projects'} className="bg-transparent pb-16 relative">
-      <div className={cn("section-container relative z-10", portfolioMode ? "pt-12" : "pt-28")}>
+    <main className="min-h-screen bg-transparent pb-24 relative">
+      <div className="section-container relative z-10 pt-24">
         {/* MAIN MODE SWITCHER (Above the Title) */}
-        {!portfolioMode && <div className="py-6 mb-12 border-b border-border-subtle flex justify-center sm:justify-start">
+        <div className="py-6 mb-12 border-b border-white/5 flex justify-center sm:justify-start">
           <div className="flex items-center p-1 bg-surface-100 border border-border-strong w-fit">
             <button
               onClick={() => setFilter('developer')}
               className={cn(
                 "px-6 sm:px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
-                filter === 'developer' 
-                  ? "bg-on-dark text-canvas" 
+                filter === 'developer'
+                  ? "bg-on-dark text-canvas"
                   : "text-body-muted hover:text-on-dark"
               )}
             >
@@ -88,32 +91,32 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
               onClick={() => setFilter('creative')}
               className={cn(
                 "px-6 sm:px-10 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
-                filter === 'creative' 
-                  ? "bg-on-dark text-canvas" 
+                filter === 'creative'
+                  ? "bg-on-dark text-canvas"
                   : "text-body-muted hover:text-on-dark"
               )}
             >
               Creative
             </button>
           </div>
-        </div>}
+        </div>
 
         {/* Header Title */}
         <div className="mb-12 space-y-3">
-          <p className="eyebrow">Projects & selected work</p>
-          <h2 className="text-3xl lg:text-4xl font-medium tracking-tight text-on-dark font-heading">
-            {filter === 'developer' ? 'Development projects' : 'Creative projects'}
-          </h2>
+          <p className="eyebrow">Archive</p>
+          <h1 className="text-3xl lg:text-4xl font-medium tracking-tight text-on-dark font-heading">
+            {filter === 'developer' ? 'Technical Works' : 'Creative Works'}
+          </h1>
           <p className="text-sm text-body-muted max-w-xl font-sans leading-relaxed">
-            {filter === 'developer' 
-              ? 'Engineering robust solutions through code and modern web technologies.' 
+            {filter === 'developer'
+              ? 'Engineering robust solutions through code and modern web technologies.'
               : 'Exploring visual narratives through motion, design, and photography.'}
           </p>
         </div>
 
         {/* Showcase Components (Only in Creative Mode) */}
         {filter === 'creative' && !loading && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-0" // Flush spacing between showcases
@@ -127,36 +130,36 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
 
         {/* Projects Grid */}
         {loading ? (
-          <div role="status" className="py-24 flex flex-col items-center justify-center gap-4 text-body-muted">
+          <div className="py-24 flex flex-col items-center justify-center gap-4 text-white/20">
             <Loader2 size={40} className="animate-spin" />
-            <p className="text-[0.6rem] font-bold uppercase tracking-[0.3em]">Loading projects…</p>
+            <p className="text-[0.6rem] font-bold uppercase tracking-[0.3em]">Loaded =, ambil nafas dan lihat beda terjauh di sekitarmu</p>
           </div>
         ) : (
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
               {filteredProjects.map((project, idx) => (
-                <motion.div 
-                  key={`project-${filter}-${project.id || project.slug || 'item'}-${idx}`} 
-                  layout 
-                  initial={{ opacity: 0, y: 20 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  exit={{ opacity: 0, scale: 0.98 }} 
-                  transition={{ duration: 0.5, delay: idx * 0.05 }} 
+                <motion.div
+                  key={`project-${filter}-${project.id || project.slug || 'item'}-${idx}`}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.5, delay: idx * 0.05 }}
                   className={cn(
                     "group relative overflow-hidden transition-all duration-500",
-                    project.mode?.toLowerCase() === 'creative' 
-                      ? "bg-transparent" 
-                      : "bg-transparent border border-border-subtle hover:border-border-strong"
+                    project.mode?.toLowerCase() === 'creative'
+                      ? "bg-transparent"
+                      : "bg-transparent border border-white/5 hover:border-white/10"
                   )}
                 >
                   {project.mode?.toLowerCase() === 'creative' ? (
                     /* CINEMATIC CREATIVE PREVIEW CARD */
                     <div className="block relative aspect-[16/10] overflow-hidden group/card border border-border-subtle hover:border-white/20 transition-all duration-700 shadow-2xl">
-                       <Link href={`/projects/${project.slug}?mode=${filter}`} aria-label={`View ${project.title}`} className="absolute inset-0 z-0">
-                          <Image src={project.image_url || '/favicon.png'} alt={project.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
+                       <Link href={`/projects/${project.slug}?mode=${filter}`} className="absolute inset-0 z-0">
+                          <Image src={project.image_url || '/placeholder.png'} alt={project.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover/card:scale-110 transition-all duration-[1.5s]" />
                           <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent opacity-60 group-hover/card:opacity-90 transition-opacity duration-700" />
                        </Link>
-                       
+
                        <div className="absolute inset-x-0 bottom-0 p-8 transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-700 z-10 pointer-events-none">
                           <div className="flex items-center gap-3 mb-3">
                              <span className="px-2 py-0.5 bg-white/10 text-[#ededed] border border-white/15 rounded text-[0.5rem] font-bold uppercase tracking-widest">{project.category}</span>
@@ -174,13 +177,13 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
                              <ChevronRight size={14} className="text-white/60" />
                           </div>
                        </div>
-                       
+
                        {/* Floating Decorative Elements */}
                        <div className="absolute top-8 right-8 flex items-center gap-3 opacity-0 group-hover/card:opacity-100 transition-all duration-700 -translate-y-2 group-hover/card:translate-y-0 z-20">
                           {project.demo_url?.toLowerCase().includes('.pdf') && (
-                            <a 
-                              href={project.demo_url} 
-                              target="_blank" 
+                            <a
+                              href={project.demo_url}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="px-3 py-1 bg-white hover:bg-[#3ecf8e] text-canvas hover:text-white rounded-md text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all shadow-lg active:scale-95 cursor-pointer"
                               title="Read PDF Directly"
@@ -196,14 +199,14 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
                     /* TECHNICAL DEVELOPER CARD */
                     <div className="grid grid-cols-1 lg:grid-cols-[40%_60%]">
                       <div className="relative aspect-video lg:aspect-auto h-full min-h-[220px] overflow-hidden bg-canvas border-b lg:border-b-0 lg:border-r border-border-subtle">
-                        <Image src={project.image_url || '/favicon.png'} alt={project.title} fill sizes="(max-width: 768px) 100vw, 40vw" className="object-cover group-hover:scale-105 transition-all duration-700 z-10" />
+                        <Image src={project.image_url || '/placeholder.png'} alt={project.title} fill sizes="(max-width: 768px) 100vw, 40vw" className="object-cover group-hover:scale-105 transition-all duration-700 z-10" />
                         <div className="absolute inset-0 bg-gradient-to-r from-canvas/10 to-transparent z-20 pointer-events-none" />
                       </div>
                       <div className="p-6 lg:p-8 flex flex-col justify-between">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                              <span className="inline-flex items-center justify-center px-2 py-1 bg-surface-100 text-body-muted border border-border-strong rounded text-[0.55rem] font-bold uppercase tracking-wider leading-none">{project.status || 'Active'}</span>
+                              <span className="inline-flex items-center justify-center px-2 py-1 bg-white/5 text-[#ededed] border border-white/15 rounded text-[0.55rem] font-bold uppercase tracking-wider leading-none">{project.status || 'Active'}</span>
                               <span className="text-body-muted text-[0.6rem] uppercase tracking-widest font-medium">{project.year_range || '2025'}</span>
                             </div>
                           </div>
@@ -219,8 +222,8 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
                         </div>
                         <div className="mt-6 pt-5 border-t border-border-subtle flex items-center justify-between gap-4">
                           <div className="flex gap-4">
-                            {project.github_url && <a href={project.github_url} aria-label={`Source code for ${project.title}`} rel="noopener noreferrer" target="_blank" className="text-body-muted hover:text-primary transition-colors"><Code2 size={16} /></a>}
-                            {project.demo_url && <a href={project.demo_url} aria-label={`Live demo of ${project.title}`} rel="noopener noreferrer" target="_blank" className="text-body-muted hover:text-primary transition-colors"><Globe size={16} /></a>}
+                            {project.github_url && <a href={project.github_url} target="_blank" className="text-body-muted hover:text-white transition-colors"><Code2 size={16} /></a>}
+                            {project.demo_url && <a href={project.demo_url} target="_blank" className="text-body-muted hover:text-white transition-colors"><Globe size={16} /></a>}
                           </div>
                           <Link href={`/projects/${project.slug}?mode=${filter}`} className="inline-flex items-center gap-2 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-primary hover:text-on-dark transition-all group/link">
                             View Case Study
@@ -236,14 +239,14 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
           </div>
         )}
 
-        {!loading && filteredProjects.length === 0 && (loadError || filter === 'developer') && (
-          <div role="status" className="py-12 border-t border-border-subtle text-body-muted text-sm">
-            {loadError ? 'Projects are temporarily unavailable. Please try again shortly.' : 'New development projects will appear here.'}
-          </div>
-        )}
+      </div>
+
+      {includeTools && <BentoTechStack mode={filter} />}
+
+      <div className="section-container">
 
         {/* FOOTER BACK BUTTON */}
-        {!portfolioMode && <div className="mt-24 pt-12 border-t border-border-subtle flex justify-center">
+        <div className="mt-24 pt-12 border-t border-white/5 flex justify-center">
           <Link href="/" className="group flex flex-col items-center gap-4 text-center">
             <div className="w-12 h-12 rounded-full border border-border-subtle flex items-center justify-center group-hover:bg-white group-hover:text-canvas group-hover:border-white transition-all duration-500">
               <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -253,8 +256,8 @@ function ProjectsPageContent({ portfolioMode }: ProjectArchiveProps) {
               <span className="block text-xs font-heading text-on-dark opacity-40 group-hover:opacity-100 transition-opacity">Back to start</span>
             </div>
           </Link>
-        </div>}
+        </div>
       </div>
-    </section>
+    </main>
   );
 }
