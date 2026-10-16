@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Mail } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
+import Experience from '@/components/Experience';
+import Achievements from '@/components/Achievements';
 
 export const metadata: Metadata = {
   title: "About Adrian Bahri (Dri4n)",
@@ -169,6 +171,9 @@ export default function AboutPage() {
           </aside>
 
         </div>
+
+        <Experience />
+        <Achievements />
 
         {/* Footer Navigation */}
         <div className="mt-24 pt-12 border-t border-white/5 flex justify-center">

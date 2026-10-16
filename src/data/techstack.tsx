@@ -65,19 +65,19 @@ const CanvaIcon = (props: SVGProps<SVGSVGElement>) => (
 
 export const techStack = [
   // --- ROW 1 ---
-  { name: 'React', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/react" /> },
-  { name: 'Next.js', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/nextdotjs" /> },
-  { name: 'Flutter', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/flutter" /> },
-  { name: 'Firebase', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/firebase" /> },
-  { name: 'Figma', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/figma" /> },
+  { name: 'React', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/react" /> },
+  { name: 'Next.js', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/nextdotjs" /> },
+  { name: 'Flutter', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/flutter" /> },
+  { name: 'Firebase', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/firebase" /> },
+  { name: 'Figma', mode: 'creative', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/figma" /> },
 
   // --- ROW 2 ---
-  { name: 'Python', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/python" /> },
-  { name: 'Google Colab', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/googlecolab" /> },
-  { name: 'WordPress', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/wordpress" /> },
-  { name: 'Tailwind', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/tailwindcss" /> },
+  { name: 'Python', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/python" /> },
+  { name: 'Google Colab', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/googlecolab" /> },
+  { name: 'WordPress', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/wordpress" /> },
+  { name: 'Tailwind', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/tailwindcss" /> },
   {
-    name: 'CapCut',
+    name: 'CapCut', mode: 'creative',
     icon: () => (
       <div className="w-7 h-7 sm:w-8 sm:h-8 opacity-70 dark:opacity-60 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
         <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 293.97 217.62" className="w-full h-full">
@@ -89,7 +89,7 @@ export const techStack = [
 
   // --- ROW 3 ---
   {
-    name: 'Lightroom',
+    name: 'Lightroom', mode: 'creative',
     icon: () => (
       <div className="w-7 h-7 sm:w-8 sm:h-8 opacity-70 dark:opacity-60 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
         <LightroomIcon />
@@ -97,7 +97,7 @@ export const techStack = [
     )
   },
   {
-    name: 'Illustrator',
+    name: 'Illustrator', mode: 'creative',
     icon: () => (
       <div className="w-7 h-7 sm:w-8 sm:h-8 opacity-70 dark:opacity-60 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
         <IllustratorIcon />
@@ -105,7 +105,7 @@ export const techStack = [
     )
   },
   {
-    name: 'Canva',
+    name: 'Canva', mode: 'creative',
     icon: () => (
       <div className="w-7 h-7 sm:w-8 sm:h-8 opacity-70 dark:opacity-60 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
         <CanvaIcon />
@@ -113,7 +113,7 @@ export const techStack = [
     )
   },
   {
-    name: 'InDesign',
+    name: 'InDesign', mode: 'creative',
     icon: () => (
       <div className="w-7 h-7 sm:w-8 sm:h-8 opacity-70 dark:opacity-60 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
         <InDesignIcon />

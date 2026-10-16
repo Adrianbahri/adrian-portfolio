@@ -2,24 +2,27 @@
 
 import { motion } from 'framer-motion';
 import { techStack } from '@/data/techstack';
+import type { ProjectMode } from '@/lib/portfolio';
 
-export default function BentoTechStack() {
+export default function BentoTechStack({ mode }: { mode?: ProjectMode }) {
+  const tools = mode ? techStack.filter(tool => tool.mode === mode) : techStack;
+  const isCreative = mode === 'creative';
   return (
-    <section className="w-full py-16 sm:py-20 bg-transparent">
+    <section id="tools" className="w-full py-16 sm:py-20 bg-transparent">
       <div className="section-container">
         <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] items-center gap-10 lg:gap-16">
           
           {/* Left: Text Content */}
           <div className="space-y-6">
             <div className="space-y-3">
-              <p className="eyebrow">My Stack</p>
+              <p className="eyebrow">{isCreative ? 'Creative toolkit' : 'Development toolkit'}</p>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal text-on-dark tracking-tight font-heading leading-tight">
-                Crafting with the <br className="hidden sm:inline" />
-                <span className="text-primary font-normal">finest tools.</span>
+                {isCreative ? 'Tools for a' : 'Built with the'}{' '}<br className="hidden sm:inline" />
+                <span className="text-primary font-normal">{isCreative ? 'different perspective.' : 'right tools.'}</span>
               </h2>
             </div>
             <p className="text-base sm:text-lg text-body-muted font-normal leading-relaxed font-sans max-w-xl">
-              I leverage modern frameworks, cloud architectures, and professional creative suites to build high-performance digital products and memorable experiences.
+              {isCreative ? 'My tools for visual design, editorial layouts, photography, and video. Each one has a place in turning an idea into a finished piece.' : 'The frameworks and platforms I use to build web applications, mobile experiences, and useful digital systems.'}
             </p>
           </div>
 
@@ -30,7 +33,7 @@ export default function BentoTechStack() {
             <div className="absolute top-[50%] left-[-10%] right-[-10%] h-[1px] bg-border-strong/30 hidden sm:block z-0 pointer-events-none" />
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-y-8 sm:gap-y-10 gap-x-4 sm:gap-x-6 items-center justify-items-center relative z-10">
-              {techStack.map((item, i) => (
+              {tools.map((item, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 12 }}

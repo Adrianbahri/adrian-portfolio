@@ -1,8 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { portfolioModeForPath, portfolioPath, type ProjectMode } from '@/lib/portfolio';
 
-export type ProjectMode = 'developer' | 'creative';
+export type { ProjectMode } from '@/lib/portfolio';
 
 interface ProjectModeContextType {
   mode: ProjectMode;
@@ -14,6 +16,8 @@ interface ProjectModeContextType {
 const ProjectModeContext = createContext<ProjectModeContextType | undefined>(undefined);
 
 export function ProjectModeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [mode, setModeState] = useState<ProjectMode>('developer');
   const [mounted, setMounted] = useState(false);
 
@@ -25,7 +29,8 @@ export function ProjectModeProvider({ children }: { children: React.ReactNode })
       if (queryMode === 'creative' || queryMode === 'developer') {
         setModeState(queryMode as ProjectMode);
       } else {
-        const saved = localStorage.getItem('portfolio-project-mode') as ProjectMode;
+        let saved: string | null = null;
+        try { saved = localStorage.getItem('portfolio-project-mode'); } catch { /* Storage is optional. */ }
         if (saved === 'creative' || saved === 'developer') {
           setModeState(saved);
         }
@@ -33,20 +38,31 @@ export function ProjectModeProvider({ children }: { children: React.ReactNode })
     }
   }, []);
 
+  // A shareable portfolio URL always wins over a previous browser preference.
+  const routeMode = portfolioModeForPath(pathname);
+  const activeMode = routeMode || mode;
+
+  useEffect(() => {
+    if (!routeMode) return;
+    setModeState(routeMode);
+    try { localStorage.setItem('portfolio-project-mode', routeMode); } catch { /* Storage is optional. */ }
+  }, [routeMode]);
+
   const setMode = (newMode: ProjectMode) => {
     setModeState(newMode);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('portfolio-project-mode', newMode);
+      try { localStorage.setItem('portfolio-project-mode', newMode); } catch { /* Storage is optional. */ }
       window.dispatchEvent(new CustomEvent('project-mode-change', { detail: newMode }));
     }
+    if (routeMode) router.push(portfolioPath(newMode));
   };
 
   const toggleMode = () => {
-    setMode(mode === 'developer' ? 'creative' : 'developer');
+    setMode(activeMode === 'developer' ? 'creative' : 'developer');
   };
 
   return (
-    <ProjectModeContext.Provider value={{ mode, setMode, toggleMode, mounted }}>
+    <ProjectModeContext.Provider value={{ mode: activeMode, setMode, toggleMode, mounted }}>
       {children}
     </ProjectModeContext.Provider>
   );

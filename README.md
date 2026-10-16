@@ -1,6 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Portfolio structure
+
+- `/` introduces Adrian and links to the two portfolios.
+- `/dev` combines development projects with development tools.
+- `/creative` combines creative projects, design/video/print/photo showcases, and creative tools.
+- `/about`, `/blog`, and `/contact` are shared pages. Experience and achievements live on `/about`.
+- `/projects?mode=developer` and `/projects?mode=creative` remain available as archive links. Legacy home links using `?mode=` redirect to the corresponding portfolio.
+
+Project categories and creative media continue to use the existing Supabase tables and admin pages; no database migration is required. Tool categories are defined in `src/data/techstack.tsx`. Portfolio URLs take precedence over a saved browser preference or conflicting `mode` parameter.
+
+Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local` for local CMS content. Keep the existing production environment variables when deploying. Use `npm run build` to check the production build.
+
+### Run locally
 
 First, run the development server:
 
