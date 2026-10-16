@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import ProjectArchive from '@/components/ProjectArchive';
+import FeaturedWork from '@/components/FeaturedWork';
+import BentoTechStack from '@/components/BentoTechStack';
 
 const title = 'Creative Portfolio';
 const description = 'Visual storytelling by Adrian Bahri: digital design, editorial work, motion, video, and photography. Discover the creative side of DRI4N.';
@@ -11,5 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function CreativePortfolio() {
-  return <ProjectArchive portfolioMode="creative" includeTools />;
+  return (
+    <main className="min-h-screen pt-24">
+      <h1 className="sr-only">Creative Portfolio</h1>
+      <FeaturedWork portfolioMode="creative" />
+      <BentoTechStack mode="creative" />
+    </main>
+  );
 }

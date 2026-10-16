@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import ProjectArchive from '@/components/ProjectArchive';
+import FeaturedWork from '@/components/FeaturedWork';
+import BentoTechStack from '@/components/BentoTechStack';
 
 const title = 'Development Portfolio';
 const description = 'Web applications, mobile experiences, and digital systems by Adrian Bahri. Explore development projects and the tools behind them.';
@@ -11,5 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function DeveloperPortfolio() {
-  return <ProjectArchive portfolioMode="developer" includeTools />;
+  return (
+    <main className="min-h-screen pt-24">
+      <h1 className="sr-only">Development Portfolio</h1>
+      <FeaturedWork portfolioMode="developer" />
+      <BentoTechStack mode="developer" />
+    </main>
+  );
 }

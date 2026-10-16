@@ -8,9 +8,9 @@ import { ExternalLink, GitBranch, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { projects as staticProjects } from '@/data/projects';
 import Link from 'next/link';
-import { useProjectMode } from '@/context/ProjectModeContext';
+import { useProjectMode, type ProjectMode } from '@/context/ProjectModeContext';
 
-export default function FeaturedWork() {
+export default function FeaturedWork({ portfolioMode }: { portfolioMode?: ProjectMode }) {
   const { mode, setMode } = useProjectMode();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -18,7 +18,7 @@ export default function FeaturedWork() {
     setIsMounted(true);
   }, []);
 
-  const activeMode = isMounted ? mode : 'developer';
+  const activeMode = portfolioMode || (isMounted ? mode : 'developer');
   const [dbProjects, setDbProjects] = useState<any[]>([]);
   const [dbCreative, setDbCreative] = useState<any[]>([]);
 
