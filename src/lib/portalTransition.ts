@@ -1,8 +1,68 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
+interface PortalState {
+  targetPath: string;
+  expandDone: boolean;
+  routeReady: boolean;
+  fadeStarted: boolean;
+  overlay: HTMLDivElement;
+  safetyTimer: number;
+}
+
+let activePortal: PortalState | null = null;
+
+function normalizePath(href: string): string {
+  try {
+    const u = new URL(href, 'http://localhost');
+    return u.pathname.replace(/\/+$/, '') || '/';
+  } catch {
+    return href.split('#')[0].split('?')[0].replace(/\/+$/, '') || '/';
+  }
+}
+
+function tryRevealTarget() {
+  if (!activePortal) return;
+  if (!activePortal.expandDone || !activePortal.routeReady || activePortal.fadeStarted) {
+    return;
+  }
+  const portal = activePortal;
+  portal.fadeStarted = true;
+  window.clearTimeout(portal.safetyTimer);
+
+  // Wait 2 animation frames so the newly mounted route has painted cleanly before lifting the veil
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const fadeAnim = portal.overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: 340,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'forwards',
+      });
+      fadeAnim.onfinish = () => {
+        portal.overlay.remove();
+        if (activePortal === portal) {
+          activePortal = null;
+        }
+      };
+    });
+  });
+}
+
+/**
+ * Called by destination pages (`/`, `/art`) once mounted so the circular portal veil
+ * ONLY lifts after the target page is actually loaded and painted.
+ */
+export function signalPortalRouteReady(pathname: string) {
+  if (typeof window === 'undefined' || !activePortal) return;
+  if (normalizePath(pathname) === activePortal.targetPath) {
+    activePortal.routeReady = true;
+    tryRevealTarget();
+  }
+}
+
 /**
  * Triggers a silky 120fps GPU-composited circular portal reveal transition
  * radiating from the clicked card/button when switching between `/` (Dev) and `/art` (Creative).
+ * Holds the veil until the destination page has actually mounted and painted.
  */
 export function navigateWithCirclePortal(
   href: string,
@@ -11,6 +71,12 @@ export function navigateWithCirclePortal(
 ) {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     router.push(href);
+    return;
+  }
+
+  const targetPath = normalizePath(href);
+  const currentPath = normalizePath(window.location.pathname);
+  if (targetPath === currentPath) {
     return;
   }
 
@@ -47,10 +113,17 @@ export function navigateWithCirclePortal(
   const isDark =
     savedTheme === 'dark' ||
     (!savedTheme && document.documentElement.classList.contains('dark'));
-  const fillColor = isDark ? '#0e0e0d' : '#faf9f6';
-  const ringColor = isDark ? 'rgba(255, 90, 61, 0.35)' : 'rgba(232, 52, 28, 0.28)';
+  const fillColor = isDark ? '#0e0e0d' : '#ffffff';
+  const ringColor = isDark
+    ? 'rgba(255, 90, 61, 0.35)'
+    : 'rgba(232, 52, 28, 0.25)';
 
-  // Remove any stale portal overlay
+  // Clean up any previous unfinished portal
+  if (activePortal) {
+    window.clearTimeout(activePortal.safetyTimer);
+    activePortal.overlay.remove();
+    activePortal = null;
+  }
   document.getElementById('dri4n-portal-overlay')?.remove();
 
   const overlay = document.createElement('div');
@@ -60,7 +133,7 @@ export function navigateWithCirclePortal(
     position: 'fixed',
     inset: '0',
     zIndex: '2147483640',
-    pointerEvents: 'none',
+    pointerEvents: 'auto',
     overflow: 'hidden',
   });
 
@@ -84,38 +157,47 @@ export function navigateWithCirclePortal(
   overlay.appendChild(circle);
   document.body.appendChild(overlay);
 
+  const safetyTimer = window.setTimeout(() => {
+    if (activePortal && activePortal.overlay === overlay) {
+      activePortal.expandDone = true;
+      activePortal.routeReady = true;
+      tryRevealTarget();
+    }
+  }, 4000);
+
+  const state: PortalState = {
+    targetPath,
+    expandDone: false,
+    routeReady: false,
+    fadeStarted: false,
+    overlay,
+    safetyTimer,
+  };
+  activePortal = state;
+
   // Phase 1: Expand circle smoothly from the clicked tile/button
   const expandAnim = circle.animate(
     [
-      { transform: 'scale(0.01)', opacity: 0.92 },
+      { transform: 'scale(0.01)', opacity: 0.94 },
       { transform: 'scale(1)', opacity: 1 },
     ],
     {
-      duration: 420,
+      duration: 380,
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       fill: 'forwards',
     }
   );
 
-  // Trigger Next.js route navigation right as the circle covers the viewport
+  // Start loading the destination route in parallel right as the circle expands
   window.setTimeout(() => {
     router.push(href);
-  }, 300);
+  }, 140);
 
-  // Phase 2: Softly fade the portal veil away once the new route is painted
+  // Phase 2: Mark expansion complete — veil stays up until signalPortalRouteReady(targetPath) fires!
   expandAnim.onfinish = () => {
-    window.setTimeout(() => {
-      const fadeAnim = overlay.animate(
-        [{ opacity: 1 }, { opacity: 0 }],
-        {
-          duration: 360,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          fill: 'forwards',
-        }
-      );
-      fadeAnim.onfinish = () => {
-        overlay.remove();
-      };
-    }, 110);
+    if (activePortal === state) {
+      state.expandDone = true;
+      tryRevealTarget();
+    }
   };
 }

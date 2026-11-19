@@ -30,7 +30,10 @@ import { workData as staticWorkData } from '@/data/experience';
 import { achievementsData as staticAchievementsData } from '@/data/achievements';
 import { ART_PATH } from '@/lib/sites';
 import { runThemeTransition } from '@/lib/themeTransition';
-import { navigateWithCirclePortal } from '@/lib/portalTransition';
+import {
+  navigateWithCirclePortal,
+  signalPortalRouteReady,
+} from '@/lib/portalTransition';
 import '@/styles/shahriyar.css';
 
 type ActiveView = 'home' | 'work' | 'experience' | 'writing' | 'resources';
@@ -400,7 +403,10 @@ export default function DevPortfolioView({
     if (saved === 'light' || saved === 'dark') {
       setTheme(saved);
     }
-  }, []);
+    router.prefetch(ART_PATH);
+    const readyCap = window.setTimeout(() => signalPortalRouteReady('/'), 420);
+    return () => window.clearTimeout(readyCap);
+  }, [router]);
 
   const switchTheme = (
     next: 'dark' | 'light',
@@ -685,6 +691,8 @@ export default function DevPortfolioView({
         }
       } catch (err) {
         console.warn('DevPortfolioView Supabase fallback:', err);
+      } finally {
+        signalPortalRouteReady('/');
       }
     }
 

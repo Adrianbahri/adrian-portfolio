@@ -9,7 +9,10 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { workData as staticWorkData } from '@/data/experience';
 import { techStack } from '@/data/techstack';
 import { runThemeTransition } from '@/lib/themeTransition';
-import { navigateWithCirclePortal } from '@/lib/portalTransition';
+import {
+  navigateWithCirclePortal,
+  signalPortalRouteReady,
+} from '@/lib/portalTransition';
 import { ArtCursor } from '@/components/ArtCursor';
 import '@/styles/shahriyar.css';
 
@@ -236,7 +239,10 @@ export default function ArtSiteView({
     } else if (document.documentElement.classList.contains('dark')) {
       setTheme('dark');
     }
-  }, []);
+    router.prefetch('/');
+    const readyCap = window.setTimeout(() => signalPortalRouteReady('/art'), 450);
+    return () => window.clearTimeout(readyCap);
+  }, [router]);
 
   // Sync hash (#archive, #design, #video, #photo, #about)
   useEffect(() => {
@@ -504,6 +510,8 @@ export default function ArtSiteView({
         if (collectedArchive.length > 0) setArchiveTiles(collectedArchive);
       } catch {
         // Keep fallbacks
+      } finally {
+        signalPortalRouteReady('/art');
       }
     }
 
