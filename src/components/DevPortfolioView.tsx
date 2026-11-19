@@ -408,6 +408,19 @@ export default function DevPortfolioView({
     return () => window.clearTimeout(readyCap);
   }, [router]);
 
+  // Pre-warm detail pages when entering #work or #writing so portal transitions are instant
+  useEffect(() => {
+    if (activeView === 'work') {
+      projects.slice(0, 8).forEach((p) => {
+        if (p.slug) router.prefetch(`/projects/${p.slug}`);
+      });
+    } else if (activeView === 'writing') {
+      articles.slice(0, 8).forEach((a) => {
+        if (a.slug) router.prefetch(`/blog/${a.slug}`);
+      });
+    }
+  }, [activeView, projects, articles, router]);
+
   const switchTheme = (
     next: 'dark' | 'light',
     e?: React.MouseEvent<HTMLButtonElement>
@@ -2161,7 +2174,19 @@ export default function DevPortfolioView({
                       <div>
                         <Link
                           href={item.slug ? `/projects/${item.slug}` : '/dev'}
-                          onClick={() => saveScrollForView('work')}
+                          onMouseEnter={() => {
+                            if (item.slug) router.prefetch(`/projects/${item.slug}`);
+                          }}
+                          onClick={(e) => {
+                            saveScrollForView('work');
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                            e.preventDefault();
+                            navigateWithCirclePortal(
+                              item.slug ? `/projects/${item.slug}` : '/dev',
+                              router,
+                              e
+                            );
+                          }}
                           data-cursor-label="open"
                           className="dev-scaffold-card relative block aspect-[16/10] w-full overflow-hidden rounded-[12px]"
                           style={{
@@ -2184,7 +2209,16 @@ export default function DevPortfolioView({
                               href={
                                 item.slug ? `/projects/${item.slug}` : '/dev'
                               }
-                              onClick={() => saveScrollForView('work')}
+                              onClick={(e) => {
+                                saveScrollForView('work');
+                                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                                e.preventDefault();
+                                navigateWithCirclePortal(
+                                  item.slug ? `/projects/${item.slug}` : '/dev',
+                                  router,
+                                  e
+                                );
+                              }}
                               className="dev-hover-title text-[15px] font-medium leading-snug"
                             >
                               {item.title}
@@ -3157,7 +3191,19 @@ export default function DevPortfolioView({
                       <Link
                         key={article.id}
                         href={article.slug ? `/blog/${article.slug}` : '/blog'}
-                        onClick={() => saveScrollForView('writing')}
+                        onMouseEnter={() => {
+                          if (article.slug) router.prefetch(`/blog/${article.slug}`);
+                        }}
+                        onClick={(e) => {
+                          saveScrollForView('writing');
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                          e.preventDefault();
+                          navigateWithCirclePortal(
+                            article.slug ? `/blog/${article.slug}` : '/blog',
+                            router,
+                            e
+                          );
+                        }}
                         data-cursor-label="read"
                         className="dev-scaffold-card group flex flex-row items-center gap-3.5 rounded-[12px] p-3.5 transition-colors sm:gap-4 sm:p-4"
                         style={{

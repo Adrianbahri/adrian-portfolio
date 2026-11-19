@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { ArtCursor } from '@/components/ArtCursor';
 import { runThemeTransition } from '@/lib/themeTransition';
+import {
+  navigateWithCirclePortal,
+  signalPortalRouteReady,
+} from '@/lib/portalTransition';
 import '@/styles/shahriyar.css';
 
 export interface MetaField {
@@ -36,7 +40,10 @@ export default function ShahriyarDetailShell({
     if (saved === 'light' || saved === 'dark') {
       setTheme(saved);
     }
-  }, []);
+    router.prefetch(backHref);
+    router.prefetch('/');
+    signalPortalRouteReady(window.location.pathname);
+  }, [router, backHref]);
 
   const switchTheme = (
     next: 'dark' | 'light',
@@ -54,7 +61,7 @@ export default function ShahriyarDetailShell({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        router.push(backHref);
+        navigateWithCirclePortal(backHref, router);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -80,6 +87,11 @@ export default function ShahriyarDetailShell({
           <div className="mx-auto flex h-[56px] max-w-[1200px] items-center justify-between gap-4 px-5 sm:px-8">
             <Link
               href={backHref}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                navigateWithCirclePortal(backHref, router, e);
+              }}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-opacity hover:opacity-85"
               style={{
                 backgroundColor: 'var(--art-tile)',
@@ -95,12 +107,25 @@ export default function ShahriyarDetailShell({
               className="hidden sm:flex min-w-0 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em]"
               style={{ color: 'var(--art-ink-muted)' }}
             >
-              <Link href="/" className="shrink-0 opacity-75 hover:opacity-100">
+              <Link
+                href="/"
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  navigateWithCirclePortal('/', router, e);
+                }}
+                className="shrink-0 opacity-75 hover:opacity-100"
+              >
                 INDEX
               </Link>
               <span className="shrink-0">/</span>
               <Link
                 href={backHref}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  navigateWithCirclePortal(backHref, router, e);
+                }}
                 className="shrink-0 opacity-75 hover:opacity-100"
               >
                 {sectionName}
