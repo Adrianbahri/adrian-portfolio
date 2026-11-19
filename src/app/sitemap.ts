@@ -2,58 +2,88 @@ import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 
 /**
- * Dynamic XML Sitemap generator.
- * Automatically queries Supabase to index all projects and blog posts for Google Search.
+ * Dynamic XML Sitemap generator for Google, Bing & AI Search Engines.
+ * Automatically queries the database to index /, /art, all projects, and all blog articles.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://dri4n.com'; // Change this to your production domain once ready
+  const baseUrl = 'https://dri4n.com';
+  const now = new Date();
 
-  // 1. Core Static Pages
-  const staticRoutes = [
-    '',
-    '/dev',
-    '/creative',
-    '/about',
-    '/projects',
-    '/blog',
-    '/contact',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: route === '' ? 1.0 : 0.8,
-  }));
+  const staticRoutes: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/art`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/projects`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/llms.txt`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/llms-full.txt`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+  ];
 
-  // 2. Dynamic Projects from Supabase
   let projectRoutes: MetadataRoute.Sitemap = [];
   try {
-    const { data: projects } = await supabase.from('projects').select('slug, created_at');
-    if (projects) {
-      projectRoutes = projects.map((p) => ({
-        url: `${baseUrl}/projects/${p.slug}`,
-        lastModified: p.created_at ? new Date(p.created_at) : new Date(),
-        changeFrequency: 'monthly' as const,
-        priority: 0.6,
-      }));
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('slug, created_at');
+    if (Array.isArray(projects)) {
+      projectRoutes = projects
+        .filter((p) => p?.slug)
+        .map((p) => ({
+          url: `${baseUrl}/projects/${p.slug}`,
+          lastModified: p.created_at ? new Date(p.created_at) : now,
+          changeFrequency: 'monthly' as const,
+          priority: 0.8,
+        }));
     }
-  } catch (e) {
-    console.warn('Sitemap: Failed to query projects dynamically. Skipping.');
+  } catch {
+    // Fallback to static routes
   }
 
-  // 3. Dynamic Blog Articles from Supabase
   let blogRoutes: MetadataRoute.Sitemap = [];
   try {
-    const { data: articles } = await supabase.from('articles').select('slug, created_at');
-    if (articles) {
-      blogRoutes = articles.map((a) => ({
-        url: `${baseUrl}/blog/${a.slug}`,
-        lastModified: a.created_at ? new Date(a.created_at) : new Date(),
-        changeFrequency: 'monthly' as const,
-        priority: 0.5,
-      }));
+    const { data: articles } = await supabase
+      .from('articles')
+      .select('slug, created_at');
+    if (Array.isArray(articles)) {
+      blogRoutes = articles
+        .filter((a) => a?.slug)
+        .map((a) => ({
+          url: `${baseUrl}/blog/${a.slug}`,
+          lastModified: a.created_at ? new Date(a.created_at) : now,
+          changeFrequency: 'monthly' as const,
+          priority: 0.8,
+        }));
     }
-  } catch (e) {
-    console.warn('Sitemap: Failed to query articles dynamically. Skipping.');
+  } catch {
+    // Fallback to static routes
   }
 
   return [...staticRoutes, ...projectRoutes, ...blogRoutes];

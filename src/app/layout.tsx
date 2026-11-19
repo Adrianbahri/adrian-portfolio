@@ -62,9 +62,35 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | Adrian Bahri"
     },
     description: siteDescription,
-    keywords: ["Dri4n", "Drian", "Adrian Bahri", "Creative Technologist", "Creative Engineer", "Fullstack Developer", "Web Design", "Next.js", "Supabase", "UI/UX", "Hasanuddin University", "Makassar"],
+    keywords: [
+      "Adrian",
+      "Adrian Bahri",
+      "Dri4n",
+      "Drian",
+      "Adrian Teknik Informatika",
+      "Adrian Unhas",
+      "Adrian Universitas Hasanuddin",
+      "Adrian Teknik Informatika Unhas",
+      "Adrian Informatika Unhas",
+      "Adrian PK Identitas Unhas",
+      "Adrian UKK Sains Unhas",
+      "Mahasiswa Teknik Informatika Unhas",
+      "Web Developer Makassar",
+      "Full Stack Developer Makassar",
+      "Creative Technologist Indonesia",
+      "Visual Designer Makassar",
+      "Informatics Engineering Hasanuddin University",
+      "Next.js",
+      "TypeScript",
+      "Bun",
+      "SQLite",
+      "Supabase",
+      "UI/UX Design",
+    ],
     authors: [{ name: "Adrian Bahri", url: primaryUrl }],
     creator: "Adrian Bahri",
+    publisher: "Adrian Bahri",
+    category: "technology",
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
@@ -123,48 +149,110 @@ export default function RootLayout({
 }>) {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Adrian Bahri",
-    "alternateName": ["Dri4n", "Drian", "adrianbahri"],
-    "url": "https://dri4n.com",
-    "image": "https://dri4n.com/api/assets/uploads/profile-fallback.webp",
-    "jobTitle": "Creative Technologist & Full Stack Developer",
-    "worksFor": [
+    "@graph": [
       {
-        "@type": "Organization",
-        "name": "PK Identitas Unhas",
-        "role": "Research & Development (Data & Technology)"
+        "@type": "ProfilePage",
+        "@id": "https://dri4n.com/#profilepage",
+        "url": "https://dri4n.com",
+        "name": "Adrian Bahri (Dri4n) — Creative Technologist & Full-Stack Developer",
+        "inLanguage": ["id-ID", "en-US"],
+        "mainEntity": { "@id": "https://dri4n.com/#person" },
       },
       {
-        "@type": "Organization",
-        "name": "SulawesiPos.com",
-        "role": "Media Production"
-      }
+        "@type": "WebSite",
+        "@id": "https://dri4n.com/#website",
+        "url": "https://dri4n.com",
+        "name": "Adrian Bahri (Dri4n) Portfolio",
+        "alternateName": ["Dri4n", "Adrian Bahri", "Adrian Unhas", "Adrian Teknik Informatika"],
+        "publisher": { "@id": "https://dri4n.com/#person" },
+        "inLanguage": ["id-ID", "en-US"],
+      },
+      {
+        "@type": "Person",
+        "@id": "https://dri4n.com/#person",
+        "name": "Adrian Bahri",
+        "givenName": "Adrian",
+        "familyName": "Bahri",
+        "alternateName": [
+          "Adrian",
+          "Adrian Bahri",
+          "Dri4n",
+          "Drian",
+          "adrianbahri",
+          "Adrian Unhas",
+          "Adrian Teknik Informatika",
+          "Adrian Teknik Informatika Unhas",
+          "Adrian Universitas Hasanuddin",
+        ],
+        "url": "https://dri4n.com",
+        "image": "https://dri4n.com/opengraph-image",
+        "jobTitle": [
+          "Creative Technologist",
+          "Full-Stack Web Developer",
+          "Visual & Brand Designer",
+          "Mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas)",
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Makassar",
+          "addressRegion": "Sulawesi Selatan",
+          "addressCountry": "ID",
+        },
+        "affiliation": [
+          {
+            "@type": "CollegeOrUniversity",
+            "name": "Universitas Hasanuddin (Unhas)",
+            "alternateName": ["Hasanuddin University", "Unhas", "Teknik Informatika Unhas"],
+            "sameAs": "https://unhas.ac.id",
+            "department": {
+              "@type": "Organization",
+              "name": "Departemen Teknik Informatika, Fakultas Teknik Universitas Hasanuddin",
+            },
+          },
+          {
+            "@type": "Organization",
+            "name": "PK Identitas Unhas",
+            "description": "Penerbitan Kampus Identitas Universitas Hasanuddin",
+          },
+          {
+            "@type": "Organization",
+            "name": "UKK Sains Unhas",
+            "description": "Unit Kegiatan Khusus Sains Universitas Hasanuddin",
+          },
+        ],
+        "alumniOf": {
+          "@type": "CollegeOrUniversity",
+          "name": "Universitas Hasanuddin (Unhas)",
+          "sameAs": "https://unhas.ac.id",
+        },
+        "knowsAbout": [
+          "Teknik Informatika",
+          "Informatics Engineering",
+          "Software Engineering",
+          "Full-Stack Web Development",
+          "Creative Technology",
+          "Next.js",
+          "React",
+          "TypeScript",
+          "Bun",
+          "SQLite",
+          "Supabase",
+          "UI/UX Design",
+          "Brand & Visual Identity",
+          "Editorial Design",
+          "Motion Graphics",
+        ],
+        "sameAs": [
+          "https://dri4n.com",
+          "https://dri4n.com/art",
+          "https://github.com/Adrianbahri",
+          "https://linkedin.com/in/adrianbahri",
+          "https://instagram.com/adrianbahri",
+        ],
+        "description":
+          "Adrian Bahri (Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar, Creative Technologist, Full-Stack Web Developer, dan Visual Designer di PK Identitas Unhas & UKK Sains Unhas.",
+      },
     ],
-    "alumniOf": {
-      "@type": "EducationalOrganization",
-      "name": "Hasanuddin University",
-      "department": {
-        "@type": "Organization",
-        "name": "Informatics Engineering"
-      }
-    },
-    "knowsAbout": [
-      "Software Engineering",
-      "Full-stack Web Development",
-      "Creative Technology",
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Supabase",
-      "UI/UX Design",
-      "Motion Graphics"
-    ],
-    "sameAs": [
-      "https://github.com/Adrianbahri",
-      "https://linkedin.com/in/adrianbahri"
-    ],
-    "description": "Adrian Bahri (Dri4n) is an Informatics Engineering student at Hasanuddin University, Creative Technologist, and Full Stack Developer passionate about creative technology, digital experiences, and building intelligent systems through code."
   };
 
   return (
