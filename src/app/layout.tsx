@@ -46,11 +46,9 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error("Error fetching site settings for metadata:", e);
   }
 
-  // Cool, premium title as requested
-  const siteTitle = "Adrian Bahri (Dri4n) | Creative Technologist & Web Developer";
-
-  // Custom description using the first paragraph of the About section as requested
-  const siteDescription = "Portfolio of Adrian Bahri (Dri4n), an Informatics Engineering student at Hasanuddin University passionate about creative technology, full-stack web development, and digital experiences.";
+  // Clean, simple title & description tailored for crisp social/WhatsApp link previews
+  const siteTitle = "Adrian Bahri (Dri4n) — Creative Technologist";
+  const siteDescription = "Full-stack developer & creative technologist based in Makassar. Building fast, expressive digital systems.";
 
   const primaryUrl = "https://dri4n.com";
 
