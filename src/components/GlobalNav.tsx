@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 import { portfolioModeForPath, portfolioPath } from '@/lib/portfolio';
+import { isMaintenanceMode, shouldBypassMaintenance } from '@/lib/maintenance';
 
 import { useProjectMode } from '@/context/ProjectModeContext';
 
@@ -60,7 +61,13 @@ export default function GlobalNav() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  if (pathname?.startsWith('/admin')) return null;
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/maintenance') ||
+    (isMaintenanceMode && pathname && !shouldBypassMaintenance(pathname))
+  ) {
+    return null;
+  }
 
   return (
     <>

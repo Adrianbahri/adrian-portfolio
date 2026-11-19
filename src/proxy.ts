@@ -1,7 +1,37 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isMaintenanceMode, shouldBypassMaintenance } from '@/lib/maintenance'
 
 export default async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Serve the Under Maintenance experience for all public routes
+  if (isMaintenanceMode && !shouldBypassMaintenance(pathname)) {
+    const maintenanceUrl = new URL('/maintenance', request.url)
+    const rewriteResponse = NextResponse.rewrite(maintenanceUrl, {
+      status: 503,
+    })
+    rewriteResponse.headers.set('Retry-After', '3600')
+    rewriteResponse.headers.set('Cache-Control', 'no-store, max-age=0')
+    return rewriteResponse
+  }
+
+  // Only run Supabase auth checks for /admin and /login
+  const isProtectedRoute = pathname.startsWith('/admin') || pathname === '/login'
+  if (!isProtectedRoute) {
+    return NextResponse.next()
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -9,8 +39,8 @@ export default async function proxy(request: NextRequest) {
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -57,14 +87,14 @@ export default async function proxy(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   // Protect /admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
   // Redirect /login to /admin if already logged in
-  if (request.nextUrl.pathname === '/login') {
+  if (pathname === '/login') {
     if (session) {
       return NextResponse.redirect(new URL('/admin', request.url))
     }
@@ -74,5 +104,7 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|favicon.png|icon.png|opengraph-image).*)',
+  ],
 }
