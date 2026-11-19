@@ -297,7 +297,7 @@ export default function DevPortfolioView({
     }
     const id = window.setInterval(() => {
       setArtSlideIdx((prev) => (prev + 1) % artSlides.length);
-    }, 2400);
+    }, 1500);
     return () => window.clearInterval(id);
   }, [activeView, artSlides.length, hoveredTile]);
 
@@ -1838,7 +1838,7 @@ export default function DevPortfolioView({
                                 : 'scale(1)'
                               : 'scale(1.05)',
                             transition:
-                              'opacity 550ms cubic-bezier(0.22, 1, 0.36, 1), transform 750ms cubic-bezier(0.22, 1, 0.36, 1)',
+                              'opacity 380ms cubic-bezier(0.22, 1, 0.36, 1), transform 520ms cubic-bezier(0.22, 1, 0.36, 1)',
                           }}
                         >
                           {!brokenImages[slide.image] ? (
