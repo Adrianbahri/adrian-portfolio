@@ -283,6 +283,23 @@ export default function DevPortfolioView({
 
   const router = useRouter();
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
+  const [artSlides, setArtSlides] = useState(ART_PORTAL_SLIDES);
+  const [artSlideIdx, setArtSlideIdx] = useState(0);
+
+  // Fast 2.4s cross-fade slideshow for the Creative Side preview tile on Home
+  useEffect(() => {
+    if (
+      activeView !== 'home' ||
+      artSlides.length <= 1 ||
+      hoveredTile === 'art'
+    ) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setArtSlideIdx((prev) => (prev + 1) % artSlides.length);
+    }, 2400);
+    return () => window.clearInterval(id);
+  }, [activeView, artSlides.length, hoveredTile]);
 
   const markImageBroken = (src: string) => {
     setBrokenImages((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
@@ -584,24 +601,43 @@ export default function DevPortfolioView({
   useEffect(() => {
     async function loadDevData() {
       try {
-        const [projectsRes, articlesRes, expRes, achRes] = await Promise.all([
-          supabase
-            .from('projects')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('articles')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('experiences')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('achievements')
-            .select('*')
-            .order('created_at', { ascending: false }),
-        ]);
+        const [projectsRes, articlesRes, expRes, achRes, galleryRes] =
+          await Promise.all([
+            supabase
+              .from('projects')
+              .select('*')
+              .order('created_at', { ascending: false }),
+            supabase
+              .from('articles')
+              .select('*')
+              .order('created_at', { ascending: false }),
+            supabase
+              .from('experiences')
+              .select('*')
+              .order('created_at', { ascending: false }),
+            supabase
+              .from('achievements')
+              .select('*')
+              .order('created_at', { ascending: false }),
+            supabase
+              .from('gallery')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(8),
+          ]);
+
+        if (galleryRes.data?.length) {
+          const validPhotos = galleryRes.data
+            .filter((g: any) => g.image_url)
+            .map((g: any, idx: number) => ({
+              id: `gal-slide-${g.id || idx}`,
+              label: g.caption || g.title || 'Creative Side',
+              image: g.image_url,
+            }));
+          if (validPhotos.length > 0) {
+            setArtSlides(validPhotos);
+          }
+        }
 
         if (projectsRes.data?.length) {
           const devProjects: DevProject[] = projectsRes.data
@@ -1772,7 +1808,7 @@ export default function DevPortfolioView({
                   </span>
                 </div>
 
-                {/* TILE 2 (Right): Portal to Creative Side (dri4n.com/art) [A] — Circular Portal Transition */}
+                {/* TILE 2 (Right): Portal to Creative Side (dri4n.com/art) [A] — 2.4s Cross-Fade Photo Preview */}
                 <button
                   type="button"
                   onClick={(e) => navigateWithCirclePortal(ART_PATH, router, e)}
@@ -1788,20 +1824,42 @@ export default function DevPortfolioView({
                   }}
                 >
                   <div className="absolute inset-0">
-                    {!brokenImages[currentArtSlide.image] ? (
-                      <Image
-                        src={currentArtSlide.image}
-                        alt={currentArtSlide.label}
-                        fill
-                        onError={() => markImageBroken(currentArtSlide.image)}
-                        className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#231f1e] via-[#171717] to-[#2e1e1a] font-mono text-[11px] uppercase tracking-[0.16em] text-[#aaa297]">
-                        dri4n.com/art
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+                    {artSlides.map((slide, idx) => {
+                      const isActive = idx === artSlideIdx % artSlides.length;
+                      return (
+                        <div
+                          key={slide.id}
+                          className="absolute inset-0 will-change-[opacity,transform]"
+                          style={{
+                            opacity: isActive ? 1 : 0,
+                            transform: isActive
+                              ? hoveredTile === 'art'
+                                ? 'scale(1.04)'
+                                : 'scale(1)'
+                              : 'scale(1.05)',
+                            transition:
+                              'opacity 550ms cubic-bezier(0.22, 1, 0.36, 1), transform 750ms cubic-bezier(0.22, 1, 0.36, 1)',
+                          }}
+                        >
+                          {!brokenImages[slide.image] ? (
+                            <Image
+                              src={slide.image}
+                              alt={slide.label}
+                              fill
+                              unoptimized
+                              sizes="(max-width: 640px) 100vw, 280px"
+                              onError={() => markImageBroken(slide.image)}
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#231f1e] via-[#171717] to-[#2e1e1a] font-mono text-[11px] uppercase tracking-[0.16em] text-[#aaa297]">
+                              Creative Side
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                   </div>
 
                   {/* Top-right subtle portal icon */}
@@ -1816,8 +1874,8 @@ export default function DevPortfolioView({
                   />
 
                   <div className="absolute inset-x-3.5 bottom-3.5 z-10 flex items-center justify-between gap-2">
-                    <span className="truncate rounded-[6px] bg-black/55 px-2 py-0.5 text-[12px] text-white backdrop-blur-md">
-                      dri4n.com/art · {currentArtSlide.label}
+                    <span className="truncate rounded-[6px] bg-black/55 px-2.5 py-0.5 text-[12px] font-medium text-white backdrop-blur-md">
+                      Creative Side
                     </span>
                     <span className="shrink-0 font-mono text-[11px] text-white/80 group-hover:text-white">
                       A
