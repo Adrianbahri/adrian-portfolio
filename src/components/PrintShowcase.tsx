@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
+import { motion } from '@/lib/motion';
 import { Download, ExternalLink, Tag, X, ZoomIn, ZoomOut } from 'lucide-react';
 import PdfThumbnail from './PdfThumbnail';
 import FlipbookReader from './FlipbookReader';

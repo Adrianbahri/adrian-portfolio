@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from '@/lib/motion';
 import { useState } from 'react';
 import { Mail, Globe, Camera, ArrowUpRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';

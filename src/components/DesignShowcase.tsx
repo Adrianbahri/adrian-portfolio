@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { ChevronLeft, ChevronRight, Layout, X, Download, ZoomIn, ZoomOut } from 'lucide-react';
 
 export default function DesignShowcase() {

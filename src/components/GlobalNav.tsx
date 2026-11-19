@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Menu, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 import { portfolioModeForPath, portfolioPath } from '@/lib/portfolio';
-import { isMaintenanceMode, shouldBypassMaintenance } from '@/lib/maintenance';
+import { isMaintenanceModeForHost, shouldBypassMaintenance } from '@/lib/maintenance';
+import { isArtHost } from '@/lib/sites';
 
 import { useProjectMode } from '@/context/ProjectModeContext';
 
@@ -24,7 +25,13 @@ export default function GlobalNav() {
   const { mode } = useProjectMode();
   const [isMounted, setIsMounted] = useState(false);
 
+  const [isArtDomain, setIsArtDomain] = useState(false);
+  const [isMaintenanceHost, setIsMaintenanceHost] = useState(false);
+
   useEffect(() => {
+    const currentHost = window.location.host;
+    setIsArtDomain(isArtHost(currentHost));
+    setIsMaintenanceHost(isMaintenanceModeForHost(currentHost));
     setIsMounted(true);
   }, []);
 
@@ -62,9 +69,15 @@ export default function GlobalNav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (
+    !isMounted ||
+    pathname === '/' ||
+    pathname?.startsWith('/blog/') ||
+    pathname?.startsWith('/projects/') ||
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/maintenance') ||
-    (isMaintenanceMode && pathname && !shouldBypassMaintenance(pathname))
+    pathname?.startsWith('/art') ||
+    isArtDomain ||
+    (isMaintenanceHost && pathname && !shouldBypassMaintenance(pathname))
   ) {
     return null;
   }

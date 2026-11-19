@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { X, Image as ImageIcon, Plus, Loader2, Check, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { compressToWebP } from '@/lib/image';

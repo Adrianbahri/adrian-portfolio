@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Shield, Key, Loader2, ArrowRight, AlertCircle, CheckCircle2, Mail, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

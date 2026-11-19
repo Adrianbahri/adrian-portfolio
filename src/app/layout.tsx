@@ -3,7 +3,6 @@ import { DM_Mono, Inter } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import SmoothScrolling from "@/components/SmoothScrolling";
 import GlobalNav from "@/components/GlobalNav";
 import GlobalPdfModal from "@/components/GlobalPdfModal";
 import AuthRecoveryHandler from "@/components/AuthRecoveryHandler";
@@ -191,18 +190,16 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--color-canvas)]/50 to-[var(--color-canvas)]" />
         </div>
 
-        <SmoothScrolling>
-          <ProjectModeProvider>
-            <Suspense fallback={null}>
-              <AuthRecoveryHandler />
-              <GlobalNav />
-            </Suspense>
-            <GlobalPdfModal />
-            {children}
-            <Analytics />
-            <SpeedInsights />
-          </ProjectModeProvider>
-        </SmoothScrolling>
+        <ProjectModeProvider>
+          <Suspense fallback={null}>
+            <AuthRecoveryHandler />
+            <GlobalNav />
+          </Suspense>
+          <GlobalPdfModal />
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </ProjectModeProvider>
       </body>
     </html>
   );

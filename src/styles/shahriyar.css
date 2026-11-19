@@ -1,0 +1,322 @@
+/* Scoped Shahriyar-inspired design tokens & tactile micro-animations for dri4n.com */
+
+.dev-shell {
+  --art-ground: #ffffff;
+  --art-tile: #f5f5f5;
+  --art-paper: #f1eee9;
+  --art-paper-raised: #f8f6f2;
+  --art-ink: #171717;
+  --art-ink-soft: #645d53;
+  --art-ink-muted: #737373;
+  --art-line: #e5e5e5;
+  --art-hairline: rgba(26, 25, 23, 0.08);
+  --art-hairline-strong: rgba(26, 25, 23, 0.18);
+  --art-marker: #e8341c;
+  --art-marker-text: #c53727;
+  --art-on-marker: #ffffff;
+  --art-marker-tint: rgba(232, 52, 28, 0.12);
+
+  --hl-blue: rgba(191, 219, 254, 0.65);
+  --hl-orange: rgba(254, 215, 170, 0.65);
+  --hl-pink: rgba(239, 71, 111, 0.22);
+  --hl-green: rgba(6, 214, 160, 0.3);
+  --hl-yellow: rgba(255, 209, 102, 0.55);
+
+  --art-grid-line: rgba(0, 0, 0, 0.035);
+  --art-grid-line-strong: rgba(0, 0, 0, 0.07);
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--art-ground);
+  color: var(--art-ink);
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.dev-shell[data-dev-theme="dark"] {
+  --art-ground: #121212;
+  --art-tile: #171717;
+  --art-paper: #121110;
+  --art-paper-raised: #1a1917;
+  --art-ink: #f1eee9;
+  --art-ink-soft: #aaa297;
+  --art-ink-muted: #a3a3a3;
+  --art-line: #292929;
+  --art-hairline: rgba(255, 255, 255, 0.08);
+  --art-hairline-strong: rgba(255, 255, 255, 0.18);
+  --art-marker: #ff5a3d;
+  --art-marker-text: #ff5a3d;
+  --art-on-marker: #141414;
+  --art-marker-tint: rgba(255, 90, 61, 0.14);
+
+  --hl-blue: rgba(0, 191, 255, 0.28);
+  --hl-orange: rgba(255, 165, 0, 0.34);
+  --hl-pink: rgba(239, 71, 111, 0.28);
+  --hl-green: rgba(6, 214, 160, 0.24);
+  --hl-yellow: rgba(255, 209, 102, 0.34);
+
+  --art-grid-line: rgba(255, 255, 255, 0.03);
+  --art-grid-line-strong: rgba(255, 255, 255, 0.065);
+}
+
+.dev-blueprint-grid {
+  background-image:
+    linear-gradient(to right, var(--art-grid-line-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--art-grid-line-strong) 1px, transparent 1px),
+    linear-gradient(to right, var(--art-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--art-grid-line) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+}
+
+.art-mark {
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--art-ink);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.art-mark-blue { background-color: var(--hl-blue); }
+.art-mark-orange { background-color: var(--hl-orange); }
+.art-mark-pink { background-color: var(--hl-pink); }
+.art-mark-green { background-color: var(--hl-green); }
+.art-mark-yellow { background-color: var(--hl-yellow); }
+
+.art-rule-dashed {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--art-hairline-strong) 0px,
+    var(--art-hairline-strong) 4px,
+    transparent 4px,
+    transparent 9px
+  );
+  overflow: hidden;
+}
+
+.art-rule-dashed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--art-marker) 50%,
+    transparent 100%
+  );
+  opacity: 0.45;
+  transform: translateX(-100%);
+  animation: devRuleShimmer 3.8s ease-in-out infinite;
+}
+
+@keyframes devRuleShimmer {
+  0%, 60% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.art-oval {
+  position: relative;
+  display: inline-block;
+  padding: 1px 8px;
+  color: var(--art-ink);
+}
+.art-oval::after {
+  content: "";
+  position: absolute;
+  inset: -2px -4px;
+  border: 1.5px solid var(--art-marker);
+  border-radius: 999px;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+.art-ticket-notch-top,
+.art-ticket-notch-bottom {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background-color: var(--art-ground);
+  border: 1px solid var(--art-line);
+  left: -7px;
+  z-index: 2;
+}
+.art-ticket-notch-top { top: -8px; }
+.art-ticket-notch-bottom { bottom: -8px; }
+
+/* Override any legacy editor link colors (e.g. old #3ecf8e green) inside article & case study prose */
+.dev-prose a {
+  color: var(--art-marker-text) !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: opacity 0.18s ease;
+}
+.dev-prose a:hover {
+  opacity: 0.8;
+}
+.dev-prose blockquote {
+  border-left-color: var(--art-marker) !important;
+}
+
+/* Interactive Competition & Honors Card micro-responses */
+.dev-award-card {
+  position: relative;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s ease,
+    box-shadow 0.24s ease;
+}
+.dev-award-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--art-marker) !important;
+  box-shadow: 0 12px 28px -16px rgba(255, 90, 61, 0.35);
+}
+
+/* Signature orange title hover across Writing, Track Record, Resources & Work */
+.dev-hover-title {
+  transition: color 0.18s ease;
+}
+.group:hover .dev-hover-title,
+.dev-hover-title:hover {
+  color: var(--art-marker-text) !important;
+}
+
+/* Blueprint Dashed-Scaffold -> Solid Border Settle Animation (Shahriyar signature!) */
+.dev-scaffold-card {
+  position: relative;
+}
+.dev-scaffold-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1px dashed var(--art-hairline-strong);
+  pointer-events: none;
+  z-index: 5;
+  animation: devScaffoldFade 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--scaffold-delay, 0ms);
+}
+
+@keyframes devScaffoldFade {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Interactive 3D Resume Booklet Preview in Track Record Sidebar */
+.dev-resume-book-scene {
+  perspective: 800px;
+}
+.dev-resume-book {
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.25s ease;
+}
+.dev-resume-book-scene:hover .dev-resume-book {
+  transform: rotateY(-14deg) translateY(-4px);
+  border-color: var(--art-marker) !important;
+  box-shadow: 10px 14px 28px -12px rgba(0, 0, 0, 0.45);
+}
+.dev-resume-book[data-opening="true"] {
+  transform: rotateY(-34deg) scale(1.06) translateY(-6px) !important;
+  border-color: var(--art-marker) !important;
+  box-shadow: 16px 20px 36px -10px rgba(255, 90, 61, 0.38) !important;
+}
+
+/* Falling cut-dash physics when scissors slice through the bio line */
+.dev-cut-dash {
+  transition: transform 0.55s cubic-bezier(0.55, 0.05, 0.85, 0.45),
+    opacity 0.5s ease-in,
+    background-color 0.12s ease;
+  will-change: transform, opacity;
+}
+.dev-cut-dash[data-cut="true"] {
+  background-color: var(--art-marker) !important;
+  transform: translateY(var(--fall-y, 24px)) rotate(var(--fall-rot, 24deg));
+  opacity: 0;
+}
+
+/* Pure CSS Smooth Grid Accordion (zero-jump 120fps expand/collapse) */
+.dev-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.26s ease;
+}
+.dev-accordion[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.dev-accordion > .dev-accordion-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Freeze only body & .dev-shell background transitions during theme snapshot (2 nodes, zero * recalc) */
+html[data-vt="theme"] body,
+html[data-vt="theme"] .dev-shell {
+  transition: none !important;
+}
+
+/* Default View Transition root: clean for GPU-composited WAAPI circular theme reveal */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Native View Transition Card-to-Sidebar Glide & Shrink Morph (scoped to section nav) */
+:root[data-vt="nav"]::view-transition-old(root) {
+  animation: devFadeOut 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+:root[data-vt="nav"]::view-transition-new(root) {
+  animation: devFadeIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes devFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes devFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+::view-transition-group(active-tile-morph) {
+  animation-duration: 0.52s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 100;
+}
+::view-transition-old(active-tile-morph),
+::view-transition-new(active-tile-morph) {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .art-custom-cursor-active,
+  .art-custom-cursor-active * {
+    cursor: none !important;
+  }
+}

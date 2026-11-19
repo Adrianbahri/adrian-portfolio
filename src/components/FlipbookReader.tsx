@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, X, Download, FileText, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Loader2,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
+import '@/styles/shahriyar.css';
 
 interface FlipbookReaderProps {
   pdfUrl: string;
@@ -14,7 +23,27 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [scale, setScale] = useState(1.0); // State to handle dynamic zooming (0.5 to 2.0)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const scaleRef = useRef(scale);
+
+  // Sync theme with portfolio preference + close on Escape key
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') {
+      setTheme(saved);
+    } else if (!document.documentElement.classList.contains('dark')) {
+      setTheme('light');
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [onClose]);
 
   // Sync ref with scale state
   useEffect(() => {
@@ -173,177 +202,267 @@ export default function FlipbookReader({ pdfUrl, title, onClose }: FlipbookReade
   };
 
   return (
-    <div 
-      data-lenis-prevent
-      className="fixed inset-0 z-[9999] bg-[#070707]/90 backdrop-blur-3xl flex flex-col justify-between font-sans select-none rounded-none animate-in fade-in duration-300 pointer-events-auto"
+    <div
+      data-dev-theme={theme}
+      className="dev-shell fixed inset-0 z-[9998] flex flex-col justify-between select-none pointer-events-auto"
     >
-      
-      {/* Dynamic Style injection to guarantee complete structural hiding of global header navigations */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        header, .global-header, [role="banner"] {
-          display: none !important;
-        }
-      ` }} />
 
-      {/* Signature Blueprint Grid Background Layer */}
-      <div className="absolute inset-0 z-0 pointer-events-none select-none">
-        <div className="absolute inset-0 blueprint-grid opacity-80" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#070707]/20 to-[#070707]/85" />
-      </div>
+      {/* Top Controls Bar (Exact Shahriyar 56px Bar) */}
+      <div
+        className="relative z-20 flex h-[56px] w-full shrink-0 items-center justify-between gap-4 px-4 sm:px-6"
+        style={{
+          backgroundColor: 'var(--art-ground)',
+          borderBottom: '1px solid var(--art-line)',
+        }}
+      >
+        {/* Left: Back/Close Pill + Mono Breadcrumb */}
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-opacity hover:opacity-85 cursor-pointer"
+            style={{
+              backgroundColor: 'var(--art-tile)',
+              color: 'var(--art-ink)',
+              border: '1px solid var(--art-line)',
+            }}
+          >
+            <ArrowLeft size={13} />
+            <span>Back</span>
+          </button>
 
-      {/* Top Controls Header Bar */}
-      <div className="h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 bg-black/40 rounded-none shrink-0 z-20 w-full relative">
-        
-        {/* Left: Title info */}
-        <div className="flex items-center gap-3">
-          <span className="text-[9px] font-mono text-[#3ecf8e] bg-[#3ecf8e]/10 border border-[#3ecf8e]/20 px-2 py-0.5 rounded-none uppercase tracking-widest hidden sm:inline-block">
-            Layout Reader
-          </span>
-          <h2 className="text-xs font-medium text-white/90 uppercase tracking-wider truncate max-w-[200px] sm:max-w-md">{title}</h2>
+          <div
+            className="hidden sm:flex min-w-0 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em]"
+            style={{ color: 'var(--art-ink-muted)' }}
+          >
+            <span className="shrink-0">PDF</span>
+            <span className="shrink-0">/</span>
+            <span className="truncate" style={{ color: 'var(--art-ink)' }}>
+              {title}
+            </span>
+          </div>
         </div>
 
-        {/* Center: Bespoke Dynamic Zoom Controls / Resize Slider */}
+        {/* Center: Clean Rounded Zoom Pill */}
         {!loading && pages.length > 0 && (
-          <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 p-1 rounded-none">
+          <div
+            className="hidden md:flex items-center gap-1.5 rounded-full px-2 py-1"
+            style={{
+              backgroundColor: 'var(--art-tile)',
+              border: '1px solid var(--art-line)',
+            }}
+          >
             <button
               type="button"
               onClick={zoomOut}
               disabled={scale <= 0.5}
-              className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
-              title="Resize Smaller"
+              className="flex h-7 w-7 items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-75 disabled:opacity-30 cursor-pointer"
+              style={{ color: 'var(--art-ink)' }}
+              title="Zoom Out"
             >
-              <ZoomOut size={16} />
+              <ZoomOut size={14} />
             </button>
-            
-            {/* Dynamic Slider Resize Control */}
-            <input 
+
+            <input
               type="range"
               min="0.5"
               max="2.0"
               step="0.05"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="hidden sm:inline-block w-28 accent-[#3ecf8e] bg-white/10 h-1 outline-none cursor-pointer appearance-none rounded-none mx-2"
-              title="Drag to resize page layout"
+              className="mx-1 h-1 w-24 cursor-pointer"
+              style={{ accentColor: 'var(--art-marker)' }}
+              title="Resize page"
             />
 
-            <span className="text-[10px] font-mono text-white/80 min-w-[38px] sm:min-w-[45px] text-center select-none font-bold">
+            <span
+              className="min-w-[40px] text-center font-mono text-[11px] font-medium select-none"
+              style={{ color: 'var(--art-ink)' }}
+            >
               {Math.round(scale * 100)}%
             </span>
+
             <button
               type="button"
               onClick={zoomIn}
               disabled={scale >= 2.0}
-              className="w-9 h-9 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer rounded-none"
-              title="Resize Larger"
+              className="flex h-7 w-7 items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-75 disabled:opacity-30 cursor-pointer"
+              style={{ color: 'var(--art-ink)' }}
+              title="Zoom In"
             >
-              <ZoomIn size={16} />
+              <ZoomIn size={14} />
             </button>
           </div>
         )}
 
-        {/* Right: Close and download floating triggers */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Right: Download Pill + Esc Hint + Close */}
+        <div className="flex shrink-0 items-center gap-2">
           <a
             href={pdfUrl}
             download
             target="_blank"
             rel="noopener noreferrer"
-            className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-[#3ecf8e]/30 text-white/70 hover:text-[#3ecf8e] flex items-center justify-center transition-all cursor-pointer rounded-none"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] transition-opacity hover:opacity-90"
+            style={{
+              backgroundColor: 'var(--art-marker)',
+              color: 'var(--art-on-marker)',
+            }}
             title="Download PDF"
           >
-            <Download size={14} className="sm:w-4 sm:h-4" />
+            <Download size={12} />
+            <span className="hidden sm:inline">Download</span>
           </a>
+
+          <span
+            className="hidden sm:inline-block rounded-[5px] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]"
+            style={{
+              backgroundColor: 'var(--art-tile)',
+              color: 'var(--art-ink-muted)',
+              border: '1px solid var(--art-line)',
+            }}
+          >
+            Esc
+          </span>
+
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 sm:w-10 sm:h-10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer rounded-none"
+            className="flex h-8 w-8 items-center justify-center rounded-full sm:hidden cursor-pointer"
+            style={{
+              backgroundColor: 'var(--art-tile)',
+              color: 'var(--art-ink)',
+              border: '1px solid var(--art-line)',
+            }}
             title="Close Reader"
           >
-            <X size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <X size={15} />
           </button>
         </div>
       </div>
 
       {/* Main Workspace Frame */}
-      <div className="flex-1 flex overflow-hidden w-full relative z-10">
-        
-        {/* Left Column: Pages Preview Sidebar (Dynamic Thumbnails Column) - Hidden on Mobile & Tablet */}
+      <div className="relative z-10 flex flex-1 w-full overflow-hidden">
+        {/* Left Thumbnail Sidebar (Desktop) */}
         {!loading && pages.length > 0 && (
-          <aside 
-            data-lenis-prevent
-            className="hidden lg:flex w-44 border-r border-white/5 bg-black/25 overflow-y-auto flex-col gap-6 p-4 shrink-0 custom-scrollbar z-10"
+          <aside
+            className="hidden lg:flex w-44 shrink-0 flex-col gap-5 overflow-y-auto p-4 custom-scrollbar z-10"
+            style={{
+              backgroundColor: 'var(--art-ground)',
+              borderRight: '1px solid var(--art-line)',
+            }}
           >
             {pages.map((imgSrc, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 onClick={() => jumpToPage(index)}
                 className="group flex flex-col gap-1.5 cursor-pointer"
               >
-                <div className="w-full aspect-[1/1.41] overflow-hidden border border-white/10 hover:border-[#3ecf8e] transition-all duration-300 relative shadow-md">
-                  <img 
-                    src={imgSrc} 
-                    alt={`Preview Page ${index + 1}`} 
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                <div
+                  className="relative aspect-[1/1.41] w-full overflow-hidden rounded-[8px] shadow-sm transition-colors duration-200"
+                  style={{
+                    border: '1px solid var(--art-line)',
+                    backgroundColor: 'var(--art-tile)',
+                  }}
+                >
+                  <img
+                    src={imgSrc}
+                    alt={`Preview Page ${index + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none" />
                 </div>
-                <span className="text-[9px] font-mono text-center text-white/40 group-hover:text-[#3ecf8e] transition-colors">
-                  Page {index + 1}
+                <span
+                  className="text-center font-mono text-[10px] transition-colors"
+                  style={{ color: 'var(--art-ink-muted)' }}
+                >
+                  Page {String(index + 1).padStart(2, '0')}
                 </span>
               </div>
             ))}
           </aside>
         )}
 
-        {/* Right Column: Scrollable Full Render Canvas */}
-        <div 
+        {/* Main Scrollable Document Canvas */}
+        <div
           id="pdf-render-canvas"
-          data-lenis-prevent
-          className="flex-1 overflow-y-auto custom-scrollbar py-6 sm:py-12 px-2 sm:px-6 flex flex-col items-center gap-4 sm:gap-8 bg-transparent"
+          className="flex flex-1 flex-col items-center gap-6 overflow-y-auto px-3 py-6 sm:px-6 sm:py-10 custom-scrollbar"
         >
           {loading ? (
-            <div className="my-auto flex flex-col items-center gap-4 text-white/40">
-              <Loader2 className="animate-spin text-[#3ecf8e]" size={36} />
+            <div className="my-auto flex flex-col items-center gap-4">
+              <Loader2
+                className="animate-spin"
+                size={30}
+                style={{ color: 'var(--art-marker)' }}
+              />
               <div className="space-y-1 text-center">
-                <p className="text-[10px] font-mono uppercase tracking-[0.25em]">Extracting Layout Pages...</p>
-                <p className="text-xs font-bold text-[#3ecf8e] font-mono">{progress}%</p>
+                <p
+                  className="font-mono text-[10px] uppercase tracking-[0.2em]"
+                  style={{ color: 'var(--art-ink-muted)' }}
+                >
+                  Loading Document...
+                </p>
+                <p
+                  className="font-mono text-[12px] font-medium"
+                  style={{ color: 'var(--art-marker-text)' }}
+                >
+                  {progress}%
+                </p>
               </div>
             </div>
           ) : pages.length === 0 ? (
-            <div className="my-auto flex flex-col items-center justify-center text-white/40 text-center space-y-4">
-              <FileText size={48} className="text-red-500/80" />
-              <p className="text-sm">Unable to render layout pages.</p>
-              <a 
-                href={pdfUrl} 
-                target="_blank" 
-                className="px-6 py-2 bg-[#3ecf8e] text-black text-xs uppercase tracking-wider font-bold rounded-none"
+            <div className="my-auto flex flex-col items-center justify-center space-y-4 text-center">
+              <FileText
+                size={40}
+                style={{ color: 'var(--art-marker-text)' }}
+              />
+              <p
+                className="text-[14px]"
+                style={{ color: 'var(--art-ink-soft)' }}
+              >
+                Unable to render document preview.
+              </p>
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full px-5 py-2 font-mono text-[11px] uppercase tracking-[0.12em] font-medium"
+                style={{
+                  backgroundColor: 'var(--art-marker)',
+                  color: 'var(--art-on-marker)',
+                }}
               >
                 Open PDF Directly
               </a>
             </div>
           ) : (
-            /* Main dynamic pages viewport. Width is dynamically governed by the Zoom Scale! */
-            <div className="w-full flex flex-col items-center gap-8 pb-12 z-10">
+            <div className="z-10 flex w-full flex-col items-center gap-6 pb-12">
               {pages.map((imgSrc, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   id={`modal-page-${index}`}
-                  className="bg-[#111] border border-white/10 shadow-2xl relative rounded-none flex items-center justify-center transition-all duration-300 animate-in slide-in-from-bottom-8 duration-500"
-                  style={{ 
-                    width: '100%', 
+                  className="relative flex items-center justify-center overflow-hidden rounded-[12px] shadow-xl"
+                  style={{
+                    width: '100%',
                     maxWidth: `${scale * 768}px`,
-                    aspectRatio: '1/1.41'
+                    aspectRatio: '1/1.41',
+                    backgroundColor: 'var(--art-tile)',
+                    border: '1px solid var(--art-line)',
                   }}
                 >
-                  <img 
-                    src={imgSrc} 
-                    alt={`Page ${index + 1}`} 
-                    className="w-full h-full object-contain rounded-none select-none pointer-events-none" 
+                  <img
+                    src={imgSrc}
+                    alt={`Page ${index + 1}`}
+                    className="h-full w-full object-contain select-none pointer-events-none"
                   />
-                  
-                  {/* Micro Page Counter Badge inside each page */}
-                  <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-2 py-0.5 border border-white/10 text-[9px] font-mono text-white/50 rounded-none">
-                    Page {index + 1} of {pages.length}
+
+                  <div
+                    className="absolute bottom-3 right-3 rounded-[6px] px-2 py-0.5 font-mono text-[10px]"
+                    style={{
+                      backgroundColor: 'var(--art-ground)',
+                      color: 'var(--art-ink-muted)',
+                      border: '1px solid var(--art-line)',
+                    }}
+                  >
+                    {index + 1} / {pages.length}
                   </div>
                 </div>
               ))}

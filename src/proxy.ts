@@ -1,12 +1,16 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isMaintenanceMode, shouldBypassMaintenance } from '@/lib/maintenance'
+import { isMaintenanceModeForHost, shouldBypassMaintenance } from '@/lib/maintenance'
+import { ART_SITE_URL, PRIMARY_DOMAIN, isArtHost, normalizeHost } from '@/lib/sites'
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const host = request.headers.get('host')
+  const normalizedHost = normalizeHost(host)
+  const artSite = isArtHost(host)
 
-  // Serve the Under Maintenance experience for all public routes
-  if (isMaintenanceMode && !shouldBypassMaintenance(pathname)) {
+  // 1. Maintenance Mode check (supports independent toggles for dri4n.com and art.dri4n.com)
+  if (isMaintenanceModeForHost(host) && !shouldBypassMaintenance(pathname)) {
     const maintenanceUrl = new URL('/maintenance', request.url)
     const rewriteResponse = NextResponse.rewrite(maintenanceUrl, {
       status: 503,
@@ -16,7 +20,16 @@ export default async function proxy(request: NextRequest) {
     return rewriteResponse
   }
 
-  // Only run Supabase auth checks for /admin and /login
+  // 2. Consolidate Art / Creative routes onto dri4n.com/art (redirect legacy art.dri4n.com & /creative)
+  if (artSite) {
+    return NextResponse.redirect(new URL(ART_SITE_URL))
+  }
+
+  if (pathname === '/creative' || pathname.startsWith('/creative/')) {
+    return NextResponse.redirect(new URL('/art', request.url))
+  }
+
+  // 3. Only run Supabase auth checks for /admin and /login
   const isProtectedRoute = pathname.startsWith('/admin') || pathname === '/login'
   if (!isProtectedRoute) {
     return NextResponse.next()

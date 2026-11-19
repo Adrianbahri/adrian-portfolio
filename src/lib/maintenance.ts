@@ -1,12 +1,32 @@
+import { isArtHost, isLocalHost } from '@/lib/sites';
+
 /**
  * Global maintenance mode switch for dri4n.com.
- *
- * Active by default so deployments serve the Under Maintenance experience.
- * To restore the full portfolio, set `NEXT_PUBLIC_MAINTENANCE_MODE=false`
- * in your environment variables (e.g. Vercel) or change the default below.
+ * Active by default. Set `NEXT_PUBLIC_MAINTENANCE_MODE=false` to go live.
  */
 export const isMaintenanceMode =
   process.env.NEXT_PUBLIC_MAINTENANCE_MODE !== 'false';
+
+/**
+ * Independent maintenance mode switch for art.dri4n.com.
+ * Falls back to `isMaintenanceMode` if `NEXT_PUBLIC_ART_MAINTENANCE_MODE` is not set.
+ * Set `NEXT_PUBLIC_ART_MAINTENANCE_MODE=false` in Vercel to launch art.dri4n.com independently.
+ */
+export const isArtMaintenanceMode =
+  process.env.NEXT_PUBLIC_ART_MAINTENANCE_MODE !== undefined
+    ? process.env.NEXT_PUBLIC_ART_MAINTENANCE_MODE !== 'false'
+    : isMaintenanceMode;
+
+export function isMaintenanceModeForHost(host?: string | null): boolean {
+  // Never force maintenance mode on local development hosts
+  if (isLocalHost(host)) {
+    return false;
+  }
+  if (isArtHost(host)) {
+    return isArtMaintenanceMode;
+  }
+  return isMaintenanceMode;
+}
 
 /**
  * Paths that remain accessible while maintenance mode is enabled.

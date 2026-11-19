@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from '@/lib/motion';
 import { techStack } from '@/data/techstack';
 import type { ProjectMode } from '@/lib/portfolio';
 

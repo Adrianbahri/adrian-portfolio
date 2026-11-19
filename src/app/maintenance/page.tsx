@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
+import { motion } from '@/lib/motion';
 import {
   ArrowUpRight,
   Check,
@@ -18,8 +18,9 @@ import {
 } from 'lucide-react';
 import { FiGithub, FiInstagram, FiLinkedin } from 'react-icons/fi';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { ART_DOMAIN, PRIMARY_DOMAIN, isArtHost } from '@/lib/sites';
 
-const UPGRADE_TASKS = [
+const MAIN_UPGRADE_TASKS = [
   {
     id: 'core',
     label: 'Core Architecture & Routing',
@@ -35,7 +36,28 @@ const UPGRADE_TASKS = [
   {
     id: 'works',
     label: 'New Case Studies & Works',
-    detail: 'Curating dev & creative showcase',
+    detail: 'Curating engineering showcase',
+    status: 'queued' as const,
+  },
+];
+
+const ART_UPGRADE_TASKS = [
+  {
+    id: 'studio',
+    label: 'Creative Studio Architecture',
+    detail: 'Dedicated subdomain art.dri4n.com',
+    status: 'done' as const,
+  },
+  {
+    id: 'archive',
+    label: 'Design, Print & Motion Archive',
+    detail: 'Curating visual & editorial works',
+    status: 'active' as const,
+  },
+  {
+    id: 'gallery',
+    label: 'Interactive Gallery Experience',
+    detail: 'Polishing transitions & lightbox',
     status: 'queued' as const,
   },
 ];
@@ -43,22 +65,26 @@ const UPGRADE_TASKS = [
 export default function MaintenancePage() {
   const { settings } = useSiteSettings();
   const [isDark, setIsDark] = useState(true);
+  const [isArtSite, setIsArtSite] = useState(false);
   const [timeString, setTimeString] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Subtle interactive spotlight following pointer
-  const mouseX = useMotionValue(-500);
-  const mouseY = useMotionValue(-500);
+  useEffect(() => {
+    setIsArtSite(isArtHost(window.location.host));
+  }, []);
 
-  const spotlightBg = useMotionTemplate`radial-gradient(520px circle at ${mouseX}px ${mouseY}px, rgba(255, 85, 34, 0.085), transparent 72%)`;
+  const activeDomain = isArtSite ? ART_DOMAIN : PRIMARY_DOMAIN;
+  const upgradeTasks = isArtSite ? ART_UPGRADE_TASKS : MAIN_UPGRADE_TASKS;
+
+  // Lightweight pointer spotlight using CSS variables (zero Framer Motion)
+  const [spotPos, setSpotPos] = useState({ x: -500, y: -500 });
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+      setSpotPos({ x: e.clientX, y: e.clientY });
     },
-    [mouseX, mouseY]
+    []
   );
 
   // Sync theme with portfolio preference (default dark)
@@ -151,9 +177,11 @@ export default function MaintenancePage() {
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute inset-0 blueprint-grid opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-b from-canvas/30 via-transparent to-canvas" />
-        <motion.div
+        <div
           className="hidden md:block absolute inset-0 transition-opacity duration-500"
-          style={{ background: spotlightBg }}
+          style={{
+            background: `radial-gradient(520px circle at ${spotPos.x}px ${spotPos.y}px, rgba(255, 85, 34, 0.085), transparent 72%)`,
+          }}
         />
         {/* Ambient Accent Glow */}
         <motion.div
@@ -177,12 +205,19 @@ export default function MaintenancePage() {
         <div className="flex items-center justify-between gap-4">
           {/* Brand + Domain Pill */}
           <div className="flex items-center gap-3 h-11 px-4 bg-canvas/80 backdrop-blur-xl border border-border-strong rounded-[5px] shadow-sm">
-            <span className="font-heading text-base tracking-tight text-on-dark">
-              Dri4n<span className="text-primary font-bold">.</span>
+            <span className="font-heading text-base tracking-tight text-on-dark flex items-center gap-2">
+              <span>
+                Dri4n<span className="text-primary font-bold">.</span>
+              </span>
+              {isArtSite && (
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] px-1.5 py-0.5 rounded-[2px] border border-primary/30 bg-primary/10 text-primary">
+                  ART
+                </span>
+              )}
             </span>
             <span className="h-3.5 w-px bg-border-strong" />
             <span className="text-[11px] font-mono text-body-muted tracking-wider">
-              dri4n.com
+              {activeDomain}
             </span>
           </div>
 
@@ -255,8 +290,17 @@ export default function MaintenancePage() {
                 transition={{ delay: 0.08, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 className="text-4xl sm:text-5xl lg:text-[56px] font-heading font-normal tracking-tight leading-[1.06] text-on-dark"
               >
-                Crafting Something{' '}
-                <span className="text-primary">Better.</span>
+                {isArtSite ? (
+                  <>
+                    Curating the{' '}
+                    <span className="text-primary">Visual Studio.</span>
+                  </>
+                ) : (
+                  <>
+                    Crafting Something{' '}
+                    <span className="text-primary">Better.</span>
+                  </>
+                )}
               </motion.h1>
 
               <motion.p
@@ -265,10 +309,12 @@ export default function MaintenancePage() {
                 transition={{ delay: 0.16, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 className="text-base sm:text-lg text-body-muted leading-relaxed max-w-xl font-sans"
               >
-                <span className="text-on-dark font-medium">dri4n.com</span> is
-                currently under maintenance while I refine the visual experience,
-                optimize performance, and prepare new projects. Thanks for your
-                patience—we&apos;ll be back online shortly.
+                <span className="text-on-dark font-medium">{activeDomain}</span> is
+                currently under maintenance while I{' '}
+                {isArtSite
+                  ? 'curate new graphic design, editorial print, motion reels, and photography works.'
+                  : 'refine the visual experience, optimize performance, and prepare new projects.'}{' '}
+                Thanks for your patience—we&apos;ll be back online shortly.
               </motion.p>
 
               {/* Action Buttons */}
@@ -354,7 +400,7 @@ export default function MaintenancePage() {
 
                 {/* Task Checklist */}
                 <ul className="space-y-3.5">
-                  {UPGRADE_TASKS.map((task) => (
+                  {upgradeTasks.map((task) => (
                     <li
                       key={task.id}
                       className="flex items-start justify-between gap-3 text-xs"
