@@ -1,42 +1,69 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+let cachedSettings: Record<string, string> | null = null;
+let inflightPromise: Promise<Record<string, string>> | null = null;
+
 export function useSiteSettings(initialSettings?: Record<string, string>) {
-  const [settings, setSettings] = useState<Record<string, string>>(initialSettings || {});
-  const [loading, setLoading] = useState(!initialSettings || Object.keys(initialSettings).length === 0);
+  const hasInitial = Boolean(
+    initialSettings && Object.keys(initialSettings).length > 0
+  );
+  if (hasInitial && !cachedSettings && initialSettings) {
+    cachedSettings = initialSettings;
+  }
+
+  const [settings, setSettings] = useState<Record<string, string>>(
+    cachedSettings || initialSettings || {}
+  );
+  const [loading, setLoading] = useState(!cachedSettings && !hasInitial);
 
   useEffect(() => {
-    if (initialSettings && Object.keys(initialSettings).length > 0) {
+    if (cachedSettings) {
+      setSettings(cachedSettings);
+      setLoading(false);
       return;
     }
 
-    async function fetchSettings() {
-      try {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('key, value');
-        
-        if (error) throw error;
+    let active = true;
 
-        if (data) {
-          const settingsMap = data.reduce((acc: any, item: any) => {
-            acc[item.key] = item.value;
-            return acc;
-          }, {});
-          setSettings(settingsMap);
+    async function load() {
+      try {
+        if (!inflightPromise) {
+          inflightPromise = Promise.resolve(
+            supabase.from('site_settings').select('key, value')
+          )
+            .then(({ data, error }) => {
+              if (error) throw error;
+              const map: Record<string, string> = {};
+              if (Array.isArray(data)) {
+                for (const item of data) {
+                  if (item?.key) map[item.key] = item.value;
+                }
+              }
+              cachedSettings = map;
+              return map;
+            })
+            .finally(() => {
+              inflightPromise = null;
+            });
         }
+
+        const map = await inflightPromise;
+        if (active) setSettings(map);
       } catch (err: any) {
-        // Silently fail if table doesn't exist yet - user needs to run SQL
         if (err?.code !== 'PGRST116') {
           console.warn('Site settings not found or RLS restricted. Using defaults.');
         }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
-    fetchSettings();
-  }, [initialSettings]);
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return { settings, loading };
 }

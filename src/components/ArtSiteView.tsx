@@ -174,6 +174,13 @@ function isDirectVideoUrl(url?: string | null) {
   return /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
 }
 
+let artMemCache: {
+  works?: ArtWorkItem[];
+  archiveTiles?: ArchiveTile[];
+  photoTiles?: ArchiveTile[];
+  experiences?: ExpRow[];
+} | null = null;
+
 export default function ArtSiteView({
   initialSettings,
 }: {
@@ -187,20 +194,27 @@ export default function ArtSiteView({
   const [activeTab, setActiveTab] = useState<ArtTab>('archive');
   const [selectedWork, setSelectedWork] = useState<ArtWorkItem | null>(null);
   const [lightboxImage, setLightboxImage] = useState<ArchiveTile | null>(null);
-  const [works, setWorks] = useState<ArtWorkItem[]>(FALLBACK_WORKS);
-  const [archiveTiles, setArchiveTiles] =
-    useState<ArchiveTile[]>(FALLBACK_ARCHIVE);
-  const [photoTiles, setPhotoTiles] = useState<ArchiveTile[]>(
-    FALLBACK_ARCHIVE.filter((a) => a.category === 'Photo')
+  const [works, setWorks] = useState<ArtWorkItem[]>(
+    () => artMemCache?.works || FALLBACK_WORKS
   );
-  const [experiences, setExperiences] = useState<ExpRow[]>(() =>
-    staticWorkData.map((w, i) => ({
-      id: `static-exp-${i}`,
-      company: w.company,
-      role: w.role,
-      period: w.year,
-      description: w.desc,
-    }))
+  const [archiveTiles, setArchiveTiles] = useState<ArchiveTile[]>(
+    () => artMemCache?.archiveTiles || FALLBACK_ARCHIVE
+  );
+  const [photoTiles, setPhotoTiles] = useState<ArchiveTile[]>(
+    () =>
+      artMemCache?.photoTiles ||
+      FALLBACK_ARCHIVE.filter((a) => a.category === 'Photo')
+  );
+  const [experiences, setExperiences] = useState<ExpRow[]>(
+    () =>
+      artMemCache?.experiences ||
+      staticWorkData.map((w, i) => ({
+        id: `static-exp-${i}`,
+        company: w.company,
+        role: w.role,
+        period: w.year,
+        description: w.desc,
+      }))
   );
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -300,8 +314,13 @@ export default function ArtSiteView({
     setBrokenImages((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
   };
 
-  // Load Adrian's live data from Supabase
+  // Load Adrian's live data from Supabase (cached in memory across navigations)
   useEffect(() => {
+    if (artMemCache) {
+      signalPortalRouteReady('/art');
+      return;
+    }
+
     async function loadArtData() {
       try {
         const [
@@ -476,6 +495,8 @@ export default function ArtSiteView({
           }
         }
 
+        const nextCache: NonNullable<typeof artMemCache> = {};
+
         if (galleryRes.data?.length) {
           const validPhotos = galleryRes.data.filter((g: any) => g.image_url);
           const mappedPhotos: ArchiveTile[] = validPhotos.map(
@@ -488,26 +509,36 @@ export default function ArtSiteView({
           );
           if (mappedPhotos.length > 0) {
             setPhotoTiles(mappedPhotos);
+            nextCache.photoTiles = mappedPhotos;
             collectedArchive.push(...mappedPhotos);
           }
         }
 
         if (expRes.data?.length) {
-          setExperiences(
-            expRes.data.map((e: any, idx: number) => ({
-              id: String(e.id || idx),
-              company: e.company || 'Studio',
-              role: e.title || 'Creative Role',
-              period: e.timeline || '2025',
-              description: (e.description || e.desc || '')
-                .replace(/<!--\s*LOGO_URL:.*?-->/g, '')
-                .trim(),
-            }))
-          );
+          const mappedExp = expRes.data.map((e: any, idx: number) => ({
+            id: String(e.id || idx),
+            company: e.company || 'Studio',
+            role: e.title || 'Creative Role',
+            period: e.timeline || '2025',
+            description: (e.description || e.desc || '')
+              .replace(/<!--\s*LOGO_URL:.*?-->/g, '')
+              .trim(),
+          }));
+          setExperiences(mappedExp);
+          nextCache.experiences = mappedExp;
         }
 
-        if (collectedWorks.length > 0) setWorks(collectedWorks);
-        if (collectedArchive.length > 0) setArchiveTiles(collectedArchive);
+        if (collectedWorks.length > 0) {
+          setWorks(collectedWorks);
+          nextCache.works = collectedWorks;
+        }
+        if (collectedArchive.length > 0) {
+          setArchiveTiles(collectedArchive);
+          nextCache.archiveTiles = collectedArchive;
+        }
+        if (Object.keys(nextCache).length > 0) {
+          artMemCache = nextCache;
+        }
       } catch {
         // Keep fallbacks
       } finally {
@@ -945,11 +976,12 @@ export default function ArtSiteView({
                     />
                   )}
 
-                  {/* Auto-Playing Muted YouTube Embed (seamless background playback) */}
+                  {/* Auto-Playing Muted YouTube Embed (lazy-loaded so it doesn't block initial render) */}
                   {!directVid && ytId && (
                     <iframe
                       src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3`}
                       title={vid.title}
+                      loading="lazy"
                       allow="autoplay; encrypted-media; picture-in-picture"
                       className="pointer-events-none absolute inset-0 h-full w-full scale-[1.18] border-0"
                     />

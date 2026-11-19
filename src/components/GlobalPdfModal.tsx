@@ -1,10 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import FlipbookReader from './FlipbookReader';
+import dynamic from 'next/dynamic';
+
+const FlipbookReader = dynamic(() => import('./FlipbookReader'), {
+  ssr: false,
+});
 
 export default function GlobalPdfModal() {
-  const [pdfData, setPdfData] = useState<{ url: string; title: string } | null>(null);
+  const [pdfData, setPdfData] = useState<{ url: string; title: string } | null>(
+    null
+  );
 
   useEffect(() => {
     const handleOpen = (event: Event) => {

@@ -223,6 +223,14 @@ function formatShortDate(iso?: string): string {
     .replace(/\//g, '.');
 }
 
+let devMemCache: {
+  projects?: DevProject[];
+  experiences?: ExperienceTicket[];
+  achievements?: AchievementItem[];
+  articles?: ArticleItem[];
+  artSlides?: { id: string; label: string; image: string }[];
+} | null = null;
+
 export default function DevPortfolioView({
   initialSettings,
 }: {
@@ -283,7 +291,9 @@ export default function DevPortfolioView({
 
   const router = useRouter();
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
-  const [artSlides, setArtSlides] = useState(ART_PORTAL_SLIDES);
+  const [artSlides, setArtSlides] = useState(
+    () => devMemCache?.artSlides || ART_PORTAL_SLIDES
+  );
   const [artSlideIdx, setArtSlideIdx] = useState(0);
 
   // Fast 2.4s cross-fade slideshow for the Creative Side preview tile on Home
@@ -382,12 +392,18 @@ export default function DevPortfolioView({
   );
 
   // Live Supabase state
-  const [projects, setProjects] = useState<DevProject[]>(fallbackProjects);
-  const [experiences, setExperiences] =
-    useState<ExperienceTicket[]>(fallbackExperiences);
-  const [achievements, setAchievements] =
-    useState<AchievementItem[]>(fallbackAchievements);
-  const [articles, setArticles] = useState<ArticleItem[]>(fallbackArticles);
+  const [projects, setProjects] = useState<DevProject[]>(
+    () => devMemCache?.projects || fallbackProjects
+  );
+  const [experiences, setExperiences] = useState<ExperienceTicket[]>(
+    () => devMemCache?.experiences || fallbackExperiences
+  );
+  const [achievements, setAchievements] = useState<AchievementItem[]>(
+    () => devMemCache?.achievements || fallbackAchievements
+  );
+  const [articles, setArticles] = useState<ArticleItem[]>(
+    () => devMemCache?.articles || fallbackArticles
+  );
 
   const devTools = useMemo(
     () => techStack.filter((t) => t.mode === 'developer'),
@@ -597,8 +613,13 @@ export default function DevPortfolioView({
 
   // Zero idle background timers for crisp, lightweight performance
 
-  // Fetch ALL live Supabase data for the Main/Dev Portfolio
+  // Fetch ALL live Supabase data for the Main/Dev Portfolio (cached in memory across navigations)
   useEffect(() => {
+    if (devMemCache) {
+      signalPortalRouteReady('/');
+      return;
+    }
+
     async function loadDevData() {
       try {
         const [projectsRes, articlesRes, expRes, achRes, galleryRes] =
@@ -626,6 +647,8 @@ export default function DevPortfolioView({
               .limit(8),
           ]);
 
+        const nextCache: NonNullable<typeof devMemCache> = {};
+
         if (galleryRes.data?.length) {
           const validPhotos = galleryRes.data
             .filter((g: any) => g.image_url)
@@ -636,6 +659,7 @@ export default function DevPortfolioView({
             }));
           if (validPhotos.length > 0) {
             setArtSlides(validPhotos);
+            nextCache.artSlides = validPhotos;
           }
         }
 
@@ -666,77 +690,84 @@ export default function DevPortfolioView({
                     .filter(Boolean)
                 : [],
             }));
-          if (devProjects.length > 0) setProjects(devProjects);
+          if (devProjects.length > 0) {
+            setProjects(devProjects);
+            nextCache.projects = devProjects;
+          }
         }
 
         if (articlesRes.data?.length) {
-          setArticles(
-            articlesRes.data.map((a: any) => ({
-              id: String(a.id),
-              title: a.title,
-              slug: a.slug,
-              category: a.category || 'Technology',
-              excerpt:
-                a.description ||
-                a.excerpt ||
-                a.desc ||
-                (typeof a.content === 'string'
-                  ? a.content.replace(/<[^>]+>/g, '').replace(/[#*_`>\[\]()]/g, '').slice(0, 130) + '…'
-                  : 'Thoughts on engineering, design, and creative systems.'),
-              date: a.date || formatShortDate(a.created_at),
-              img:
-                a.img ||
-                'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-            }))
-          );
+          const mappedArticles = articlesRes.data.map((a: any) => ({
+            id: String(a.id),
+            title: a.title,
+            slug: a.slug,
+            category: a.category || 'Technology',
+            excerpt:
+              a.description ||
+              a.excerpt ||
+              a.desc ||
+              (typeof a.content === 'string'
+                ? a.content.replace(/<[^>]+>/g, '').replace(/[#*_`>\[\]()]/g, '').slice(0, 130) + '…'
+                : 'Thoughts on engineering, design, and creative systems.'),
+            date: a.date || formatShortDate(a.created_at),
+            img:
+              a.img ||
+              'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+          }));
+          setArticles(mappedArticles);
+          nextCache.articles = mappedArticles;
         }
 
         if (expRes.data?.length) {
-          setExperiences(
-            sortExperiencesNewestFirst(
-              expRes.data.map((e: any, idx: number) => {
-                const rawDesc = e.description || e.desc || '';
-                const logoMatch = rawDesc.match(/<!-- LOGO_URL:\s*(.*?)\s*-->/);
-                const logoUrl =
-                  e.logo_url || (logoMatch ? logoMatch[1] : undefined);
-                const cleanDesc = rawDesc
-                  .replace(/<!-- LOGO_URL:\s*(.*?)\s*-->/, '')
-                  .trim();
+          const sortedExp = sortExperiencesNewestFirst(
+            expRes.data.map((e: any, idx: number) => {
+              const rawDesc = e.description || e.desc || '';
+              const logoMatch = rawDesc.match(/<!-- LOGO_URL:\s*(.*?)\s*-->/);
+              const logoUrl =
+                e.logo_url || (logoMatch ? logoMatch[1] : undefined);
+              const cleanDesc = rawDesc
+                .replace(/<!-- LOGO_URL:\s*(.*?)\s*-->/, '')
+                .trim();
 
-                return {
-                  id: String(e.id),
-                  code: String(idx + 1).padStart(2, '0'),
-                  year: e.timeline || e.year || e.period || '2026',
-                  role: e.title || e.role || 'Role',
-                  company: e.company || e.organization || '',
-                  location: e.location || 'Makassar, Indonesia',
-                  logoUrl,
-                  desc: cleanDesc,
-                  points: Array.isArray(e.points) ? e.points : undefined,
-                  topics: ['DEV', 'SYSTEMS', 'ROLE'] as [
-                    string,
-                    string,
-                    string,
-                  ],
-                  primaryIndex: (idx % 3) as 0 | 1 | 2,
-                };
-              })
-            )
+              return {
+                id: String(e.id),
+                code: String(idx + 1).padStart(2, '0'),
+                year: e.timeline || e.year || e.period || '2026',
+                role: e.title || e.role || 'Role',
+                company: e.company || e.organization || '',
+                location: e.location || 'Makassar, Indonesia',
+                logoUrl,
+                desc: cleanDesc,
+                points: Array.isArray(e.points) ? e.points : undefined,
+                topics: ['DEV', 'SYSTEMS', 'ROLE'] as [
+                  string,
+                  string,
+                  string,
+                ],
+                primaryIndex: (idx % 3) as 0 | 1 | 2,
+              };
+            })
           );
+          setExperiences(sortedExp);
+          nextCache.experiences = sortedExp;
         }
 
         if (achRes.data?.length) {
-          setAchievements(
-            sortAchievementsNewestFirst(
-              achRes.data.map((a: any) => ({
-                id: String(a.id),
-                title: a.title,
-                event: a.event || a.issuer || 'Award',
-                year: a.year || '2025',
-                desc: a.description || a.desc || '',
-              }))
-            )
+          const sortedAch = sortAchievementsNewestFirst(
+            achRes.data.map((a: any) => ({
+              id: String(a.id),
+              title: a.title,
+              event: a.event || a.issuer || 'Award',
+              year: a.year || '2025',
+              desc: a.description || a.desc || '',
+            }))
           );
+          setAchievements(sortedAch);
+          nextCache.achievements = sortedAch;
+        }
+
+        if (Object.keys(nextCache).length > 0) {
+          devMemCache = nextCache;
         }
       } catch (err) {
         console.warn('DevPortfolioView Supabase fallback:', err);
