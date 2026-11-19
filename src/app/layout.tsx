@@ -46,9 +46,15 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error("Error fetching site settings for metadata:", e);
   }
 
-  // Clean, simple title & description tailored for crisp social/WhatsApp link previews
-  const siteTitle = "Adrian Bahri (Dri4n) — Creative Technologist";
-  const siteDescription = "Full-stack developer & creative technologist based in Makassar. Building fast, expressive digital systems.";
+  // Primary SEO Title & Description on https://dri4n.com directly targeting
+  // "Adrian", "Adrian Bahri", "Adrian Teknik Informatika", "Adrian Unhas", "Universitas Hasanuddin"
+  const siteTitle =
+    "Adrian Bahri (Dri4n) — Creative Technologist | Teknik Informatika Unhas";
+  const siteDescription =
+    "Portfolio resmi Adrian Bahri (Dri4n) — Mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas), Creative Technologist & Full-Stack Web Developer di Makassar.";
+  const socialTitle = "Adrian Bahri (Dri4n) — Creative Technologist";
+  const socialDescription =
+    "Full-stack developer & creative technologist (Teknik Informatika Unhas, Makassar).";
 
   const primaryUrl = "https://dri4n.com";
 
@@ -100,24 +106,25 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      locale: "en_US",
+      locale: "id_ID",
+      alternateLocale: ["en_US"],
       url: primaryUrl,
-      title: siteTitle,
-      description: siteDescription,
-      siteName: "Adrian Bahri Portfolio",
+      title: socialTitle,
+      description: socialDescription,
+      siteName: "Adrian Bahri (Dri4n)",
       images: [
         {
           url: "/opengraph-image",
           width: 1200,
           height: 630,
-          alt: "Adrian Bahri Portfolio Preview",
+          alt: "Adrian Bahri (Dri4n) — Creative Technologist & Full-Stack Developer",
         }
       ]
     },
     twitter: {
       card: "summary_large_image",
-      title: siteTitle,
-      description: siteDescription,
+      title: socialTitle,
+      description: socialDescription,
       creator: "@adrianbahri",
       images: ["/opengraph-image"],
     },
