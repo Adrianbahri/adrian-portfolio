@@ -182,8 +182,8 @@ export default function ArtSiteView({
   const router = useRouter();
   const { settings } = useSiteSettings(initialSettings);
 
-  // Synced Light & Dark Theme (Default Light like Gaurav Mishra, switches cleanly with circular reveal!)
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Synced Light & Dark Theme (Default Dark across both Dev & Art)
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [activeTab, setActiveTab] = useState<ArtTab>('archive');
   const [selectedWork, setSelectedWork] = useState<ArtWorkItem | null>(null);
   const [lightboxImage, setLightboxImage] = useState<ArchiveTile | null>(null);

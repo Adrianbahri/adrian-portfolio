@@ -170,8 +170,13 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${inter.variable} ${dmMono.variable} font-sans`}>
+    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${dmMono.variable} font-sans`}>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}`,
+          }}
+        />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
