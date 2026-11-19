@@ -252,6 +252,36 @@ export default function RootLayout({
         "description":
           "Adrian Bahri (Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar, Creative Technologist, Full-Stack Web Developer, dan Visual Designer di PK Identitas Unhas & UKK Sains Unhas.",
       },
+      {
+        "@type": "FAQPage",
+        "@id": "https://dri4n.com/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Siapa Adrian Bahri (Dri4n)?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Adrian Bahri (dikenal juga sebagai Adrian atau Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar yang berkarya sebagai Creative Technologist, Full-Stack Web Developer, dan Visual & Brand Designer. Portfolio resminya dapat diakses di https://dri4n.com dan https://dri4n.com/art.",
+            },
+          },
+          {
+            "@type": "Question",
+            "name": "Adrian Bahri kuliah di mana dan jurusan apa?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Adrian Bahri menempuh pendidikan di Departemen Teknik Informatika, Fakultas Teknik, Universitas Hasanuddin (Unhas), Makassar, Sulawesi Selatan, serta aktif di PK Identitas Unhas dan UKK Sains Unhas.",
+            },
+          },
+          {
+            "@type": "Question",
+            "name": "Apa keahlian dan karya Adrian Teknik Informatika Unhas?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Adrian Bahri membangun aplikasi web full-stack menggunakan Next.js, TypeScript, React, Flutter, Bun, SQLite, dan Supabase di https://dri4n.com, serta karya visual identity, editorial print, fotografi, dan motion graphics di https://dri4n.com/art.",
+            },
+          },
+        ],
+      },
     ],
   };
 
