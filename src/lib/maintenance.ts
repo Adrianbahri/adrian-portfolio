@@ -2,19 +2,18 @@ import { isArtHost, isLocalHost } from '@/lib/sites';
 
 /**
  * Global maintenance mode switch for dri4n.com.
- * Active by default. Set `NEXT_PUBLIC_MAINTENANCE_MODE=false` to go live.
+ * Disabled by default (site is live). Set `NEXT_PUBLIC_MAINTENANCE_MODE=true` to enable maintenance mode.
  */
 export const isMaintenanceMode =
-  process.env.NEXT_PUBLIC_MAINTENANCE_MODE !== 'false';
+  process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
 
 /**
- * Independent maintenance mode switch for art.dri4n.com.
+ * Independent maintenance mode switch for /art.
  * Falls back to `isMaintenanceMode` if `NEXT_PUBLIC_ART_MAINTENANCE_MODE` is not set.
- * Set `NEXT_PUBLIC_ART_MAINTENANCE_MODE=false` in Vercel to launch art.dri4n.com independently.
  */
 export const isArtMaintenanceMode =
   process.env.NEXT_PUBLIC_ART_MAINTENANCE_MODE !== undefined
-    ? process.env.NEXT_PUBLIC_ART_MAINTENANCE_MODE !== 'false'
+    ? process.env.NEXT_PUBLIC_ART_MAINTENANCE_MODE === 'true'
     : isMaintenanceMode;
 
 export function isMaintenanceModeForHost(host?: string | null): boolean {
