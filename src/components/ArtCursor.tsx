@@ -280,6 +280,7 @@ export function ArtCursor({
         if (p.asleep) continue;
         anyAwake = true;
 
+        const prevX = p.x;
         const prevY = p.y;
         const half = p.size * 0.5;
 
@@ -306,27 +307,15 @@ export function ArtCursor({
           p.vy = Math.abs(p.vy) * 0.25;
         }
 
-        // Collide with true 4-sided solid AABB boxes (top, bottom, left, right; bypassed briefly during scroll shake)
+        // Collide with 3-sided box surfaces (top, left, right) — bottom edge is open space so scrolling past a bento never teleports/ejects squares
         if (!scrollingShaken) {
           for (let s = 0; s < surfaces.length; s++) {
             const surf = surfaces[s];
-            if (
-              p.x + half <= surf.left ||
-              p.x - half >= surf.right ||
-              p.y + half <= surf.top ||
-              p.y - half >= surf.bottom
-            ) {
-              continue;
-            }
+            const withinX = p.x + half * 0.75 > surf.left && p.x - half * 0.75 < surf.right;
+            const withinY = p.y + half > surf.top + 2 && p.y - half < surf.bottom;
 
-            const penTop = p.y + half - surf.top;
-            const penBottom = surf.bottom - (p.y - half);
-            const penLeft = p.x + half - surf.left;
-            const penRight = surf.right - (p.x - half);
-            const minPen = Math.min(penTop, penBottom, penLeft, penRight);
-
-            if (minPen === penTop) {
-              // Top surface of the box
+            // 1) Top surface: catches squares falling downward from above
+            if (p.vy >= 0 && withinX && prevY + half <= surf.top + 8 && p.y + half >= surf.top) {
               p.y = surf.top - half;
               if (p.vy > 1.35) {
                 p.vy = -p.vy * SURFACE_BOUNCE;
@@ -336,7 +325,7 @@ export function ArtCursor({
                 p.vy = 0;
                 p.vx *= FRICTION;
                 p.vr = p.vx * 0.14;
-                // Tip & roll off cleanly when near left/right edge of the box
+                // Tip & roll off cleanly when near left/right edge
                 const edgeDistLeft = p.x - surf.left;
                 const edgeDistRight = surf.right - p.x;
                 if (edgeDistLeft < half * 0.85) {
@@ -347,22 +336,22 @@ export function ArtCursor({
                   supported = true;
                 }
               }
-            } else if (minPen === penBottom) {
-              // Bottom surface (underside) of the box
-              p.y = surf.bottom + half;
-              p.vy = Math.max(0.4, Math.abs(p.vy) * 0.35);
-              p.vx += (Math.random() - 0.5) * 0.4;
-              p.vr = p.vx * 0.12;
-            } else if (minPen === penLeft) {
-              // Left wall of the box
-              p.x = surf.left - half;
-              p.vx = -Math.max(0.35, Math.abs(p.vx) * 0.42);
-              p.vr = p.vx * 0.12;
-            } else {
-              // Right wall of the box
-              p.x = surf.right + half;
-              p.vx = Math.max(0.35, Math.abs(p.vx) * 0.42);
-              p.vr = p.vx * 0.12;
+              break;
+            }
+
+            // 2) Left & right outer walls only (bottom is open space — squares inside simply fall through naturally)
+            if (withinY) {
+              if (p.vx > 0 && prevX + half <= surf.left + 6 && p.x + half >= surf.left) {
+                p.x = surf.left - half;
+                p.vx = -Math.abs(p.vx) * 0.42;
+                p.vr = p.vx * 0.12;
+                break;
+              } else if (p.vx < 0 && prevX - half >= surf.right - 6 && p.x - half <= surf.right) {
+                p.x = surf.right + half;
+                p.vx = Math.abs(p.vx) * 0.42;
+                p.vr = p.vx * 0.12;
+                break;
+              }
             }
           }
         }
