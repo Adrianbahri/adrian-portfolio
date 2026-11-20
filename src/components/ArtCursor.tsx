@@ -200,7 +200,7 @@ export function ArtCursor({
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const nodes = document.querySelectorAll<HTMLElement>(
-        '[data-agent-slot="top-tiles"] > *, [data-agent-slot="writing"] > *, [data-agent-slot="bottom-tiles"] > *, [data-agent-slot="hero"] header button, [data-agent-slot="hero"] header a, [data-agent-slot="hero"] p, main .dev-tile, main .dev-tile-soft'
+        '[data-agent-slot="top-tiles"] > *, [data-agent-slot="writing"] > *, [data-agent-slot="bottom-tiles"] > *, [data-agent-slot="hero"] header button, [data-agent-slot="hero"] header a, [data-agent-slot="hero"] header [role="group"]'
       );
       const next: SurfaceRect[] = [];
       for (let i = 0; i < nodes.length; i++) {
@@ -306,24 +306,25 @@ export function ArtCursor({
           p.vy = Math.abs(p.vy) * 0.25;
         }
 
-        // Collide with top ledges of text / cards / buttons (bypassed briefly during scroll shake so squares never glue to moving elements)
-        if (!scrollingShaken && p.vy >= 0) {
+        // Collide with solid box surfaces (top ledge + left/right side walls; bypassed briefly during scroll shake)
+        if (!scrollingShaken) {
           for (let s = 0; s < surfaces.length; s++) {
             const surf = surfaces[s];
-            if (p.x + half * 0.7 < surf.left || p.x - half * 0.7 > surf.right) continue;
-            // Crossing the top edge from above
-            if (prevY + half <= surf.top + 6 && p.y + half >= surf.top) {
+            const insideX = p.x + half * 0.75 > surf.left && p.x - half * 0.75 < surf.right;
+            const insideY = p.y + half * 0.75 > surf.top && p.y - half * 0.75 < surf.bottom;
+
+            // 1) Landing on top edge of the box
+            if (p.vy >= 0 && insideX && prevY + half <= surf.top + 6 && p.y + half >= surf.top) {
               p.y = surf.top - half;
               if (p.vy > 1.35) {
                 p.vy = -p.vy * SURFACE_BOUNCE;
-                // Tiny natural scatter / roll impulse on bounce
                 p.vx += (Math.random() - 0.5) * 0.65;
                 p.vr = p.vx * 0.14;
               } else {
                 p.vy = 0;
                 p.vx *= FRICTION;
                 p.vr = p.vx * 0.14;
-                // If perched right near an edge, tip & roll off!
+                // Tip & roll off cleanly when near left/right edge of the box
                 const edgeDistLeft = p.x - surf.left;
                 const edgeDistRight = surf.right - p.x;
                 if (edgeDistLeft < half * 0.85) {
@@ -335,6 +336,21 @@ export function ArtCursor({
                 }
               }
               break;
+            }
+
+            // 2) Side-wall bounce if a falling/rolling square hits the left or right wall of the box
+            if (insideY && p.y - half > surf.top + 2) {
+              if (p.vx > 0 && p.x + half >= surf.left && p.x - half < surf.left) {
+                p.x = surf.left - half;
+                p.vx = -Math.abs(p.vx) * 0.42;
+                p.vr = p.vx * 0.12;
+                break;
+              } else if (p.vx < 0 && p.x - half <= surf.right && p.x + half > surf.right) {
+                p.x = surf.right + half;
+                p.vx = Math.abs(p.vx) * 0.42;
+                p.vr = p.vx * 0.12;
+                break;
+              }
             }
           }
         }
