@@ -182,21 +182,13 @@ export function ArtCursor() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const nodes = document.querySelectorAll<HTMLElement>(
-        'main .dev-tile, main .dev-tile-soft, main h1, main h2, main h3, main p, main button, main a'
+        '[data-agent-slot="top-tiles"] > *, [data-agent-slot="writing"] > *, [data-agent-slot="bottom-tiles"] > *, [data-agent-slot="hero"] header button, [data-agent-slot="hero"] header a, [data-agent-slot="hero"] p, main .dev-tile, main .dev-tile-soft'
       );
       const next: SurfaceRect[] = [];
       for (let i = 0; i < nodes.length; i++) {
         const el = nodes[i];
-        // Skip inner elements inside tiles so squares land cleanly on the tile top edge, not floating inside images
-        if (
-          !el.classList.contains('dev-tile') &&
-          !el.classList.contains('dev-tile-soft') &&
-          el.closest('.dev-tile, .dev-tile-soft')
-        ) {
-          continue;
-        }
         const r = el.getBoundingClientRect();
-        if (r.width < 24 || r.height < 10) continue;
+        if (r.width < 24 || r.height < 12) continue;
         if (r.bottom < 0 || r.top > vh - 14 || r.right < 0 || r.left > vw) continue;
         if (r.width > vw * 0.92 && r.height > vh * 0.7) continue;
         if (!isElementVisiblyRendered(el)) continue;
