@@ -200,7 +200,7 @@ export function ArtCursor({
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const nodes = document.querySelectorAll<HTMLElement>(
-        '[data-agent-slot="top-tiles"] > *, [data-agent-slot="writing"] > *, [data-agent-slot="bottom-tiles"] > *, [data-agent-slot="hero"] header button, [data-agent-slot="hero"] header a, [data-agent-slot="hero"] header [role="group"]'
+        '[data-agent-slot="top-tiles"] > *, [data-agent-slot="writing"], [data-agent-slot="bottom-tiles"] > *, [data-agent-slot="hero"] header button, [data-agent-slot="hero"] header a, [data-agent-slot="hero"] header [role="group"]'
       );
       const next: SurfaceRect[] = [];
       for (let i = 0; i < nodes.length; i++) {
@@ -306,15 +306,27 @@ export function ArtCursor({
           p.vy = Math.abs(p.vy) * 0.25;
         }
 
-        // Collide with solid box surfaces (top ledge + left/right side walls; bypassed briefly during scroll shake)
+        // Collide with true 4-sided solid AABB boxes (top, bottom, left, right; bypassed briefly during scroll shake)
         if (!scrollingShaken) {
           for (let s = 0; s < surfaces.length; s++) {
             const surf = surfaces[s];
-            const insideX = p.x + half * 0.75 > surf.left && p.x - half * 0.75 < surf.right;
-            const insideY = p.y + half * 0.75 > surf.top && p.y - half * 0.75 < surf.bottom;
+            if (
+              p.x + half <= surf.left ||
+              p.x - half >= surf.right ||
+              p.y + half <= surf.top ||
+              p.y - half >= surf.bottom
+            ) {
+              continue;
+            }
 
-            // 1) Landing on top edge of the box
-            if (p.vy >= 0 && insideX && prevY + half <= surf.top + 6 && p.y + half >= surf.top) {
+            const penTop = p.y + half - surf.top;
+            const penBottom = surf.bottom - (p.y - half);
+            const penLeft = p.x + half - surf.left;
+            const penRight = surf.right - (p.x - half);
+            const minPen = Math.min(penTop, penBottom, penLeft, penRight);
+
+            if (minPen === penTop) {
+              // Top surface of the box
               p.y = surf.top - half;
               if (p.vy > 1.35) {
                 p.vy = -p.vy * SURFACE_BOUNCE;
@@ -335,22 +347,22 @@ export function ArtCursor({
                   supported = true;
                 }
               }
-              break;
-            }
-
-            // 2) Side-wall bounce if a falling/rolling square hits the left or right wall of the box
-            if (insideY && p.y - half > surf.top + 2) {
-              if (p.vx > 0 && p.x + half >= surf.left && p.x - half < surf.left) {
-                p.x = surf.left - half;
-                p.vx = -Math.abs(p.vx) * 0.42;
-                p.vr = p.vx * 0.12;
-                break;
-              } else if (p.vx < 0 && p.x - half <= surf.right && p.x + half > surf.right) {
-                p.x = surf.right + half;
-                p.vx = Math.abs(p.vx) * 0.42;
-                p.vr = p.vx * 0.12;
-                break;
-              }
+            } else if (minPen === penBottom) {
+              // Bottom surface (underside) of the box
+              p.y = surf.bottom + half;
+              p.vy = Math.max(0.4, Math.abs(p.vy) * 0.35);
+              p.vx += (Math.random() - 0.5) * 0.4;
+              p.vr = p.vx * 0.12;
+            } else if (minPen === penLeft) {
+              // Left wall of the box
+              p.x = surf.left - half;
+              p.vx = -Math.max(0.35, Math.abs(p.vx) * 0.42);
+              p.vr = p.vx * 0.12;
+            } else {
+              // Right wall of the box
+              p.x = surf.right + half;
+              p.vx = Math.max(0.35, Math.abs(p.vx) * 0.42);
+              p.vr = p.vx * 0.12;
             }
           }
         }
