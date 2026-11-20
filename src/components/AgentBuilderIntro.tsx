@@ -7,28 +7,17 @@ interface AgentSpec {
   name: string;
   color: string;
   textColor: string;
+  tint: string;
   enterFrom: 'left' | 'right';
   slot: string;
   status: string;
-  enterAtMs: number;
-  snapAtMs: number;
+  startMs: number;
 }
 
-interface CursorState {
-  x: number;
-  y: number;
-  visible: boolean;
-  done: boolean;
-}
-
-interface BoxRect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-  color: string;
-  label: string;
-}
+const GLIDE_MS = 300;
+const DRAG_MS = 380;
+const HOLD_BOX_MS = 240;
+const FADE_OUT_MS = 300;
 
 const AGENTS: AgentSpec[] = [
   {
@@ -36,48 +25,79 @@ const AGENTS: AgentSpec[] = [
     name: 'Layout Agent',
     color: '#ff5a3d',
     textColor: '#ffffff',
+    tint: 'rgba(255, 90, 61, 0.07)',
     enterFrom: 'left',
     slot: 'hero',
     status: 'framing hero',
-    enterAtMs: 120,
-    snapAtMs: 920,
+    startMs: 80,
   },
   {
     id: 'ui',
     name: 'UI Agent',
     color: '#38bdf8',
     textColor: '#0b1116',
+    tint: 'rgba(56, 189, 248, 0.07)',
     enterFrom: 'right',
     slot: 'top-tiles',
-    status: 'snapping grid',
-    enterAtMs: 1250,
-    snapAtMs: 2050,
+    status: 'drawing grid',
+    startMs: 740,
   },
   {
     id: 'content',
     name: 'Content Agent',
     color: '#34d399',
     textColor: '#081711',
+    tint: 'rgba(52, 211, 153, 0.07)',
     enterFrom: 'left',
     slot: 'writing',
-    status: 'hydrating blog',
-    enterAtMs: 2350,
-    snapAtMs: 3150,
+    status: 'placing writing',
+    startMs: 1400,
   },
   {
     id: 'systems',
     name: 'Systems Agent',
     color: '#fbbf24',
     textColor: '#1a1304',
+    tint: 'rgba(251, 191, 36, 0.07)',
     enterFrom: 'right',
     slot: 'bottom-tiles',
-    status: 'wiring stack',
-    enterAtMs: 3450,
-    snapAtMs: 4250,
+    status: 'wiring tiles',
+    startMs: 2060,
   },
 ];
 
-const SESSION_KEY = 'dri4n-agent-intro-v2';
+const SESSION_KEY = 'dri4n-agent-intro-v3';
+
+function easeOutCubic(t: number): number {
+  const u = 1 - Math.min(1, Math.max(0, t));
+  return 1 - u * u * u;
+}
+
+function easeInOutCubic(t: number): number {
+  const x = Math.min(1, Math.max(0, t));
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+/**
+ * Exact transform-free layout rect relative to .dev-shell (overlay's offsetParent).
+ * Immune to scroll position and CSS scale/translate transforms so boxes align 0.0px.
+ */
+function getExactLayoutRect(el: HTMLElement, stopAt: Element | null) {
+  let left = 0;
+  let top = 0;
+  let cur: HTMLElement | null = el;
+  while (cur && cur !== stopAt && cur !== document.body) {
+    left += cur.offsetLeft;
+    top += cur.offsetTop;
+    cur = cur.offsetParent as HTMLElement | null;
+  }
+  return {
+    left,
+    top,
+    width: el.offsetWidth,
+    height: el.offsetHeight,
+  };
+}
 
 export default function AgentBuilderIntro({
   active,
@@ -85,9 +105,11 @@ export default function AgentBuilderIntro({
   active: boolean;
 }) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'running' | 'fading' | 'done'>('idle');
-  const [cursorCoords, setCursorCoords] = useState<Record<string, CursorState>>({});
-  const [activeBoxes, setActiveBoxes] = useState<Record<string, BoxRect>>({});
+  const cursorRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const statusRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+  const boxRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const dimRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (!active || typeof window === 'undefined') return;
@@ -95,16 +117,10 @@ export default function AgentBuilderIntro({
     const prefersReduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches;
-    if (prefersReduced) {
-      setPhase('done');
-      return;
-    }
+    if (prefersReduced) return;
 
     try {
-      if (sessionStorage.getItem(SESSION_KEY) === '1') {
-        setPhase('done');
-        return;
-      }
+      if (sessionStorage.getItem(SESSION_KEY) === '1') return;
       sessionStorage.setItem(SESSION_KEY, '1');
     } catch {
       // ignore storage restrictions
@@ -113,261 +129,254 @@ export default function AgentBuilderIntro({
     const root = document.documentElement;
     root.setAttribute('data-agent-building', 'true');
 
-    // Mark all target slots as unbuilt initially so agents visibly snap them into place one by one
     const slotEls = Array.from(
       document.querySelectorAll<HTMLElement>('[data-agent-slot]')
     );
-    slotEls.forEach((el) => {
-      el.setAttribute('data-agent-built', 'false');
-    });
+    slotEls.forEach((el) => el.setAttribute('data-agent-built', 'false'));
 
-    setPhase('running');
+    setMounted(true);
 
-    const timers: number[] = [];
+    let rafId = 0;
+    let startTime = 0;
+    const snapped = new Set<string>();
 
-    // Measure a slot's coordinates relative to the scrollable .dev-shell overlay
-    // so cursors & bounding boxes scroll 1:1 with the real page content.
-    const measureSlotRelative = (
-      slotName: string
-    ): { left: number; top: number; width: number; height: number } | null => {
-      const el = document.querySelector<HTMLElement>(
-        `[data-agent-slot="${slotName}"]`
-      );
-      if (!el) return null;
-      const elRect = el.getBoundingClientRect();
-      const overlayRect = overlayRef.current?.getBoundingClientRect();
-      if (overlayRect) {
-        return {
-          left: elRect.left - overlayRect.left,
-          top: elRect.top - overlayRect.top,
-          width: elRect.width,
-          height: elRect.height,
-        };
-      }
-      return {
-        left: elRect.left + window.scrollX,
-        top: elRect.top + window.scrollY,
-        width: elRect.width,
-        height: elRect.height,
-      };
-    };
+    // Wait 1 animation frame so refs are attached before starting the rAF loop
+    const initRaf = requestAnimationFrame(() => {
+      const overlayEl = overlayRef.current;
+      const offsetParent = overlayEl?.offsetParent ?? null;
+      const containerWidth = overlayEl?.clientWidth || window.innerWidth || 1200;
 
-    // Schedule each agent sequentially: enter -> glide -> select & snap -> clear box -> fade out
-    AGENTS.forEach((agent) => {
-      // 1) Spawn agent near the side of its own target slot
-      const enterTimer = window.setTimeout(() => {
-        const rect = measureSlotRelative(agent.slot);
-        if (!rect) return;
-        const vw = window.innerWidth || 1200;
-        const spawnX =
-          agent.enterFrom === 'left'
-            ? Math.max(16, rect.left - 130)
-            : Math.min(vw - 150, rect.left + rect.width + 65);
-        const spawnY = Math.max(16, rect.top - 24);
-
-        setCursorCoords((prev) => ({
-          ...prev,
-          [agent.id]: { x: spawnX, y: spawnY, visible: true, done: false },
-        }));
-      }, agent.enterAtMs);
-      timers.push(enterTimer);
-
-      // 2) Smoothly glide into the target UI block
-      const glideTimer = window.setTimeout(() => {
-        const rect = measureSlotRelative(agent.slot);
-        if (!rect) return;
-        const targetX = rect.left + Math.min(rect.width * 0.34, 170);
-        const targetY = rect.top + Math.min(rect.height * 0.34, 84);
-
-        setCursorCoords((prev) => ({
-          ...prev,
-          [agent.id]: { x: targetX, y: targetY, visible: true, done: false },
-        }));
-      }, agent.enterAtMs + 110);
-      timers.push(glideTimer);
-
-      // 3) Arrive, flash Figma bounding box + live dimensions, and snap the UI block into place
-      const snapTimer = window.setTimeout(() => {
+      // Pre-measure exact transform-free layout rects for each agent's slot
+      const plans = AGENTS.map((agent) => {
         const el = document.querySelector<HTMLElement>(
           `[data-agent-slot="${agent.slot}"]`
         );
-        if (el) {
-          el.setAttribute('data-agent-built', 'true');
-          const rect = measureSlotRelative(agent.slot);
-          if (rect) {
-            setActiveBoxes((prev) => ({
-              ...prev,
-              [agent.id]: {
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height,
-                color: agent.color,
-                label: `${Math.round(rect.width)} × ${Math.round(rect.height)}`,
-              },
-            }));
-            // Gentle nudge of cursor to the opposite corner handle after snap
-            setCursorCoords((prev) => ({
-              ...prev,
-              [agent.id]: {
-                x: rect.left + rect.width - 36,
-                y: rect.top + Math.min(rect.height * 0.56, 118),
-                visible: true,
-                done: true,
-              },
-            }));
+        if (!el) return null;
+        const rect = getExactLayoutRect(el, offsetParent);
+        const spawnX =
+          agent.enterFrom === 'left'
+            ? Math.max(12, rect.left - 110)
+            : Math.min(containerWidth - 130, rect.left + rect.width + 80);
+        const spawnY = Math.max(12, rect.top - 36);
+        // Gentle Bezier control point so cursor moves along a natural human arc
+        const ctrlX = (spawnX + rect.left) * 0.5;
+        const ctrlY = Math.min(spawnY, rect.top) - 28;
+        return { agent, el, rect, spawnX, spawnY, ctrlX, ctrlY };
+      }).filter((p): p is NonNullable<typeof p> => p !== null);
+
+      const totalEndMs =
+        Math.max(...AGENTS.map((a) => a.startMs)) +
+        GLIDE_MS +
+        DRAG_MS +
+        HOLD_BOX_MS +
+        FADE_OUT_MS +
+        80;
+
+      const tick = (now: number) => {
+        if (!startTime) startTime = now;
+        const elapsed = now - startTime;
+
+        for (const plan of plans) {
+          const { agent, el, rect, spawnX, spawnY, ctrlX, ctrlY } = plan;
+          const cursorEl = cursorRefs.current[agent.id];
+          const statusEl = statusRefs.current[agent.id];
+          const boxEl = boxRefs.current[agent.id];
+          const dimEl = dimRefs.current[agent.id];
+          if (!cursorEl || !boxEl) continue;
+
+          const local = elapsed - agent.startMs;
+
+          if (local < 0) {
+            cursorEl.style.opacity = '0';
+            boxEl.style.opacity = '0';
+            continue;
           }
+
+          // Phase 1: Glide along natural curved arc to top-left corner of the frame
+          if (local < GLIDE_MS) {
+            const t = easeOutCubic(local / GLIDE_MS);
+            const inv = 1 - t;
+            const x = inv * inv * spawnX + 2 * inv * t * ctrlX + t * t * rect.left;
+            const y = inv * inv * spawnY + 2 * inv * t * ctrlY + t * t * rect.top;
+            cursorEl.style.opacity = String(Math.min(1, local / 110));
+            cursorEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            boxEl.style.opacity = '0';
+            continue;
+          }
+
+          // Phase 2: Drag diagonally from top-left to bottom-right, drawing the real Figma frame!
+          if (local < GLIDE_MS + DRAG_MS) {
+            const t = easeInOutCubic((local - GLIDE_MS) / DRAG_MS);
+            const curW = Math.max(12, rect.width * t);
+            const curH = Math.max(12, rect.height * t);
+            const curX = rect.left + curW;
+            const curY = rect.top + curH;
+
+            cursorEl.style.opacity = '1';
+            cursorEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+
+            boxEl.style.opacity = '1';
+            boxEl.style.transform = `translate3d(${rect.left - 2}px, ${rect.top - 2}px, 0)`;
+            boxEl.style.width = `${curW + 4}px`;
+            boxEl.style.height = `${curH + 4}px`;
+
+            if (dimEl) {
+              dimEl.textContent = `${Math.round(curW)} × ${Math.round(curH)}`;
+            }
+            continue;
+          }
+
+          // Phase 3: Snap real UI block into the exact drawn frame!
+          if (!snapped.has(agent.id)) {
+            snapped.add(agent.id);
+            el.setAttribute('data-agent-built', 'true');
+            if (statusEl) statusEl.textContent = '✓';
+            if (dimEl) {
+              dimEl.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
+            }
+          }
+
+          const postDrag = local - (GLIDE_MS + DRAG_MS);
+          const settleT = easeOutCubic(Math.min(1, postDrag / (HOLD_BOX_MS + FADE_OUT_MS)));
+          const driftX = agent.enterFrom === 'left' ? 18 : -18;
+          const driftY = 10;
+
+          // Keep box locked at exact final dimensions while fading out cleanly
+          boxEl.style.transform = `translate3d(${rect.left - 2}px, ${rect.top - 2}px, 0)`;
+          boxEl.style.width = `${rect.width + 4}px`;
+          boxEl.style.height = `${rect.height + 4}px`;
+
+          if (postDrag < HOLD_BOX_MS) {
+            boxEl.style.opacity = '1';
+            cursorEl.style.opacity = '1';
+          } else {
+            const fadeT = Math.min(1, (postDrag - HOLD_BOX_MS) / FADE_OUT_MS);
+            const op = String(1 - fadeT);
+            boxEl.style.opacity = op;
+            cursorEl.style.opacity = op;
+          }
+
+          cursorEl.style.transform = `translate3d(${rect.left + rect.width + driftX * settleT}px, ${rect.top + rect.height + driftY * settleT}px, 0)`;
         }
-      }, agent.snapAtMs);
-      timers.push(snapTimer);
 
-      // 4) Clear Figma selection outline cleanly
-      const clearBoxTimer = window.setTimeout(() => {
-        setActiveBoxes((prev) => {
-          const next = { ...prev };
-          delete next[agent.id];
-          return next;
-        });
-      }, agent.snapAtMs + 660);
-      timers.push(clearBoxTimer);
+        if (elapsed < totalEndMs) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          root.removeAttribute('data-agent-building');
+          slotEls.forEach((el) => el.removeAttribute('data-agent-built'));
+          setMounted(false);
+        }
+      };
 
-      // 5) Fade out this agent after completing its turn
-      const exitTimer = window.setTimeout(() => {
-        setCursorCoords((prev) => {
-          const cur = prev[agent.id];
-          if (!cur) return prev;
-          return {
-            ...prev,
-            [agent.id]: { ...cur, visible: false },
-          };
-        });
-      }, agent.snapAtMs + 980);
-      timers.push(exitTimer);
+      rafId = requestAnimationFrame(tick);
     });
 
-    // Ensure every slot is built & smoothly fade out overlay
-    const fadeTimer = window.setTimeout(() => {
-      slotEls.forEach((el) => el.setAttribute('data-agent-built', 'true'));
-      setActiveBoxes({});
-      setPhase('fading');
-    }, 5300);
-    timers.push(fadeTimer);
-
-    const doneTimer = window.setTimeout(() => {
-      root.removeAttribute('data-agent-building');
-      slotEls.forEach((el) => el.removeAttribute('data-agent-built'));
-      setPhase('done');
-    }, 5780);
-    timers.push(doneTimer);
-
     return () => {
-      timers.forEach((t) => window.clearTimeout(t));
+      cancelAnimationFrame(initRaf);
+      cancelAnimationFrame(rafId);
       root.removeAttribute('data-agent-building');
       slotEls.forEach((el) => el.removeAttribute('data-agent-built'));
     };
   }, [active]);
 
-  if (phase === 'idle' || phase === 'done') return null;
+  if (!mounted) return null;
 
   return (
     <div
       ref={overlayRef}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-[9990] overflow-x-clip transition-opacity duration-500 ease-out"
-      style={{ opacity: phase === 'fading' ? 0 : 1 }}
+      className="pointer-events-none absolute inset-0 z-[9990] overflow-x-clip"
     >
-      {/* Active Figma-Style Selection Bounding Boxes + Corner Handles + Dimension Pill */}
-      {Object.entries(activeBoxes).map(([id, box]) => (
+      {/* Real-Time Drag-Drawn Figma Selection Frames */}
+      {AGENTS.map((agent) => (
         <div
-          key={id}
-          className="absolute rounded-[14px] transition-all duration-300 ease-out"
+          key={`box-${agent.id}`}
+          ref={(el) => {
+            boxRefs.current[agent.id] = el;
+          }}
+          className="absolute left-0 top-0 rounded-[12px] will-change-transform"
           style={{
-            left: `${box.left - 3}px`,
-            top: `${box.top - 3}px`,
-            width: `${box.width + 6}px`,
-            height: `${box.height + 6}px`,
-            border: `1.5px solid ${box.color}`,
-            boxShadow: `0 0 0 1px rgba(0,0,0,0.08)`,
+            opacity: 0,
+            border: `1.5px solid ${agent.color}`,
+            backgroundColor: agent.tint,
           }}
         >
-          {/* 4 Corner Resize Handles */}
+          {/* 4 Corner Handles */}
           <span
             className="absolute -left-[4px] -top-[4px] h-[7px] w-[7px] bg-white"
-            style={{ border: `1.5px solid ${box.color}` }}
+            style={{ border: `1.5px solid ${agent.color}` }}
           />
           <span
             className="absolute -right-[4px] -top-[4px] h-[7px] w-[7px] bg-white"
-            style={{ border: `1.5px solid ${box.color}` }}
+            style={{ border: `1.5px solid ${agent.color}` }}
           />
           <span
             className="absolute -bottom-[4px] -left-[4px] h-[7px] w-[7px] bg-white"
-            style={{ border: `1.5px solid ${box.color}` }}
+            style={{ border: `1.5px solid ${agent.color}` }}
           />
           <span
             className="absolute -bottom-[4px] -right-[4px] h-[7px] w-[7px] bg-white"
-            style={{ border: `1.5px solid ${box.color}` }}
+            style={{ border: `1.5px solid ${agent.color}` }}
           />
-          {/* Live Dimension Tag */}
+          {/* Live Updating Dimension Pill */}
           <span
+            ref={(el) => {
+              dimRefs.current[agent.id] = el;
+            }}
             className="absolute -bottom-[22px] left-1/2 -translate-x-1/2 rounded-[4px] px-1.5 py-0.5 font-mono text-[9.5px] font-medium whitespace-nowrap shadow-sm"
             style={{
-              backgroundColor: box.color,
+              backgroundColor: agent.color,
               color: '#0e0e0e',
             }}
-          >
-            {box.label}
-          </span>
+          />
         </div>
       ))}
 
-      {/* 4 Collaborative Multiplayer AI Agent Cursors (Document-Anchored) */}
-      {AGENTS.map((agent) => {
-        const pos = cursorCoords[agent.id];
-        if (!pos) return null;
-        return (
+      {/* 4 Collaborative Multiplayer AI Agent Cursors */}
+      {AGENTS.map((agent) => (
+        <div
+          key={`cursor-${agent.id}`}
+          ref={(el) => {
+            cursorRefs.current[agent.id] = el;
+          }}
+          className="absolute left-0 top-0 will-change-transform"
+          style={{ opacity: 0 }}
+        >
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 18 18"
+            fill="none"
+            className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+          >
+            <path
+              d="M2.2 1.6L15.4 7.8L9.5 9.6L7.4 15.6L2.2 1.6Z"
+              fill={agent.color}
+              stroke="#ffffff"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
+          </svg>
+
           <div
-            key={agent.id}
-            className="absolute left-0 top-0 will-change-transform"
+            className="ml-3.5 -mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] shadow-[0_4px_14px_rgba(0,0,0,0.32)] whitespace-nowrap"
             style={{
-              opacity: pos.visible ? 1 : 0,
-              transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
-              transition:
-                'transform 720ms cubic-bezier(0.22, 1, 0.36, 1), opacity 360ms ease',
+              backgroundColor: agent.color,
+              color: agent.textColor,
             }}
           >
-            {/* Sharp Collaborative Cursor Arrow SVG */}
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
-            >
-              <path
-                d="M2.2 1.6L15.4 7.8L9.5 9.6L7.4 15.6L2.2 1.6Z"
-                fill={agent.color}
-                stroke="#ffffff"
-                strokeWidth="1.2"
-                strokeLinejoin="round"
-              />
-            </svg>
-
-            {/* Agent Name + Live Build Status Pill */}
-            <div
-              className="ml-3.5 -mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] shadow-[0_4px_14px_rgba(0,0,0,0.32)] whitespace-nowrap"
-              style={{
-                backgroundColor: agent.color,
-                color: agent.textColor,
+            <span>{agent.name}</span>
+            <span
+              ref={(el) => {
+                statusRefs.current[agent.id] = el;
               }}
+              className="opacity-80"
             >
-              <span>{agent.name}</span>
-              <span className="opacity-75">
-                {pos.done ? '✓' : `· ${agent.status}`}
-              </span>
-            </div>
+              · {agent.status}
+            </span>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
