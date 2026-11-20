@@ -132,6 +132,7 @@ export function ArtCursor() {
     let lastCursorY = -999;
     let lastSurfaceScan = 0;
     let lastScrollY = window.scrollY;
+    let scrollUnlockUntil = 0;
     let markerColor = '#ff5a3d';
 
     const resizeCanvas = () => {
@@ -154,6 +155,25 @@ export function ArtCursor() {
       if (c) markerColor = c;
     };
 
+    const isElementVisiblyRendered = (el: HTMLElement): boolean => {
+      if (el.closest('.sr-only, [aria-hidden="true"]')) return false;
+      let cur: HTMLElement | null = el;
+      while (cur && cur !== document.body) {
+        const style = getComputedStyle(cur);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) < 0.05) {
+          return false;
+        }
+        if (
+          (style.overflow === 'hidden' || style.overflowY === 'hidden') &&
+          cur.getBoundingClientRect().height < 6
+        ) {
+          return false;
+        }
+        cur = cur.parentElement;
+      }
+      return true;
+    };
+
     const scanSurfaces = (force = false) => {
       const now = performance.now();
       if (!force && now - lastSurfaceScan < 420) return;
@@ -162,15 +182,24 @@ export function ArtCursor() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const nodes = document.querySelectorAll<HTMLElement>(
-        'main h1, main h2, main h3, main p, main button, main a, main .dev-tile, main .dev-tile-soft, main li, main article'
+        'main .dev-tile, main .dev-tile-soft, main h1, main h2, main h3, main p, main button, main a'
       );
       const next: SurfaceRect[] = [];
       for (let i = 0; i < nodes.length; i++) {
-        const r = nodes[i].getBoundingClientRect();
-        if (r.width < 18 || r.height < 8) continue;
-        if (r.bottom < 0 || r.top > vh - 12 || r.right < 0 || r.left > vw) continue;
-        // Skip huge full-page wrappers so blocks collide with real inner cards/text
+        const el = nodes[i];
+        // Skip inner elements inside tiles so squares land cleanly on the tile top edge, not floating inside images
+        if (
+          !el.classList.contains('dev-tile') &&
+          !el.classList.contains('dev-tile-soft') &&
+          el.closest('.dev-tile, .dev-tile-soft')
+        ) {
+          continue;
+        }
+        const r = el.getBoundingClientRect();
+        if (r.width < 24 || r.height < 10) continue;
+        if (r.bottom < 0 || r.top > vh - 14 || r.right < 0 || r.left > vw) continue;
         if (r.width > vw * 0.92 && r.height > vh * 0.7) continue;
+        if (!isElementVisiblyRendered(el)) continue;
         next.push({
           left: r.left,
           right: r.right,
@@ -199,6 +228,8 @@ export function ArtCursor() {
 
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      const now = performance.now();
+      const scrollingShaken = now < scrollUnlockUntil;
       let anyAwake = false;
 
       // 1) Integrate gravity, air drag, floor & DOM surface collisions
@@ -243,8 +274,8 @@ export function ArtCursor() {
           p.vy = Math.abs(p.vy) * 0.25;
         }
 
-        // Collide with top ledges of text / cards / buttons
-        if (p.vy >= 0) {
+        // Collide with top ledges of text / cards / buttons (bypassed briefly during scroll shake so squares never glue to moving elements)
+        if (!scrollingShaken && p.vy >= 0) {
           for (let s = 0; s < surfaces.length; s++) {
             const surf = surfaces[s];
             if (p.x + half * 0.7 < surf.left || p.x - half * 0.7 > surf.right) continue;
@@ -520,37 +551,36 @@ export function ArtCursor() {
       const curScrollY = window.scrollY;
       const deltaY = curScrollY - lastScrollY;
       lastScrollY = curScrollY;
-      if (particles.length === 0 || Math.abs(deltaY) < 0.5) return;
+      if (particles.length === 0 || Math.abs(deltaY) < 0.2) return;
 
+      // Unlock surface sticking briefly so even slow scrolling shakes & dislodges perched squares
+      scrollUnlockUntil = performance.now() + 220;
       scanSurfaces(true);
       const vh = window.innerHeight;
-      const shakeMag = Math.min(1, Math.abs(deltaY) / 45);
+      const shakeMag = Math.min(1, Math.abs(deltaY) / 36);
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        const half = p.size * 0.5;
         p.asleep = false;
         p.restFrames = 0;
 
         // Shaken-surface Newtonian inertia:
-        // Scrolling DOWN jerks ledges upward -> launches/bounces squares up & off elements
-        // Scrolling UP drops ledges underneath -> squares hop/rattle then fall under gravity
+        // Any scroll (even slow) gives perched squares a hop & sideways rattle so they never glue to elements
         const isNearFloor = p.y >= vh - 96;
         if (deltaY > 0) {
           const lift = isNearFloor
-            ? Math.min(6.4, deltaY * 0.12 + 0.9)
-            : Math.min(9.2, deltaY * 0.18 + 1.4);
-          if (!isNearFloor) {
-            p.y = Math.max(half + 4, p.y - deltaY * 0.45);
-          }
-          p.vy = Math.max(-11.5, p.vy - lift * (0.75 + Math.random() * 0.5));
+            ? Math.min(6.0, deltaY * 0.12 + 0.7)
+            : Math.min(8.5, deltaY * 0.16 + 1.8);
+          p.vy = Math.max(-11, p.vy - lift * (0.7 + Math.random() * 0.5));
         } else {
-          const hop = Math.min(4.8, Math.abs(deltaY) * 0.09 + 0.65);
-          p.vy = Math.max(-8.5, p.vy - hop * (0.6 + Math.random() * 0.6));
+          const hop = isNearFloor
+            ? Math.min(4.4, Math.abs(deltaY) * 0.08 + 0.5)
+            : Math.min(5.5, Math.abs(deltaY) * 0.11 + 1.3);
+          p.vy = Math.max(-8.5, p.vy - hop * (0.65 + Math.random() * 0.5));
         }
 
         // Horizontal tremor + angular spin like objects on a shaken table
-        const rattle = (1.1 + shakeMag * 3.0) * (Math.random() - 0.5);
+        const rattle = (1.3 + shakeMag * 2.8) * (Math.random() - 0.5);
         p.vx = Math.max(-6, Math.min(6, p.vx + rattle));
         p.vr = Math.max(
           -0.36,
