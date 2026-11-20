@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { supabase } from '@/lib/supabase';
+import { fetchPublicTable } from '@/lib/supabase';
 
 /**
  * Dynamic XML Sitemap generator for Google, Bing & AI Search Engines.
@@ -50,9 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let projectRoutes: MetadataRoute.Sitemap = [];
   try {
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('slug, created_at');
+    const projects = await fetchPublicTable<any>('projects', 'select=slug,created_at');
     if (Array.isArray(projects)) {
       projectRoutes = projects
         .filter((p) => p?.slug)
@@ -69,9 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let blogRoutes: MetadataRoute.Sitemap = [];
   try {
-    const { data: articles } = await supabase
-      .from('articles')
-      .select('slug, created_at');
+    const articles = await fetchPublicTable<any>('articles', 'select=slug,created_at');
     if (Array.isArray(articles)) {
       blogRoutes = articles
         .filter((a) => a?.slug)

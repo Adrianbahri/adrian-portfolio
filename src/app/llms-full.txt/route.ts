@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { fetchPublicTable } from '@/lib/supabase';
 
 export const revalidate = 1800;
 
@@ -10,16 +10,12 @@ export async function GET() {
   let articles: any[] = [];
 
   try {
-    const [pRes, eRes, aRes, bRes] = await Promise.all([
-      supabase.from('projects').select('*').order('created_at', { ascending: false }),
-      supabase.from('experiences').select('*').order('created_at', { ascending: false }),
-      supabase.from('achievements').select('*').order('created_at', { ascending: false }),
-      supabase.from('articles').select('*').order('created_at', { ascending: false }),
+    [projects, experiences, achievements, articles] = await Promise.all([
+      fetchPublicTable('projects', 'select=*&order=created_at.desc'),
+      fetchPublicTable('experiences', 'select=*&order=created_at.desc'),
+      fetchPublicTable('achievements', 'select=*&order=created_at.desc'),
+      fetchPublicTable('articles', 'select=*&order=created_at.desc'),
     ]);
-    projects = pRes.data || [];
-    experiences = eRes.data || [];
-    achievements = aRes.data || [];
-    articles = bRes.data || [];
   } catch {
     // Fallback to static summary if database is unreachable
   }

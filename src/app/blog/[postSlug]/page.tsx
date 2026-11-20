@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { fetchPublicTable } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Image from 'next/image';
@@ -8,14 +8,18 @@ interface Props {
   params: Promise<{ postSlug: string }>;
 }
 
+async function getArticleBySlug(slug: string) {
+  const rows = await fetchPublicTable<any>(
+    'articles',
+    `select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`
+  );
+  return rows[0] || null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { postSlug } = await params;
   const decodedSlug = decodeURIComponent(postSlug);
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', decodedSlug)
-    .single();
+  const article = await getArticleBySlug(decodedSlug);
 
   return {
     title: article?.seo_title || `${article?.title || 'Writing'} | Dri4n`,
@@ -35,11 +39,7 @@ function estimateReadTime(text: string): string {
 export default async function BlogPostPage({ params }: Props) {
   const { postSlug } = await params;
   const decodedSlug = decodeURIComponent(postSlug);
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', decodedSlug)
-    .single();
+  const article = await getArticleBySlug(decodedSlug);
 
   if (!article) {
     return notFound();

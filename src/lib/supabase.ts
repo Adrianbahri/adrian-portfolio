@@ -24,3 +24,43 @@ export const createClient = () => {
 
 // Keep a static instance for backward compatibility where needed
 export const supabase = createClient();
+
+/**
+ * Direct lightweight REST fetch for Server Components, Sitemap, and Route Handlers.
+ * Avoids browser-only cookie/auth headers and PostgREST custom Accept headers.
+ */
+export async function fetchPublicTable<T = any>(
+  table: string,
+  query = 'select=*'
+): Promise<T[]> {
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://api.dri4n.com'
+  )
+    .trim()
+    .replace(/\/$/, '');
+  const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+  const url = `${baseUrl}/rest/v1/${table}?${query}`;
+
+  try {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (anonKey) {
+      headers.apikey = anonKey;
+    }
+    const res = await fetch(url, {
+      method: 'GET',
+      headers,
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) {
+      console.error(`[fetchPublicTable] ${table} failed: HTTP ${res.status}`);
+      return [];
+    }
+    const json = await res.json();
+    return Array.isArray(json) ? (json as T[]) : [];
+  } catch (err) {
+    console.error(`[fetchPublicTable] ${table} error:`, err);
+    return [];
+  }
+}
