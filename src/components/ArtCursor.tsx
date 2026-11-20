@@ -83,7 +83,9 @@ interface PhysicsSquare {
   rot: number;
   vr: number;
   alpha: number;
+  scale: number;
   fading: boolean;
+  vanishAt: number;
   asleep: boolean;
   restFrames: number;
 }
@@ -103,7 +105,11 @@ interface SurfaceRect {
  * - Hover interactive (button, a): compact 8x8 orange square
  * - Hover [data-cursor-label]: expanded orange pill ("CUT", "COPY", "VISIT", "TEAR", etc.)
  */
-export function ArtCursor() {
+export function ArtCursor({
+  enableDebris = false,
+}: {
+  enableDebris?: boolean;
+}) {
   const [enabled, setEnabled] = useState(false);
   const [mode, setMode] = useState<CursorMode>('default');
   const [cursorLabel, setCursorLabel] = useState<string | null>(null);
@@ -111,6 +117,16 @@ export function ArtCursor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lastModeRef = useRef<CursorMode>('default');
   const lastLabelRef = useRef<string | null>(null);
+  const enableDebrisRef = useRef(enableDebris);
+  const sweepDebrisRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const prev = enableDebrisRef.current;
+    enableDebrisRef.current = enableDebris;
+    if (prev && !enableDebris) {
+      sweepDebrisRef.current?.();
+    }
+  }, [enableDebris]);
 
   useEffect(() => {
     const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -134,6 +150,7 @@ export function ArtCursor() {
     let lastScrollY = window.scrollY;
     let lastScrollTime = performance.now();
     let scrollUnlockUntil = 0;
+    let pdfOpen = false;
     let markerColor = '#ff5a3d';
 
     const resizeCanvas = () => {
@@ -228,6 +245,28 @@ export function ArtCursor() {
       // 1) Integrate gravity, air drag, floor & DOM surface collisions
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
+
+        // Staggered rapid one-by-one pop & vanish sweep when leaving homepage or opening PDF
+        if (p.vanishAt > 0) {
+          anyAwake = true;
+          if (now >= p.vanishAt) {
+            if (!p.fading) {
+              p.fading = true;
+              p.asleep = false;
+              p.vy = -1.8 - Math.random() * 1.1;
+              p.vr = (Math.random() - 0.5) * 0.25;
+            }
+            p.x += p.vx * 0.6;
+            p.y += p.vy;
+            p.rot += p.vr;
+            p.scale -= 0.14;
+            p.alpha -= 0.14;
+            if (p.alpha <= 0.02 || p.scale <= 0.05) {
+              particles.splice(i, 1);
+            }
+          }
+          continue;
+        }
 
         if (p.fading) {
           p.alpha -= 0.035;
@@ -407,13 +446,15 @@ export function ArtCursor() {
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
+        const drawSize = p.size * p.scale;
+        if (drawSize <= 0.3) continue;
         ctx.save();
-        ctx.globalAlpha = p.alpha;
+        ctx.globalAlpha = Math.max(0, p.alpha);
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
-        const h = p.size * 0.5;
+        const h = drawSize * 0.5;
         ctx.beginPath();
-        ctx.roundRect(-h, -h, p.size, p.size, 1.4);
+        ctx.roundRect(-h, -h, drawSize, drawSize, 1.4);
         ctx.fill();
         ctx.restore();
       }
@@ -431,8 +472,25 @@ export function ArtCursor() {
       rafId = requestAnimationFrame(stepPhysics);
     };
 
+    const sweepDebrisOneByOne = () => {
+      if (particles.length === 0) return;
+      // Sort left-to-right so the sweep ripples cleanly across the floor/ledges
+      particles.sort((a, b) => a.x - b.x);
+      const now = performance.now();
+      const totalSweepMs = Math.min(360, Math.max(120, particles.length * 8));
+      const stepMs = particles.length > 1 ? totalSweepMs / (particles.length - 1) : 0;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.asleep = false;
+        p.vanishAt = now + i * stepMs;
+      }
+      ensureLoop();
+    };
+
+    sweepDebrisRef.current = sweepDebrisOneByOne;
+
     const spawnPhysicsSquare = (x: number, y: number, vxHint: number) => {
-      if (prefersReduced) return;
+      if (prefersReduced || !enableDebrisRef.current || pdfOpen) return;
       const now = performance.now();
       const dx = x - lastSpawnX;
       const dy = y - lastSpawnY;
@@ -446,7 +504,7 @@ export function ArtCursor() {
 
       // Gently fade oldest particle when pile reaches cap
       if (particles.length >= MAX_PARTICLES) {
-        const oldest = particles.find((pt) => !pt.fading);
+        const oldest = particles.find((pt) => !pt.fading && pt.vanishAt === 0);
         if (oldest) oldest.fading = true;
       }
 
@@ -460,7 +518,9 @@ export function ArtCursor() {
         rot: (Math.random() - 0.5) * 0.7,
         vr: (Math.random() - 0.5) * 0.14,
         alpha: 0.9,
+        scale: 1,
         fading: false,
+        vanishAt: 0,
         asleep: false,
         restFrames: 0,
       });
@@ -595,6 +655,15 @@ export function ArtCursor() {
       if (particles.length > 0) wakeAll();
     };
 
+    const handlePdfState = (event: Event) => {
+      const ce = event as CustomEvent<{ open?: boolean }>;
+      const isOpen = Boolean(ce.detail?.open);
+      pdfOpen = isOpen;
+      if (isOpen) {
+        sweepDebrisOneByOne();
+      }
+    };
+
     // Init canvas after first render
     const initRaf = requestAnimationFrame(() => {
       resizeCanvas();
@@ -605,14 +674,17 @@ export function ArtCursor() {
     window.addEventListener('mousemove', handleMove, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('pdf-reader-state', handlePdfState);
     document.addEventListener('mouseleave', handleLeave);
 
     return () => {
       cancelAnimationFrame(initRaf);
       cancelAnimationFrame(rafId);
+      sweepDebrisRef.current = null;
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('pdf-reader-state', handlePdfState);
       document.removeEventListener('mouseleave', handleLeave);
     };
   }, []);

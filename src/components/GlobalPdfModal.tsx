@@ -20,6 +20,9 @@ export default function GlobalPdfModal() {
           url: customEvent.detail.url,
           title: customEvent.detail.title || 'Document Preview',
         });
+        window.dispatchEvent(
+          new CustomEvent('pdf-reader-state', { detail: { open: true } })
+        );
       }
     };
 
@@ -35,7 +38,12 @@ export default function GlobalPdfModal() {
     <FlipbookReader
       pdfUrl={pdfData.url}
       title={pdfData.title}
-      onClose={() => setPdfData(null)}
+      onClose={() => {
+        setPdfData(null);
+        window.dispatchEvent(
+          new CustomEvent('pdf-reader-state', { detail: { open: false } })
+        );
+      }}
     />
   );
 }

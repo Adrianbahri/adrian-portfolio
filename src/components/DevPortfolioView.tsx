@@ -1306,7 +1306,7 @@ export default function DevPortfolioView({
       data-dev-theme={theme}
       className="dev-shell art-custom-cursor-active relative w-full selection:bg-[#ff5a3d] selection:text-[#141414]"
     >
-      <ArtCursor />
+      <ArtCursor enableDebris={activeView === 'home'} />
       <AgentBuilderIntro active={activeView === 'home'} />
 
       <div className="relative z-10">
