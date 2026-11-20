@@ -1,17 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface AgentSpec {
   id: string;
   name: string;
   color: string;
   textColor: string;
-  startX: number;
-  startY: number;
+  enterFrom: 'left' | 'right';
   slot: string;
   status: string;
-  revealAtMs: number;
+  enterAtMs: number;
+  snapAtMs: number;
+}
+
+interface CursorState {
+  x: number;
+  y: number;
+  visible: boolean;
+  done: boolean;
 }
 
 interface BoxRect {
@@ -29,58 +36,57 @@ const AGENTS: AgentSpec[] = [
     name: 'Layout Agent',
     color: '#ff5a3d',
     textColor: '#ffffff',
-    startX: 12,
-    startY: 14,
+    enterFrom: 'left',
     slot: 'hero',
     status: 'framing hero',
-    revealAtMs: 360,
+    enterAtMs: 120,
+    snapAtMs: 920,
   },
   {
     id: 'ui',
     name: 'UI Agent',
     color: '#38bdf8',
     textColor: '#0b1116',
-    startX: 86,
-    startY: 20,
+    enterFrom: 'right',
     slot: 'top-tiles',
     status: 'snapping grid',
-    revealAtMs: 760,
+    enterAtMs: 1250,
+    snapAtMs: 2050,
   },
   {
     id: 'content',
     name: 'Content Agent',
     color: '#34d399',
     textColor: '#081711',
-    startX: 14,
-    startY: 78,
+    enterFrom: 'left',
     slot: 'writing',
     status: 'hydrating blog',
-    revealAtMs: 1120,
+    enterAtMs: 2350,
+    snapAtMs: 3150,
   },
   {
     id: 'systems',
     name: 'Systems Agent',
     color: '#fbbf24',
     textColor: '#1a1304',
-    startX: 85,
-    startY: 82,
+    enterFrom: 'right',
     slot: 'bottom-tiles',
     status: 'wiring stack',
-    revealAtMs: 1460,
+    enterAtMs: 3450,
+    snapAtMs: 4250,
   },
 ];
 
-const SESSION_KEY = 'dri4n-agent-intro-v1';
+const SESSION_KEY = 'dri4n-agent-intro-v2';
 
 export default function AgentBuilderIntro({
   active,
 }: {
   active: boolean;
 }) {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const [phase, setPhase] = useState<'idle' | 'running' | 'fading' | 'done'>('idle');
-  const [cursorCoords, setCursorCoords] = useState<
-    Record<string, { x: number; y: number; done: boolean }>
-  >({});
+  const [cursorCoords, setCursorCoords] = useState<Record<string, CursorState>>({});
   const [activeBoxes, setActiveBoxes] = useState<Record<string, BoxRect>>({});
 
   useEffect(() => {
@@ -107,7 +113,7 @@ export default function AgentBuilderIntro({
     const root = document.documentElement;
     root.setAttribute('data-agent-building', 'true');
 
-    // Mark all target slots as unbuilt initially so agents visibly snap them into place
+    // Mark all target slots as unbuilt initially so agents visibly snap them into place one by one
     const slotEls = Array.from(
       document.querySelectorAll<HTMLElement>('[data-agent-slot]')
     );
@@ -115,104 +121,143 @@ export default function AgentBuilderIntro({
       el.setAttribute('data-agent-built', 'false');
     });
 
-    const vw = window.innerWidth || 1200;
-    const vh = window.innerHeight || 800;
-
-    // Initial spawn positions near viewport corners
-    const initial: Record<string, { x: number; y: number; done: boolean }> = {};
-    for (const a of AGENTS) {
-      initial[a.id] = {
-        x: (a.startX / 100) * vw,
-        y: (a.startY / 100) * vh,
-        done: false,
-      };
-    }
-    setCursorCoords(initial);
     setPhase('running');
 
     const timers: number[] = [];
 
-    // Helper to measure a slot's live viewport rect
-    const measureSlot = (slotName: string): DOMRect | null => {
+    // Measure a slot's coordinates relative to the scrollable .dev-shell overlay
+    // so cursors & bounding boxes scroll 1:1 with the real page content.
+    const measureSlotRelative = (
+      slotName: string
+    ): { left: number; top: number; width: number; height: number } | null => {
       const el = document.querySelector<HTMLElement>(
         `[data-agent-slot="${slotName}"]`
       );
       if (!el) return null;
-      return el.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const overlayRect = overlayRef.current?.getBoundingClientRect();
+      if (overlayRect) {
+        return {
+          left: elRect.left - overlayRect.left,
+          top: elRect.top - overlayRect.top,
+          width: elRect.width,
+          height: elRect.height,
+        };
+      }
+      return {
+        left: elRect.left + window.scrollX,
+        top: elRect.top + window.scrollY,
+        width: elRect.width,
+        height: elRect.height,
+      };
     };
 
-    // Schedule each agent to glide to its target UI block, show Figma selection box, and snap it in
+    // Schedule each agent sequentially: enter -> glide -> select & snap -> clear box -> fade out
     AGENTS.forEach((agent) => {
-      // 1) Glide toward slot
-      const glideTimer = window.setTimeout(() => {
-        const rect = measureSlot(agent.slot);
+      // 1) Spawn agent near the side of its own target slot
+      const enterTimer = window.setTimeout(() => {
+        const rect = measureSlotRelative(agent.slot);
         if (!rect) return;
-        const targetX = rect.left + Math.min(rect.width * 0.38, 180);
-        const targetY = rect.top + Math.min(rect.height * 0.36, 90);
+        const vw = window.innerWidth || 1200;
+        const spawnX =
+          agent.enterFrom === 'left'
+            ? Math.max(16, rect.left - 130)
+            : Math.min(vw - 150, rect.left + rect.width + 65);
+        const spawnY = Math.max(16, rect.top - 24);
 
         setCursorCoords((prev) => ({
           ...prev,
-          [agent.id]: { x: targetX, y: targetY, done: false },
+          [agent.id]: { x: spawnX, y: spawnY, visible: true, done: false },
         }));
-      }, Math.max(40, agent.revealAtMs - 280));
+      }, agent.enterAtMs);
+      timers.push(enterTimer);
+
+      // 2) Smoothly glide into the target UI block
+      const glideTimer = window.setTimeout(() => {
+        const rect = measureSlotRelative(agent.slot);
+        if (!rect) return;
+        const targetX = rect.left + Math.min(rect.width * 0.34, 170);
+        const targetY = rect.top + Math.min(rect.height * 0.34, 84);
+
+        setCursorCoords((prev) => ({
+          ...prev,
+          [agent.id]: { x: targetX, y: targetY, visible: true, done: false },
+        }));
+      }, agent.enterAtMs + 110);
       timers.push(glideTimer);
 
-      // 2) Arrive, flash Figma bounding box + dimensions, and snap the real UI block into place!
+      // 3) Arrive, flash Figma bounding box + live dimensions, and snap the UI block into place
       const snapTimer = window.setTimeout(() => {
         const el = document.querySelector<HTMLElement>(
           `[data-agent-slot="${agent.slot}"]`
         );
         if (el) {
           el.setAttribute('data-agent-built', 'true');
-          const rect = el.getBoundingClientRect();
-          setActiveBoxes((prev) => ({
-            ...prev,
-            [agent.id]: {
-              left: rect.left,
-              top: rect.top,
-              width: rect.width,
-              height: rect.height,
-              color: agent.color,
-              label: `${Math.round(rect.width)} × ${Math.round(rect.height)}`,
-            },
-          }));
-          // Subtle second micro-nudge of cursor to the corner handle
-          setCursorCoords((prev) => ({
-            ...prev,
-            [agent.id]: {
-              x: rect.left + rect.width - 28,
-              y: rect.top + Math.min(rect.height * 0.55, 110),
-              done: true,
-            },
-          }));
+          const rect = measureSlotRelative(agent.slot);
+          if (rect) {
+            setActiveBoxes((prev) => ({
+              ...prev,
+              [agent.id]: {
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                color: agent.color,
+                label: `${Math.round(rect.width)} × ${Math.round(rect.height)}`,
+              },
+            }));
+            // Gentle nudge of cursor to the opposite corner handle after snap
+            setCursorCoords((prev) => ({
+              ...prev,
+              [agent.id]: {
+                x: rect.left + rect.width - 36,
+                y: rect.top + Math.min(rect.height * 0.56, 118),
+                visible: true,
+                done: true,
+              },
+            }));
+          }
         }
-      }, agent.revealAtMs);
+      }, agent.snapAtMs);
       timers.push(snapTimer);
 
-      // 3) Clear selection outline shortly after snap
+      // 4) Clear Figma selection outline cleanly
       const clearBoxTimer = window.setTimeout(() => {
         setActiveBoxes((prev) => {
           const next = { ...prev };
           delete next[agent.id];
           return next;
         });
-      }, agent.revealAtMs + 420);
+      }, agent.snapAtMs + 660);
       timers.push(clearBoxTimer);
+
+      // 5) Fade out this agent after completing its turn
+      const exitTimer = window.setTimeout(() => {
+        setCursorCoords((prev) => {
+          const cur = prev[agent.id];
+          if (!cur) return prev;
+          return {
+            ...prev,
+            [agent.id]: { ...cur, visible: false },
+          };
+        });
+      }, agent.snapAtMs + 980);
+      timers.push(exitTimer);
     });
 
-    // Ensure every slot is built & smoothly fade out all agent cursors
+    // Ensure every slot is built & smoothly fade out overlay
     const fadeTimer = window.setTimeout(() => {
       slotEls.forEach((el) => el.setAttribute('data-agent-built', 'true'));
       setActiveBoxes({});
       setPhase('fading');
-    }, 2050);
+    }, 5300);
     timers.push(fadeTimer);
 
     const doneTimer = window.setTimeout(() => {
       root.removeAttribute('data-agent-building');
       slotEls.forEach((el) => el.removeAttribute('data-agent-built'));
       setPhase('done');
-    }, 2480);
+    }, 5780);
     timers.push(doneTimer);
 
     return () => {
@@ -226,15 +271,16 @@ export default function AgentBuilderIntro({
 
   return (
     <div
+      ref={overlayRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[9990] overflow-hidden transition-opacity duration-400 ease-out"
+      className="pointer-events-none absolute inset-0 z-[9990] overflow-x-clip transition-opacity duration-500 ease-out"
       style={{ opacity: phase === 'fading' ? 0 : 1 }}
     >
       {/* Active Figma-Style Selection Bounding Boxes + Corner Handles + Dimension Pill */}
       {Object.entries(activeBoxes).map(([id, box]) => (
         <div
           key={id}
-          className="fixed rounded-[14px] transition-all duration-200 ease-out"
+          className="absolute rounded-[14px] transition-all duration-300 ease-out"
           style={{
             left: `${box.left - 3}px`,
             top: `${box.top - 3}px`,
@@ -274,18 +320,19 @@ export default function AgentBuilderIntro({
         </div>
       ))}
 
-      {/* 4 Collaborative Multiplayer AI Agent Cursors */}
+      {/* 4 Collaborative Multiplayer AI Agent Cursors (Document-Anchored) */}
       {AGENTS.map((agent) => {
         const pos = cursorCoords[agent.id];
         if (!pos) return null;
         return (
           <div
             key={agent.id}
-            className="fixed left-0 top-0 will-change-transform"
+            className="absolute left-0 top-0 will-change-transform"
             style={{
+              opacity: pos.visible ? 1 : 0,
               transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
               transition:
-                'transform 440ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease',
+                'transform 720ms cubic-bezier(0.22, 1, 0.36, 1), opacity 360ms ease',
             }}
           >
             {/* Sharp Collaborative Cursor Arrow SVG */}
