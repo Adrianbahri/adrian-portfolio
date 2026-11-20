@@ -314,6 +314,18 @@ html[data-vt="theme"] .dev-shell {
   border-radius: 14px;
 }
 
+/* Multi-Agent Collaborative UI/UX Builder Entrance (120fps GPU snap) */
+html[data-agent-building="true"] [data-agent-slot][data-agent-built="false"] {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0) scale(0.96);
+}
+html[data-agent-building="true"] [data-agent-slot][data-agent-built="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: opacity 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .art-custom-cursor-active,
   .art-custom-cursor-active * {

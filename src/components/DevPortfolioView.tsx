@@ -20,6 +20,7 @@ import {
   Trophy,
 } from 'lucide-react';
 import { ArtCursor, ScrambleKeychip } from '@/components/ArtCursor';
+import AgentBuilderIntro from '@/components/AgentBuilderIntro';
 import { supabase } from '@/lib/supabase';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { techStack } from '@/data/techstack';
@@ -1278,6 +1279,7 @@ export default function DevPortfolioView({
       className="dev-shell art-custom-cursor-active relative w-full selection:bg-[#ff5a3d] selection:text-[#141414]"
     >
       <ArtCursor />
+      <AgentBuilderIntro active={activeView === 'home'} />
 
       <div className="relative z-10">
           {/* =================================================================
@@ -1288,6 +1290,7 @@ export default function DevPortfolioView({
               key="dev-home"
               className="mx-auto max-w-[560px] px-4 pb-16 pt-6 sm:px-0 sm:pb-20 sm:pt-[14vh]"
             >
+              <div data-agent-slot="hero">
               {/* Top Row: Avatar + Easter-Egg + Prominent Resume CV + Segmented Theme Toggle */}
               <header className="flex items-center justify-between gap-2 pb-5 pt-1 sm:items-start sm:pb-6 sm:pt-[2vh]">
                 <div className="flex items-center gap-3 sm:gap-3.5">
@@ -1598,12 +1601,17 @@ export default function DevPortfolioView({
                   style={{ backgroundColor: 'var(--art-line)' }}
                 />
               )}
+              </div>
 
               {/* 5 INTERACTIVE BENTO TILES */}
               <section
                 aria-label="Portfolio sections"
                 className="grid grid-cols-2 gap-2.5 sm:gap-3"
               >
+                <div
+                  data-agent-slot="top-tiles"
+                  className="col-span-2 grid grid-cols-2 gap-2.5 sm:gap-3"
+                >
                 {/* TILE 1 (Left): Selected Projects [W] — Auto-Flipping & Draggable Card Deck */}
                 <div
                   role="button"
@@ -1913,10 +1921,12 @@ export default function DevPortfolioView({
                     </span>
                   </div>
                 </button>
+                </div>
 
                 {/* TILE 3 (Full-Width Horizontal): Writing / Blog [B] */}
                 <button
                   type="button"
+                  data-agent-slot="writing"
                   onClick={() => navigateTo('writing')}
                   onMouseEnter={() => setHoveredTile('writing')}
                   onMouseLeave={() => setHoveredTile(null)}
@@ -2000,6 +2010,10 @@ export default function DevPortfolioView({
                   </span>
                 </button>
 
+                <div
+                  data-agent-slot="bottom-tiles"
+                  className="col-span-2 grid grid-cols-2 gap-2.5 sm:gap-3"
+                >
                 {/* TILE 4: Track Record [E] (Ultra-minimal like Shahriyar bottom-left tile) */}
                 <button
                   type="button"
@@ -2132,6 +2146,7 @@ export default function DevPortfolioView({
                     R
                   </span>
                 </button>
+                </div>
               </section>
 
               {/* Minimal Homepage Footer */}
