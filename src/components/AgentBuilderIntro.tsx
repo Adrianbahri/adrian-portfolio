@@ -66,7 +66,7 @@ const AGENTS: AgentSpec[] = [
   },
 ];
 
-const SESSION_KEY = 'dri4n-agent-intro-v3';
+const SESSION_KEY = 'dri4n-agent-intro-v4';
 
 function easeOutCubic(t: number): number {
   const u = 1 - Math.min(1, Math.max(0, t));

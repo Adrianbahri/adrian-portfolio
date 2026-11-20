@@ -314,11 +314,11 @@ html[data-vt="theme"] .dev-shell {
   border-radius: 14px;
 }
 
-/* Multi-Agent Collaborative UI/UX Builder Entrance (120fps GPU snap, zero scroll-anchor jump) */
+/* Multi-Agent Collaborative UI/UX Builder Entrance (Zero-FOUC + 120fps GPU snap, zero scroll-anchor jump) */
 html[data-agent-building="true"] {
   overflow-anchor: none;
 }
-html[data-agent-building="true"] [data-agent-slot][data-agent-built="false"] {
+html[data-agent-building="true"] [data-agent-slot]:not([data-agent-built="true"]) {
   opacity: 0;
   transform: scale(0.985);
 }

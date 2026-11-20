@@ -132,6 +132,7 @@ export function ArtCursor() {
     let lastCursorY = -999;
     let lastSurfaceScan = 0;
     let lastScrollY = window.scrollY;
+    let lastScrollTime = performance.now();
     let scrollUnlockUntil = 0;
     let markerColor = '#ff5a3d';
 
@@ -540,43 +541,48 @@ export function ArtCursor() {
     };
 
     const handleScroll = () => {
+      const now = performance.now();
       const curScrollY = window.scrollY;
       const deltaY = curScrollY - lastScrollY;
+      const dt = Math.max(12, now - lastScrollTime);
       lastScrollY = curScrollY;
+      lastScrollTime = now;
       if (particles.length === 0 || Math.abs(deltaY) < 0.2) return;
 
-      // Unlock surface sticking briefly so even slow scrolling shakes & dislodges perched squares
-      scrollUnlockUntil = performance.now() + 220;
+      // Actual scroll speed in px/ms (gentle trackpad ~0.08–0.3, medium ~0.6–1.4, fast flick ~2.0–4.5+)
+      const speedPxPerMs = Math.abs(deltaY) / dt;
+      const intensity = Math.min(1, speedPxPerMs / 3.2);
+
+      // Unlock surface sticking briefly so even slow scrolling dislodges perched squares smoothly
+      scrollUnlockUntil = now + 180;
       scanSurfaces(true);
       const vh = window.innerHeight;
-      const shakeMag = Math.min(1, Math.abs(deltaY) / 36);
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         p.asleep = false;
         p.restFrames = 0;
 
-        // Shaken-surface Newtonian inertia:
-        // Any scroll (even slow) gives perched squares a hop & sideways rattle so they never glue to elements
+        // Speed-proportional shaken-surface inertia (non-stacking cap via Math.min so rapid trackpad ticks never launch squares to the ceiling)
         const isNearFloor = p.y >= vh - 96;
+        const maxHop = isNearFloor
+          ? 0.45 + intensity * 4.2 // gentle tremor on slow scroll, crisp hop on fast flick
+          : 0.75 + intensity * 5.2; // dislodges from ledges cleanly without flying too high
+
+        const targetVy = -maxHop * (0.75 + Math.random() * 0.45);
         if (deltaY > 0) {
-          const lift = isNearFloor
-            ? Math.min(6.0, deltaY * 0.12 + 0.7)
-            : Math.min(8.5, deltaY * 0.16 + 1.8);
-          p.vy = Math.max(-11, p.vy - lift * (0.7 + Math.random() * 0.5));
+          p.vy = Math.min(p.vy, targetVy);
         } else {
-          const hop = isNearFloor
-            ? Math.min(4.4, Math.abs(deltaY) * 0.08 + 0.5)
-            : Math.min(5.5, Math.abs(deltaY) * 0.11 + 1.3);
-          p.vy = Math.max(-8.5, p.vy - hop * (0.65 + Math.random() * 0.5));
+          // Scrolling up drops the surface beneath -> softer upward hop (55%) before gravity takes over
+          p.vy = Math.min(p.vy, targetVy * 0.55);
         }
 
-        // Horizontal tremor + angular spin like objects on a shaken table
-        const rattle = (1.3 + shakeMag * 2.8) * (Math.random() - 0.5);
-        p.vx = Math.max(-6, Math.min(6, p.vx + rattle));
+        // Subtle horizontal tremor & spin scaled strictly by scroll speed
+        const rattle = (0.25 + intensity * 2.2) * (Math.random() - 0.5);
+        p.vx = Math.max(-4.2, Math.min(4.2, p.vx + rattle));
         p.vr = Math.max(
-          -0.36,
-          Math.min(0.36, p.vr + (Math.random() - 0.5) * (0.14 + shakeMag * 0.22))
+          -0.28,
+          Math.min(0.28, p.vr + (Math.random() - 0.5) * (0.05 + intensity * 0.18))
         );
       }
 

@@ -297,7 +297,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}if(window.location.pathname==='/'&&!window.location.hash&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&sessionStorage.getItem('dri4n-agent-intro-v4')!=='1'){document.documentElement.setAttribute('data-agent-building','true');setTimeout(function(){document.documentElement.removeAttribute('data-agent-building')},6500)}}catch(e){}`,
           }}
         />
         <link rel="icon" href="/favicon.ico" sizes="any" />
