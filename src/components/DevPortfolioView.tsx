@@ -784,10 +784,19 @@ export default function DevPortfolioView({
     setIsDraggingCut(false);
     setCutProgress(1);
     cutMaxProgressRef.current = 1;
+    setIsDraggingCut(false);
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.userSelect = '';
+      document.documentElement.style.webkitUserSelect = '';
+      window.getSelection()?.removeAllRanges();
+    }
     // Brief beat so the final falling dashes cascade down before the bio unfolds
     setTimeout(() => {
       setBioExpanded(true);
       setIsAutoCutting(false);
+      if (typeof window !== 'undefined') {
+        window.getSelection()?.removeAllRanges();
+      }
     }, 260);
   };
 
@@ -826,11 +835,29 @@ export default function DevPortfolioView({
     }
   };
 
+  const releaseCutDrag = () => {
+    setIsDraggingCut(false);
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.userSelect = '';
+      document.documentElement.style.webkitUserSelect = '';
+    }
+  };
+
   const handleCutPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (bioExpanded || isAutoCutting) return;
+    e.preventDefault();
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.userSelect = 'none';
+      document.documentElement.style.webkitUserSelect = 'none';
+      window.getSelection()?.removeAllRanges();
+    }
     setIsDraggingCut(true);
     cutStartXRef.current = e.clientX;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore pointer capture failure on synthetic events
+    }
     updateCutFromClientX(e.clientX);
   };
 
@@ -842,12 +869,13 @@ export default function DevPortfolioView({
       setCutHoverPct(pct);
     }
     if (!isDraggingCut) return;
+    e.preventDefault();
     updateCutFromClientX(e.clientX);
   };
 
   const handleCutPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingCut) return;
-    setIsDraggingCut(false);
+    releaseCutDrag();
     const movedPx = Math.abs(e.clientX - cutStartXRef.current);
     if (cutMaxProgressRef.current >= 0.95) {
       finishCutAndExpand();
@@ -1533,9 +1561,12 @@ export default function DevPortfolioView({
                   data-cursor-hide="true"
                   onMouseEnter={() => setIsHoveringCut(true)}
                   onMouseLeave={() => setIsHoveringCut(false)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
                   onPointerDown={handleCutPointerDown}
                   onPointerMove={handleCutPointerMove}
                   onPointerUp={handleCutPointerUp}
+                  onPointerCancel={releaseCutDrag}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
