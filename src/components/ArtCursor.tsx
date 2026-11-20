@@ -67,7 +67,7 @@ export function ScrambleKeychip({
 
 type CursorMode = 'default' | 'interactive' | 'text' | 'label';
 
-const MAX_PARTICLES = 135;
+const MAX_PARTICLES = 320;
 const GRAVITY = 0.42;
 const FLOOR_BOUNCE = 0.28;
 const SURFACE_BOUNCE = 0.3;
@@ -131,6 +131,7 @@ export function ArtCursor() {
     let lastCursorX = -999;
     let lastCursorY = -999;
     let lastSurfaceScan = 0;
+    let lastScrollY = window.scrollY;
     let markerColor = '#ff5a3d';
 
     const resizeCanvas = () => {
@@ -227,7 +228,7 @@ export function ArtCursor() {
 
         let supported = false;
 
-        // Viewport side walls
+        // Viewport side walls & soft ceiling (prevents squares from flying off-screen on hard scrolls)
         if (p.x - half < 0) {
           p.x = half;
           p.vx = Math.abs(p.vx) * 0.45;
@@ -236,6 +237,10 @@ export function ArtCursor() {
           p.x = vw - half;
           p.vx = -Math.abs(p.vx) * 0.45;
           p.vr = p.vx * 0.12;
+        }
+        if (p.y - half < 0) {
+          p.y = half;
+          p.vy = Math.abs(p.vy) * 0.25;
         }
 
         // Collide with top ledges of text / cards / buttons
@@ -512,9 +517,48 @@ export function ArtCursor() {
     };
 
     const handleScroll = () => {
-      if (particles.length === 0) return;
+      const curScrollY = window.scrollY;
+      const deltaY = curScrollY - lastScrollY;
+      lastScrollY = curScrollY;
+      if (particles.length === 0 || Math.abs(deltaY) < 0.5) return;
+
       scanSurfaces(true);
-      wakeAll();
+      const vh = window.innerHeight;
+      const shakeMag = Math.min(1, Math.abs(deltaY) / 45);
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const half = p.size * 0.5;
+        p.asleep = false;
+        p.restFrames = 0;
+
+        // Shaken-surface Newtonian inertia:
+        // Scrolling DOWN jerks ledges upward -> launches/bounces squares up & off elements
+        // Scrolling UP drops ledges underneath -> squares hop/rattle then fall under gravity
+        const isNearFloor = p.y >= vh - 96;
+        if (deltaY > 0) {
+          const lift = isNearFloor
+            ? Math.min(6.4, deltaY * 0.12 + 0.9)
+            : Math.min(9.2, deltaY * 0.18 + 1.4);
+          if (!isNearFloor) {
+            p.y = Math.max(half + 4, p.y - deltaY * 0.45);
+          }
+          p.vy = Math.max(-11.5, p.vy - lift * (0.75 + Math.random() * 0.5));
+        } else {
+          const hop = Math.min(4.8, Math.abs(deltaY) * 0.09 + 0.65);
+          p.vy = Math.max(-8.5, p.vy - hop * (0.6 + Math.random() * 0.6));
+        }
+
+        // Horizontal tremor + angular spin like objects on a shaken table
+        const rattle = (1.1 + shakeMag * 3.0) * (Math.random() - 0.5);
+        p.vx = Math.max(-6, Math.min(6, p.vx + rattle));
+        p.vr = Math.max(
+          -0.36,
+          Math.min(0.36, p.vr + (Math.random() - 0.5) * (0.14 + shakeMag * 0.22))
+        );
+      }
+
+      ensureLoop();
     };
 
     const handleResize = () => {
