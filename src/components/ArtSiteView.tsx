@@ -16,7 +16,66 @@ import {
 import { ArtCursor } from '@/components/ArtCursor';
 import '@/styles/shahriyar.css';
 
-type ArtTab = 'archive' | 'design' | 'video' | 'photo' | 'about';
+type ArtSection = 'design' | 'print' | 'video' | 'photo' | 'growth' | 'about';
+
+interface SocialGrowthItem {
+  id: string;
+  account: string;
+  handle: string;
+  platform: string;
+  role: string;
+  period: string;
+  focus: string;
+  highlights: string[];
+}
+
+const DEFAULT_SOCIAL_GROWTH: SocialGrowthItem[] = [
+  {
+    id: 'sg-identitas',
+    account: 'PK Identitas Unhas',
+    handle: '@identitasunhas',
+    platform: 'INSTAGRAM · CAMPUS MEDIA',
+    role: 'DATA, EDITORIAL & VISUAL SYSTEMS',
+    period: '2025 — NOW',
+    focus:
+      'Data journalism carousels, editorial infographics (SNBP, Pilrek Unhas), print magazine layout, and automated publishing workflows for Universitas Hasanuddin’s official student press.',
+    highlights: [
+      'Data-driven infographic series & high-share campus coverage',
+      'Consistent editorial visual language across print & social feeds',
+      'Structured content pipeline & digital workflow modernization',
+    ],
+  },
+  {
+    id: 'sg-sulawesipos',
+    account: 'SulawesiPos.com',
+    handle: 'Jawa Pos Group Network',
+    platform: 'INSTAGRAM · TIKTOK · DIGITAL',
+    role: 'MEDIA PRODUCTION & CONTENT',
+    period: 'JAN 2026 — NOW',
+    focus:
+      'Daily digital content production, fast-turnaround news visual packaging, and short-form video editing under PT Tiran Multimedia Nusantara (Jawa Pos Group).',
+    highlights: [
+      'High-frequency daily visual publishing & breaking-news templates',
+      'Short-form vertical reels & documentary storytelling',
+      'Cross-platform audience retention & visual consistency',
+    ],
+  },
+  {
+    id: 'sg-kedai',
+    account: 'Kedai Ayah UQ',
+    handle: 'F&B Brand Campaign',
+    platform: 'INSTAGRAM · PROMOTIONAL',
+    role: 'GRAPHIC DESIGNER & SOCIAL VISUALS',
+    period: 'JUN — SEP 2025',
+    focus:
+      'Campaign direction, promotional social feeds, seasonal menu visuals, and cohesive café marketing collateral tailored for local Makassar audiences.',
+    highlights: [
+      'End-to-end promotional feed & story visual templates',
+      'Product-focused campaign graphics & seasonal promos',
+      'Unified brand palette & typography for F&B identity',
+    ],
+  },
+];
 
 interface ArtWorkItem {
   id: string;
@@ -191,7 +250,7 @@ export default function ArtSiteView({
 
   // Synced Light & Dark Theme (Default Dark across both Dev & Art)
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [activeTab, setActiveTab] = useState<ArtTab>('archive');
+  const [activeSection, setActiveSection] = useState<ArtSection>('design');
   const [selectedWork, setSelectedWork] = useState<ArtWorkItem | null>(null);
   const [lightboxImage, setLightboxImage] = useState<ArchiveTile | null>(null);
   const [works, setWorks] = useState<ArtWorkItem[]>(
@@ -218,32 +277,11 @@ export default function ArtSiteView({
   );
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [slotTicks, setSlotTicks] = useState<[number, number, number, number, number]>([
-    0, 0, 0, 0, 0,
-  ]);
-  const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
 
   const creativeTools = useMemo(
     () => techStack.filter((t) => t.mode === 'creative'),
     []
   );
-
-  // Staggered cover slideshow for Archive: 3 Design slots (0,1,2) + 2 Photo slots (3,4)
-  useEffect(() => {
-    if (activeTab !== 'archive' || selectedWork) return;
-    let step = 0;
-    const id = window.setInterval(() => {
-      const targetSlot = step % 5;
-      step += 1;
-      if (hoveredSlot === targetSlot) return;
-      setSlotTicks((prev) => {
-        const next: [number, number, number, number, number] = [...prev];
-        next[targetSlot] += 1;
-        return next;
-      });
-    }, 1250);
-    return () => window.clearInterval(id);
-  }, [activeTab, selectedWork, hoveredSlot]);
 
   // Sync saved theme on mount
   useEffect(() => {
@@ -258,25 +296,54 @@ export default function ArtSiteView({
     return () => window.clearTimeout(readyCap);
   }, [router]);
 
-  // Sync hash (#archive, #design, #video, #photo, #about)
+  // Smooth scroll to hash section if user lands directly on /art#video, /art#photo, etc.
   useEffect(() => {
-    const syncHash = () => {
+    const scrollToHash = () => {
       const h = window.location.hash.replace('#', '').toLowerCase();
       if (
-        h === 'archive' ||
         h === 'design' ||
+        h === 'print' ||
         h === 'video' ||
         h === 'photo' ||
+        h === 'growth' ||
         h === 'about'
       ) {
-        setActiveTab(h);
         setSelectedWork(null);
+        setActiveSection(h);
+        window.requestAnimationFrame(() => {
+          document.getElementById(h)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
       }
     };
-    syncHash();
-    window.addEventListener('hashchange', syncHash);
-    return () => window.removeEventListener('hashchange', syncHash);
+    scrollToHash();
+    window.addEventListener('hashchange', scrollToHash);
+    return () => window.removeEventListener('hashchange', scrollToHash);
   }, []);
+
+  // Lightweight scroll-spy to highlight current section in sticky Swiss top bar
+  useEffect(() => {
+    if (selectedWork) return;
+    const ids: ArtSection[] = ['design', 'print', 'video', 'photo', 'growth', 'about'];
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (els.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]?.target?.id) {
+          setActiveSection(visible[0].target.id as ArtSection);
+        }
+      },
+      { rootMargin: '-18% 0px -65% 0px', threshold: 0.01 }
+    );
+
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [selectedWork]);
 
   // Escape closes project case study or lightbox
   useEffect(() => {
@@ -303,10 +370,20 @@ export default function ArtSiteView({
     }, e);
   };
 
-  const selectTab = (tab: ArtTab) => {
+  const scrollToSection = (section: ArtSection) => {
     setSelectedWork(null);
-    setActiveTab(tab);
-    window.history.replaceState(null, '', tab === 'archive' ? '/art' : `/art#${tab}`);
+    setActiveSection(section);
+    window.history.replaceState(null, '', `/art#${section}`);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(section)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const scrollToTop = () => {
+    setSelectedWork(null);
+    window.history.replaceState(null, '', '/art');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -591,13 +668,37 @@ export default function ArtSiteView({
         };
 
   const designWorks = useMemo(
-    () => works.filter((w) => w.category === 'design' || w.category === 'print'),
+    () => works.filter((w) => w.category === 'design'),
+    [works]
+  );
+  const printWorks = useMemo(
+    () => works.filter((w) => w.category === 'print'),
     [works]
   );
   const videoWorks = useMemo(
     () => works.filter((w) => w.category === 'motion'),
     [works]
   );
+  const landscapeVideos = useMemo(
+    () => videoWorks.filter((v) => v.videoFormat !== '9:16'),
+    [videoWorks]
+  );
+  const portraitVideos = useMemo(
+    () => videoWorks.filter((v) => v.videoFormat === '9:16'),
+    [videoWorks]
+  );
+  const socialGrowthItems = useMemo<SocialGrowthItem[]>(() => {
+    if (settings.social_growth) {
+      try {
+        const parsed = JSON.parse(settings.social_growth);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        // Fallback to default curated growth cases
+      }
+    }
+    return DEFAULT_SOCIAL_GROWTH;
+  }, [settings.social_growth]);
+
   const dividerColor =
     theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
 
@@ -629,7 +730,7 @@ export default function ArtSiteView({
           <div className="flex w-full items-center justify-between md:w-auto md:justify-start md:gap-4">
             <button
               type="button"
-              onClick={() => selectTab('archive')}
+              onClick={scrollToTop}
               className="text-left hover:underline underline-offset-[2px]"
             >
               ©ADRIAN BAHRI
@@ -644,26 +745,27 @@ export default function ArtSiteView({
             </button>
           </div>
 
-          {/* Right 50% (aligned cleanly at 50% on desktop): Nav Tabs + Theme Toggle */}
+          {/* Right 50% (aligned cleanly at 50% on desktop): Single-Page Anchor Nav + Theme Toggle */}
           <nav
-            aria-label="Creative navigation"
-            className="flex w-full items-center justify-between gap-3 md:justify-start md:gap-[16px]"
+            aria-label="Creative sections"
+            className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 md:flex-nowrap md:justify-start md:gap-[14px]"
           >
             {(
               [
-                ['archive', 'ARCHIVE'],
                 ['design', 'DESIGN'],
+                ['print', 'PRINT'],
                 ['video', 'VIDEO'],
                 ['photo', 'PHOTO'],
+                ['growth', 'GROWTH'],
                 ['about', 'ABOUT'],
-              ] as [ArtTab, string][]
-            ).map(([tabKey, label]) => {
-              const isActive = !selectedWork && activeTab === tabKey;
+              ] as [ArtSection, string][]
+            ).map(([secKey, label]) => {
+              const isActive = !selectedWork && activeSection === secKey;
               return (
                 <button
-                  key={tabKey}
+                  key={secKey}
                   type="button"
-                  onClick={() => selectTab(tabKey)}
+                  onClick={() => scrollToSection(secKey)}
                   className={`underline-offset-[3px] hover:underline ${
                     isActive ? 'underline' : ''
                   }`}
@@ -856,773 +958,645 @@ export default function ArtSiteView({
           </div>
         </main>
       ) : (
-        <main>
+        <main className="space-y-[64px] pt-[92px] md:space-y-[96px] md:pt-[132px]">
           {/* ===============================================================
-              TAB 1: ARCHIVE — 3 Curated Rows:
-              Row 1: 3 Animated 4:5 Design Slots
-              Row 2: 2 Animated 4:3 Photo Slots
-              Row 3: 2 Auto-Playing 16:9 Landscape Videos + 1 Auto-Playing 9:16 Vertical Video
+              HERO — 50%-Offset Swiss Typographic Intro + Complete Single-Page Index
           ================================================================ */}
-          {activeTab === 'archive' && (() => {
-            // Flatten all design images across every design work for rich animated variety
-            const allDesignSlides: { id: string; image: string; title: string }[] = [];
-            for (const w of designWorks) {
-              const imgs = w.images?.length ? w.images : [w.cover];
-              imgs.forEach((img, idx) => {
-                if (img) {
-                  allDesignSlides.push({
-                    id: `${w.id}-${idx}`,
-                    image: img,
-                    title: w.title,
-                  });
-                }
-              });
-            }
-            if (allDesignSlides.length === 0) {
-              allDesignSlides.push({
-                id: 'fb-d',
-                image: FALLBACK_WORKS[0].cover,
-                title: FALLBACK_WORKS[0].title,
-              });
-            }
-
-            // Split design slides into 3 distinct rotating pools so all 3 slots show different works
-            const designPools = [0, 1, 2].map((slotIdx) => {
-              const pool = allDesignSlides.filter(
-                (_, i) => i % 3 === slotIdx
-              );
-              const list = pool.length > 0 ? pool : allDesignSlides;
-              return list.slice(0, 6);
-            });
-
-            // Split photo tiles into 2 distinct rotating pools for Row 2
-            const allPhotos =
-              photoTiles.length > 0
-                ? photoTiles
-                : [
-                    {
-                      id: 'fb-p',
-                      image: FALLBACK_WORKS[3].cover,
-                      title: FALLBACK_WORKS[3].title,
-                      category: 'Photo',
-                    },
-                  ];
-            const photoPools = [0, 1].map((slotIdx) => {
-              const pool = allPhotos.filter((_, i) => i % 2 === slotIdx);
-              const list = pool.length > 0 ? pool : allPhotos;
-              return list.slice(0, 6);
-            });
-
-            // Pick 2 landscape (16:9) + 1 vertical (9:16) auto-playing videos for Row 3
-            const landscapePool = videoWorks.filter(
-              (v) => v.videoFormat !== '9:16'
-            );
-            const portraitPool = videoWorks.filter(
-              (v) => v.videoFormat === '9:16'
-            );
-            const featuredLandscape: ArtWorkItem[] = [
-              landscapePool[0] || videoWorks[0] || FALLBACK_WORKS[2],
-              landscapePool[1] ||
-                videoWorks[1] ||
-                landscapePool[0] ||
-                FALLBACK_WORKS[2],
-            ];
-            const featuredVertical: ArtWorkItem =
-              portraitPool[0] ||
-              videoWorks[2] ||
-              videoWorks[0] ||
-              FALLBACK_WORKS[2];
-
-            const renderAutoPlayVideo = (
-              vid: ArtWorkItem,
-              isVertical: boolean
-            ) => {
-              const ytId = getYoutubeId(vid.href);
-              const directVid = isDirectVideoUrl(vid.href);
-
-              return (
-                <button
-                  type="button"
-                  onClick={() => selectTab('video')}
-                  className={`group relative block w-full overflow-hidden text-left ${
-                    isVertical
-                      ? 'aspect-[9/16] md:aspect-auto md:h-full md:min-h-[420px]'
-                      : 'aspect-[16/9]'
-                  }`}
-                  style={{ backgroundColor: c.placeholder }}
-                >
-                  {/* Fallback Poster Image underneath while video initializes */}
-                  {vid.cover && !brokenImages[vid.cover] && (
-                    <Image
-                      src={vid.cover}
-                      alt={vid.title}
-                      fill
-                      unoptimized
-                      sizes={isVertical ? '38vw' : '62vw'}
-                      onError={() => markImageBroken(vid.cover)}
-                      className="object-cover"
-                    />
-                  )}
-
-                  {/* Auto-Playing Direct MP4/WebM Video */}
-                  {directVid && vid.href && (
-                    <video
-                      src={vid.href}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                    />
-                  )}
-
-                  {/* Auto-Playing Muted YouTube Embed (lazy-loaded so it doesn't block initial render) */}
-                  {!directVid && ytId && (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3`}
-                      title={vid.title}
-                      loading="lazy"
-                      allow="autoplay; encrypted-media; picture-in-picture"
-                      className="pointer-events-none absolute inset-0 h-full w-full scale-[1.18] border-0"
-                    />
-                  )}
-
-                  {/* Subtle Frosted Caption Overlay */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/75 via-black/20 to-transparent px-3 pb-3 pt-10 text-white">
-                    <div className="min-w-0">
-                      <p className="truncate text-[11.5px] font-medium uppercase tracking-[-0.01em]">
-                        {vid.title}
-                      </p>
-                      <p className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-white/75">
-                        {isVertical ? 'PORTRAIT · 9:16' : 'LANDSCAPE · 16:9'}
-                      </p>
-                    </div>
-                    <span className="shrink-0 font-mono text-[10px] uppercase text-white/85">
-                      OPEN ↗
-                    </span>
-                  </div>
-                </button>
-              );
-            };
-
-            return (
-              <section className="space-y-[44px] pt-[88px] md:space-y-[56px] md:pt-[132px]">
-                {/* 50%-Offset Swiss Typographic Intro */}
-                <div className="px-[10px] md:ml-[50%] md:max-w-[603px] md:px-0 md:pr-4">
-                  <p className="text-[12px] uppercase leading-[16.5px]">
-                    A COLLECTION OF VISUAL WORK, EXPERIMENTS, AND IDEAS — SOME
-                    MADE WITH PURPOSE, OTHERS SIMPLY BECAUSE I WANTED TO,
-                    EVERYTHING I&apos;VE EXPLORED ALONG THE WAY, FROM ROUGH
-                    EXPERIMENTS TO WELL THOUGHT PROJECTS.
-                  </p>
-                </div>
-
-                {/* ROW 1: DESIGN — 3 Animated 4:5 Slots */}
-                <div className="px-[9px]">
-                  <div
-                    className="mb-[12px] flex items-center justify-between pt-3 font-mono text-[10px] uppercase tracking-[0.12em]"
-                    style={{
-                      borderTop: `1px solid ${dividerColor}`,
-                      color: c.muted,
-                    }}
-                  >
-                    <span>DESIGN</span>
-                    <button
-                      type="button"
-                      onClick={() => selectTab('design')}
-                      className="underline-offset-[3px] hover:underline"
-                      style={{ color: c.ink }}
-                    >
-                      OPEN DESIGN ↗
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-[9px] sm:grid-cols-3">
-                    {designPools.map((pool, slotIdx) => {
-                      const activeIdx = slotTicks[slotIdx] % pool.length;
-                      const current = pool[activeIdx];
-                      const isHovered = hoveredSlot === slotIdx;
-
-                      return (
-                        <button
-                          key={`design-slot-${slotIdx}`}
-                          type="button"
-                          onClick={() => selectTab('design')}
-                          onMouseEnter={() => setHoveredSlot(slotIdx)}
-                          onMouseLeave={() => setHoveredSlot(null)}
-                          className="group relative block aspect-[4/5] w-full overflow-hidden text-left"
-                          style={{ backgroundColor: c.placeholder }}
-                        >
-                          {pool.map((slide, sIdx) => {
-                            const isCurrent = sIdx === activeIdx;
-                            return (
-                              <div
-                                key={slide.id}
-                                className="absolute inset-0 will-change-[opacity,transform]"
-                                style={{
-                                  opacity: isCurrent ? 1 : 0,
-                                  transform: isCurrent
-                                    ? isHovered
-                                      ? 'scale(1.03)'
-                                      : 'scale(1)'
-                                    : 'scale(1.06)',
-                                  transition:
-                                    'opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 900ms cubic-bezier(0.22, 1, 0.36, 1)',
-                                }}
-                              >
-                                {!brokenImages[slide.image] ? (
-                                  <Image
-                                    src={slide.image}
-                                    alt={slide.title}
-                                    fill
-                                    unoptimized
-                                    sizes="(max-width: 640px) 100vw, 33vw"
-                                    onError={() => markImageBroken(slide.image)}
-                                    className="object-cover"
-                                  />
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent px-3 pb-2.5 pt-8 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                            <p className="truncate font-mono text-[10px] uppercase tracking-[0.08em] text-white">
-                              {current?.title}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* ROW 2: PHOTO — 2 Animated 4:3 Landscape Slots */}
-                <div className="px-[9px]">
-                  <div
-                    className="mb-[12px] flex items-center justify-between pt-3 font-mono text-[10px] uppercase tracking-[0.12em]"
-                    style={{
-                      borderTop: `1px solid ${dividerColor}`,
-                      color: c.muted,
-                    }}
-                  >
-                    <span>PHOTO</span>
-                    <button
-                      type="button"
-                      onClick={() => selectTab('photo')}
-                      className="underline-offset-[3px] hover:underline"
-                      style={{ color: c.ink }}
-                    >
-                      OPEN PHOTO ↗
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-[9px] md:grid-cols-2">
-                    {photoPools.map((pool, idx) => {
-                      const slotIdx = 3 + idx;
-                      const activeIdx = slotTicks[slotIdx] % pool.length;
-                      const current = pool[activeIdx];
-                      const isHovered = hoveredSlot === slotIdx;
-
-                      return (
-                        <button
-                          key={`photo-slot-${idx}`}
-                          type="button"
-                          onClick={() => selectTab('photo')}
-                          onMouseEnter={() => setHoveredSlot(slotIdx)}
-                          onMouseLeave={() => setHoveredSlot(null)}
-                          className="group relative block aspect-[4/3] w-full overflow-hidden text-left"
-                          style={{ backgroundColor: c.placeholder }}
-                        >
-                          {pool.map((slide, sIdx) => {
-                            const isCurrent = sIdx === activeIdx;
-                            return (
-                              <div
-                                key={slide.id}
-                                className="absolute inset-0 will-change-[opacity,transform]"
-                                style={{
-                                  opacity: isCurrent ? 1 : 0,
-                                  transform: isCurrent
-                                    ? isHovered
-                                      ? 'scale(1.03)'
-                                      : 'scale(1)'
-                                    : 'scale(1.06)',
-                                  transition:
-                                    'opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 900ms cubic-bezier(0.22, 1, 0.36, 1)',
-                                }}
-                              >
-                                {!brokenImages[slide.image] ? (
-                                  <Image
-                                    src={slide.image}
-                                    alt={slide.title}
-                                    fill
-                                    unoptimized
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                    onError={() => markImageBroken(slide.image)}
-                                    className="object-cover"
-                                  />
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent px-3 pb-2.5 pt-8 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                            <p className="truncate font-mono text-[10px] uppercase tracking-[0.08em] text-white">
-                              {current?.title}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* ROW 3: VIDEO — 2 Auto-Playing Landscape (16:9) + 1 Auto-Playing Vertical (9:16) */}
-                <div className="px-[9px]">
-                  <div
-                    className="mb-[12px] flex items-center justify-between pt-3 font-mono text-[10px] uppercase tracking-[0.12em]"
-                    style={{
-                      borderTop: `1px solid ${dividerColor}`,
-                      color: c.muted,
-                    }}
-                  >
-                    <span>VIDEO</span>
-                    <button
-                      type="button"
-                      onClick={() => selectTab('video')}
-                      className="underline-offset-[3px] hover:underline"
-                      style={{ color: c.ink }}
-                    >
-                      OPEN VIDEO ↗
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-[9px] md:grid-cols-[1.65fr_1fr]">
-                    {/* Left: 2 Stacked 16:9 Landscape Auto-Playing Videos */}
-                    <div className="flex flex-col gap-[9px]">
-                      {featuredLandscape.map((vid, idx) => (
-                        <div key={`land-vid-${vid.id}-${idx}`}>
-                          {renderAutoPlayVideo(vid, false)}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Right: 1 Tall 9:16 Vertical Auto-Playing Video (Flush Height!) */}
-                    <div className="h-full">
-                      {renderAutoPlayVideo(featuredVertical, true)}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            );
-          })()}
+          <section className="px-[10px] md:ml-[50%] md:max-w-[603px] md:px-0 md:pr-4">
+            <p className="text-[12px] uppercase leading-[16.5px]">
+              A COMPLETE SINGLE-PAGE ARCHIVE OF VISUAL DESIGN, PRINT &amp;
+              INFOGRAPHICS, VIDEO DIRECTION, PHOTOGRAPHY, AND SOCIAL MEDIA
+              GROWTH BY ADRIAN BAHRI (DRI4N) — SCROLL THROUGH EVERY DISCIPLINE
+              BELOW OR JUMP DIRECTLY FROM THE TOP BAR.
+            </p>
+            <div
+              className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em]"
+              style={{ color: c.muted }}
+            >
+              <span>{String(designWorks.length).padStart(2, '0')} DESIGN</span>
+              <span>·</span>
+              <span>{String(printWorks.length).padStart(2, '0')} PRINT</span>
+              <span>·</span>
+              <span>{String(videoWorks.length).padStart(2, '0')} VIDEO</span>
+              <span>·</span>
+              <span>{String(photoTiles.length).padStart(2, '0')} PHOTO</span>
+              <span>·</span>
+              <span>
+                {String(socialGrowthItems.length).padStart(2, '0')} SOCIAL GROWTH
+              </span>
+            </div>
+          </section>
 
           {/* ===============================================================
-              TAB 2: DESIGN (4:5 Portrait Editorial Ratio — 2-Col Mobile / 3-Col Desktop)
+              01 / DESIGN — Visual Identity, Editorial & Data Graphics (4:5 Grid)
           ================================================================ */}
-          {activeTab === 'design' && (
-            <section className="px-[9px] pt-[92px] md:pt-[150px]">
-              <div
-                className="mb-[18px] flex items-center justify-between pb-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-                style={{
-                  borderBottom: `1px solid ${dividerColor}`,
-                  color: c.muted,
-                }}
-              >
-                <span>DESIGN</span>
-                <span>{String(designWorks.length).padStart(2, '0')} WORKS</span>
-              </div>
+          <section id="design" className="scroll-mt-[64px] px-[9px]">
+            <div
+              className="mb-[18px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+              style={{
+                borderTop: `1px solid ${dividerColor}`,
+                color: c.muted,
+              }}
+            >
+              <span>01 / DESIGN &amp; VISUAL PROJECTS</span>
+              <span>{String(designWorks.length).padStart(2, '0')} PROJECTS</span>
+            </div>
 
-              <div className="grid grid-cols-2 gap-x-[9px] gap-y-[22px] md:grid-cols-3 md:gap-y-[28px]">
-                {designWorks.map((work) => (
-                  <article
-                    key={work.id}
-                    onClick={() => {
-                      if (work.pdfUrl) {
-                        window.dispatchEvent(
-                          new CustomEvent('open-pdf-reader', {
-                            detail: { url: work.pdfUrl, title: work.title },
-                          })
-                        );
-                      } else {
-                        setSelectedWork(work);
-                        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-                      }
-                    }}
-                    className="group cursor-pointer"
-                  >
-                    <div
-                      className="relative aspect-[4/5] w-full overflow-hidden"
-                      style={{ backgroundColor: c.placeholder }}
-                    >
-                      {!brokenImages[work.cover] ? (
-                        <Image
-                          src={work.cover}
-                          alt={work.title}
-                          fill
-                          unoptimized
-                          sizes="(max-width: 768px) 50vw, 33vw"
-                          onError={() => markImageBroken(work.cover)}
-                          className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
-                        />
-                      ) : (
-                        <div
-                          className="flex h-full w-full items-center justify-center uppercase"
-                          style={{ color: c.muted }}
-                        >
-                          {work.title}
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="mt-[9px] flex items-center justify-between gap-2 text-[11.5px] uppercase leading-[14.4px] underline-offset-[2px] group-hover:underline sm:text-[12px]"
-                      style={{ color: c.ink2, letterSpacing: '-0.12px' }}
-                    >
-                      <span className="truncate">
-                        {work.title} | {work.disciplines.join(', ')}
-                      </span>
-                      {work.pdfUrl && (
-                        <span className="shrink-0 font-mono text-[10px]" style={{ color: c.muted }}>
-                          PDF ↗
-                        </span>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ===============================================================
-              TAB 3: VIDEO (Supports Landscape 16:9 & Portrait 9:16 Native Ratios!)
-          ================================================================ */}
-          {activeTab === 'video' && (() => {
-            const landscapeVideos = videoWorks.filter(
-              (v) => v.videoFormat !== '9:16'
-            );
-            const portraitVideos = videoWorks.filter(
-              (v) => v.videoFormat === '9:16'
-            );
-
-            const renderVideoCard = (vid: ArtWorkItem, isPortrait: boolean) => (
-              <article
-                key={vid.id}
-                onClick={() => {
-                  setSelectedWork(vid);
-                  window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-                }}
-                className="group cursor-pointer"
-              >
-                <div
-                  className={`relative w-full overflow-hidden ${
-                    isPortrait ? 'aspect-[9/16]' : 'aspect-[16/9]'
-                  }`}
-                  style={{ backgroundColor: c.placeholder }}
-                >
-                  {!brokenImages[vid.cover] ? (
-                    <Image
-                      src={vid.cover}
-                      alt={vid.title}
-                      fill
-                      unoptimized
-                      sizes={
-                        isPortrait
-                          ? '(max-width: 768px) 50vw, 25vw'
-                          : '(max-width: 768px) 100vw, 50vw'
-                      }
-                      onError={() => markImageBroken(vid.cover)}
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                  ) : null}
-
-                  {/* Signature Frosted-Glass Floating Play Pill */}
-                  <div
-                    className="absolute inset-x-[12px] bottom-[12px] flex h-[42px] items-center justify-between rounded-[8px] px-3 backdrop-blur-md"
-                    style={{
-                      backgroundColor: 'rgba(235, 235, 235, 0.5)',
-                      color: '#1f1f1f',
-                    }}
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
-                        <Play size={10} className="ml-0.5 fill-white" />
-                      </span>
-                      <span className="truncate text-[11px] font-medium uppercase tracking-[-0.01em]">
-                        {vid.title}
-                      </span>
-                    </div>
-                    <span className="shrink-0 font-mono text-[10px] uppercase opacity-75">
-                      {isPortrait ? '9:16' : '16:9'} ↗
-                    </span>
-                  </div>
-                </div>
-              </article>
-            );
-
-            return (
-              <section className="px-[9px] pt-[92px] md:px-[14px] md:pt-[150px]">
-                <div
-                  className="mb-[20px] flex items-center justify-between pb-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-                  style={{
-                    borderBottom: `1px solid ${dividerColor}`,
-                    color: c.muted,
+            <div className="grid grid-cols-2 gap-x-[9px] gap-y-[22px] md:grid-cols-3 md:gap-y-[28px]">
+              {designWorks.map((work) => (
+                <article
+                  key={work.id}
+                  onClick={() => {
+                    setSelectedWork(work);
+                    window.scrollTo({
+                      top: 0,
+                      behavior: 'instant' as ScrollBehavior,
+                    });
                   }}
+                  className="group cursor-pointer"
                 >
-                  <span>VIDEO</span>
-                  <span>{String(videoWorks.length).padStart(2, '0')} VIDEOS</span>
-                </div>
-
-                {landscapeVideos.length > 0 && (
-                  <div className="space-y-3">
-                    <p
-                      className="font-mono text-[10px] uppercase tracking-[0.12em]"
-                      style={{ color: c.muted }}
-                    >
-                      LANDSCAPE — 16:9 ({String(landscapeVideos.length).padStart(2, '0')})
-                    </p>
-                    <div className="grid grid-cols-1 gap-[12px] md:grid-cols-2 md:gap-[16px]">
-                      {landscapeVideos.map((vid) => renderVideoCard(vid, false))}
-                    </div>
-                  </div>
-                )}
-
-                {portraitVideos.length > 0 && (
                   <div
-                    className={
-                      landscapeVideos.length > 0 ? 'mt-[36px] space-y-3 pt-[28px]' : 'space-y-3'
-                    }
-                    style={
-                      landscapeVideos.length > 0
-                        ? { borderTop: `1px solid ${dividerColor}` }
-                        : undefined
-                    }
-                  >
-                    <p
-                      className="font-mono text-[10px] uppercase tracking-[0.12em]"
-                      style={{ color: c.muted }}
-                    >
-                      PORTRAIT / REELS — 9:16 ({String(portraitVideos.length).padStart(2, '0')})
-                    </p>
-                    <div className="grid grid-cols-2 gap-[10px] sm:grid-cols-3 md:grid-cols-4 md:gap-[14px]">
-                      {portraitVideos.map((vid) => renderVideoCard(vid, true))}
-                    </div>
-                  </div>
-                )}
-              </section>
-            );
-          })()}
-
-          {/* ===============================================================
-              TAB 4: PHOTO (4:3 Landscape Photography Grid — Strictly Gallery Table)
-          ================================================================ */}
-          {activeTab === 'photo' && (
-            <section className="px-[9px] pt-[92px] md:pt-[150px]">
-              <div
-                className="mb-[18px] flex items-center justify-between pb-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-                style={{
-                  borderBottom: `1px solid ${dividerColor}`,
-                  color: c.muted,
-                }}
-              >
-                <span>PHOTO</span>
-                <span>{String(photoTiles.length).padStart(2, '0')} FRAMES</span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-[7px] sm:grid-cols-2 md:grid-cols-3 md:gap-[9px]">
-                {photoTiles.map((photo) => (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedWork({
-                        id: photo.id,
-                        title: photo.title,
-                        disciplines: ['PHOTOGRAPHY', photo.category.toUpperCase()],
-                        category: 'photo',
-                        cover: photo.image,
-                        images: [photo.image],
-                        description: `Photographic frame captured and curated by Adrian Bahri (Dri4n) under ${photo.category}.`,
-                        year: '2025',
-                      });
-                      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-                    }}
-                    className="group relative block aspect-[4/3] w-full overflow-hidden text-left"
+                    className="relative aspect-[4/5] w-full overflow-hidden"
                     style={{ backgroundColor: c.placeholder }}
                   >
-                    {!brokenImages[photo.image] ? (
+                    {!brokenImages[work.cover] ? (
                       <Image
-                        src={photo.image}
-                        alt={photo.title}
+                        src={work.cover}
+                        alt={work.title}
                         fill
                         unoptimized
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                        onError={() => markImageBroken(photo.image)}
-                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        onError={() => markImageBroken(work.cover)}
+                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
                       />
                     ) : (
                       <div
                         className="flex h-full w-full items-center justify-center uppercase"
                         style={{ color: c.muted }}
                       >
-                        PHOTO
+                        {work.title}
                       </div>
                     )}
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent px-2.5 py-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      <span className="block truncate text-[11px] uppercase text-white">
-                        {photo.title}
+                    {work.images.length > 1 && (
+                      <span className="pointer-events-none absolute right-2 top-2 bg-black/65 px-1.5 py-0.5 font-mono text-[9.5px] text-white backdrop-blur-sm">
+                        {work.images.length} SLIDES
                       </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
+                    )}
+                  </div>
+                  <div
+                    className="mt-[9px] flex items-center justify-between gap-2 text-[11.5px] uppercase leading-[14.4px] underline-offset-[2px] group-hover:underline sm:text-[12px]"
+                    style={{ color: c.ink2, letterSpacing: '-0.12px' }}
+                  >
+                    <span className="truncate">
+                      {work.title} | {work.disciplines.join(', ')}
+                    </span>
+                    <span
+                      className="shrink-0 font-mono text-[10px]"
+                      style={{ color: c.muted }}
+                    >
+                      OPEN ↗
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
 
           {/* ===============================================================
-              TAB 5: ABOUT (Exact Gaurav Mishra 2-Column Swiss Grid!)
+              02 / PRINT & INFOGRAFIS CETAK — Editorial Print, Magazines & Packaging
           ================================================================ */}
-          {activeTab === 'about' && (
-            <section className="px-4 pb-[80px] pt-[100px] uppercase leading-[15.9px] md:px-0 md:pt-[183px]">
-              {/* 1. WHO AM I */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-0">
-                <div className="md:pr-[111px] md:text-right">WHO AM I</div>
-                <div className="max-w-[475px] space-y-4">
-                  <p>
-                    I&apos;M ADRIAN BAHRI (DRI4N), A CREATIVE TECHNOLOGIST &amp;
-                    VISUAL DESIGNER BASED IN MAKASSAR, INDONESIA. MY WORK IS
-                    ROOTED IN BRANDING, EDITORIAL LAYOUTS, MOTION DIRECTION, AND
-                    DIGITAL SYSTEMS WITH A FOCUS ON TRANSLATING IDEAS INTO CLEAR
-                    FORM.
-                  </p>
-                  <p>
-                    ALONGSIDE ENGINEERING FULL-STACK PLATFORMS, I MAINTAIN AN
-                    INDEPENDENT VISUAL PRACTICE DRIVEN BY CURIOSITY — EXPLORING
-                    PRINT, FILM, PHOTOGRAPHY, AND GRAPHIC IDENTITY.
-                  </p>
-                  <p>
-                    I&apos;M INTERESTED IN WORK THAT HAS A POINT OF VIEW, BUT
-                    DOESN&apos;T TAKE ITSELF TOO SERIOUSLY.
-                  </p>
-                </div>
-              </div>
+          <section id="print" className="scroll-mt-[64px] px-[9px]">
+            <div
+              className="mb-[18px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+              style={{
+                borderTop: `1px solid ${dividerColor}`,
+                color: c.muted,
+              }}
+            >
+              <span>02 / PRINT, EDITORIAL &amp; INFOGRAFIS CETAK</span>
+              <span>{String(printWorks.length).padStart(2, '0')} EDITIONS</span>
+            </div>
 
-              {/* 2. WORK EXPERIENCE (Synced with Supabase) */}
-              <div
-                className="mt-[60px] grid grid-cols-1 gap-3 pt-[48px] md:mt-[76px] md:grid-cols-2 md:gap-0 md:pt-[64px]"
-                style={{ borderTop: `1px solid ${dividerColor}` }}
-              >
-                <div className="md:pr-[111px] md:text-right">
-                  WORK EXPERIENCE
-                </div>
-                <div className="max-w-[475px] space-y-7">
-                  {experiences.map((exp) => (
-                    <div key={exp.id} className="space-y-2.5">
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="font-semibold">
-                          {exp.company} | {exp.role}
-                        </span>
-                        <span style={{ color: c.muted }}>{exp.period}</span>
+            <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2 md:grid-cols-3 md:gap-[14px]">
+              {printWorks.map((work) => (
+                <article
+                  key={work.id}
+                  onClick={() => {
+                    if (work.pdfUrl) {
+                      window.dispatchEvent(
+                        new CustomEvent('open-pdf-reader', {
+                          detail: { url: work.pdfUrl, title: work.title },
+                        })
+                      );
+                    } else {
+                      setSelectedWork(work);
+                      window.scrollTo({
+                        top: 0,
+                        behavior: 'instant' as ScrollBehavior,
+                      });
+                    }
+                  }}
+                  className="group cursor-pointer"
+                >
+                  <div
+                    className="relative aspect-[4/5] w-full overflow-hidden"
+                    style={{
+                      backgroundColor: c.placeholder,
+                      border: `1px solid ${dividerColor}`,
+                    }}
+                  >
+                    {!brokenImages[work.cover] ? (
+                      <Image
+                        src={work.cover}
+                        alt={work.title}
+                        fill
+                        unoptimized
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        onError={() => markImageBroken(work.cover)}
+                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center uppercase"
+                        style={{ color: c.muted }}
+                      >
+                        {work.title}
                       </div>
-                      {exp.description && (
-                        <p style={{ color: c.ink2 }}>{exp.description}</p>
-                      )}
-                    </div>
+                    )}
+                    <span className="pointer-events-none absolute left-2.5 top-2.5 bg-black/70 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.08em] text-white backdrop-blur-sm">
+                      {work.pdfUrl ? 'PRINT PDF' : 'PRINT / INFOGRAFIS'}
+                    </span>
+                  </div>
+                  <div
+                    className="mt-[9px] flex items-center justify-between gap-2 text-[11.5px] uppercase leading-[14.4px] underline-offset-[2px] group-hover:underline sm:text-[12px]"
+                    style={{ color: c.ink2, letterSpacing: '-0.12px' }}
+                  >
+                    <span className="truncate">
+                      {work.title} | {work.disciplines.join(', ')}
+                    </span>
+                    <span
+                      className="shrink-0 font-mono text-[10px]"
+                      style={{ color: c.ink }}
+                    >
+                      {work.pdfUrl ? 'READ PDF ↗' : 'VIEW ↗'}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* ===============================================================
+              03 / VIDEO & MOTION — Landscape 16:9 & Portrait 9:16
+          ================================================================ */}
+          <section id="video" className="scroll-mt-[64px] px-[9px]">
+            <div
+              className="mb-[20px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+              style={{
+                borderTop: `1px solid ${dividerColor}`,
+                color: c.muted,
+              }}
+            >
+              <span>03 / VIDEO &amp; MOTION PROJECTS</span>
+              <span>{String(videoWorks.length).padStart(2, '0')} VIDEOS</span>
+            </div>
+
+            {landscapeVideos.length > 0 && (
+              <div className="space-y-3">
+                <p
+                  className="font-mono text-[10px] uppercase tracking-[0.12em]"
+                  style={{ color: c.muted }}
+                >
+                  LANDSCAPE — 16:9 ({String(landscapeVideos.length).padStart(2, '0')})
+                </p>
+                <div className="grid grid-cols-1 gap-[12px] md:grid-cols-2 md:gap-[16px]">
+                  {landscapeVideos.map((vid) => (
+                    <article
+                      key={vid.id}
+                      onClick={() => {
+                        setSelectedWork(vid);
+                        window.scrollTo({
+                          top: 0,
+                          behavior: 'instant' as ScrollBehavior,
+                        });
+                      }}
+                      className="group cursor-pointer"
+                    >
+                      <div
+                        className="relative aspect-[16/9] w-full overflow-hidden"
+                        style={{ backgroundColor: c.placeholder }}
+                      >
+                        {!brokenImages[vid.cover] ? (
+                          <Image
+                            src={vid.cover}
+                            alt={vid.title}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            onError={() => markImageBroken(vid.cover)}
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          />
+                        ) : null}
+
+                        <div
+                          className="absolute inset-x-[12px] bottom-[12px] flex h-[42px] items-center justify-between rounded-[8px] px-3 backdrop-blur-md"
+                          style={{
+                            backgroundColor: 'rgba(235, 235, 235, 0.5)',
+                            color: '#1f1f1f',
+                          }}
+                        >
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
+                              <Play size={10} className="ml-0.5 fill-white" />
+                            </span>
+                            <span className="truncate text-[11px] font-medium uppercase tracking-[-0.01em]">
+                              {vid.title}
+                            </span>
+                          </div>
+                          <span className="shrink-0 font-mono text-[10px] uppercase opacity-75">
+                            16:9 ↗
+                          </span>
+                        </div>
+                      </div>
+                    </article>
                   ))}
                 </div>
               </div>
+            )}
 
-              {/* 3. SKILLS */}
+            {portraitVideos.length > 0 && (
               <div
-                className="mt-[60px] grid grid-cols-1 gap-3 pt-[48px] md:mt-[76px] md:grid-cols-2 md:gap-0 md:pt-[64px]"
-                style={{ borderTop: `1px solid ${dividerColor}` }}
+                className={
+                  landscapeVideos.length > 0
+                    ? 'mt-[32px] space-y-3 pt-[24px]'
+                    : 'space-y-3'
+                }
+                style={
+                  landscapeVideos.length > 0
+                    ? { borderTop: `1px solid ${dividerColor}` }
+                    : undefined
+                }
               >
-                <div className="md:pr-[111px] md:text-right">SKILLS</div>
-                <div className="max-w-[475px] space-y-6">
-                  <div className="space-y-1">
-                    <p>CREATIVE DIRECTION</p>
-                    <p>BRAND &amp; VISUAL IDENTITY</p>
-                    <p>EDITORIAL &amp; PUBLICATION DESIGN</p>
-                    <p>MOTION &amp; VIDEO EDITING</p>
-                    <p>PHOTOGRAPHY &amp; COLOR GRADING</p>
-                    <p>UI/UX &amp; INTERACTIVE SYSTEMS</p>
-                  </div>
-                  {creativeTools.length > 0 && (
-                    <div className="space-y-1" style={{ color: c.muted }}>
-                      {creativeTools.map((t) => (
-                        <p key={t.name}>{t.name}</p>
-                      ))}
+                <p
+                  className="font-mono text-[10px] uppercase tracking-[0.12em]"
+                  style={{ color: c.muted }}
+                >
+                  PORTRAIT / REELS — 9:16 (
+                  {String(portraitVideos.length).padStart(2, '0')})
+                </p>
+                <div className="grid grid-cols-2 gap-[10px] sm:grid-cols-3 md:grid-cols-4 md:gap-[14px]">
+                  {portraitVideos.map((vid) => (
+                    <article
+                      key={vid.id}
+                      onClick={() => {
+                        setSelectedWork(vid);
+                        window.scrollTo({
+                          top: 0,
+                          behavior: 'instant' as ScrollBehavior,
+                        });
+                      }}
+                      className="group cursor-pointer"
+                    >
+                      <div
+                        className="relative aspect-[9/16] w-full overflow-hidden"
+                        style={{ backgroundColor: c.placeholder }}
+                      >
+                        {!brokenImages[vid.cover] ? (
+                          <Image
+                            src={vid.cover}
+                            alt={vid.title}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                            onError={() => markImageBroken(vid.cover)}
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          />
+                        ) : null}
+
+                        <div
+                          className="absolute inset-x-[10px] bottom-[10px] flex h-[38px] items-center justify-between rounded-[8px] px-2.5 backdrop-blur-md"
+                          style={{
+                            backgroundColor: 'rgba(235, 235, 235, 0.5)',
+                            color: '#1f1f1f',
+                          }}
+                        >
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
+                              <Play size={9} className="ml-0.5 fill-white" />
+                            </span>
+                            <span className="truncate text-[10.5px] font-medium uppercase">
+                              {vid.title}
+                            </span>
+                          </div>
+                          <span className="shrink-0 font-mono text-[9.5px] uppercase opacity-75">
+                            9:16 ↗
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* ===============================================================
+              04 / PHOTOGRAPHY GALLERY — Full-Quality Curated Frames (4:3 Grid)
+          ================================================================ */}
+          <section id="photo" className="scroll-mt-[64px] px-[9px]">
+            <div
+              className="mb-[18px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+              style={{
+                borderTop: `1px solid ${dividerColor}`,
+                color: c.muted,
+              }}
+            >
+              <span>04 / PHOTOGRAPHY GALLERY</span>
+              <span>{String(photoTiles.length).padStart(2, '0')} FRAMES</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-[7px] sm:grid-cols-2 md:grid-cols-3 md:gap-[9px]">
+              {photoTiles.map((photo) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedWork({
+                      id: photo.id,
+                      title: photo.title,
+                      disciplines: ['PHOTOGRAPHY', photo.category.toUpperCase()],
+                      category: 'photo',
+                      cover: photo.image,
+                      images: [photo.image],
+                      description: `Original full-quality photographic frame captured and curated by Adrian Bahri (Dri4n) under ${photo.category}.`,
+                      year: '2025',
+                    });
+                    window.scrollTo({
+                      top: 0,
+                      behavior: 'instant' as ScrollBehavior,
+                    });
+                  }}
+                  className="group relative block aspect-[4/3] w-full overflow-hidden text-left"
+                  style={{ backgroundColor: c.placeholder }}
+                >
+                  {!brokenImages[photo.image] ? (
+                    <Image
+                      src={photo.image}
+                      alt={photo.title}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                      onError={() => markImageBroken(photo.image)}
+                      className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-full w-full items-center justify-center uppercase"
+                      style={{ color: c.muted }}
+                    >
+                      PHOTO
                     </div>
                   )}
-                </div>
-              </div>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent px-2.5 py-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="block truncate text-[11px] uppercase text-white">
+                      {photo.title}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
 
-              {/* 4. CONNECT (Exact #d9d9d9 Suffix Tags!) */}
-              <div
-                className="mt-[60px] grid grid-cols-1 gap-3 pt-[48px] md:mt-[76px] md:grid-cols-2 md:gap-0 md:pt-[64px]"
-                style={{ borderTop: `1px solid ${dividerColor}` }}
-              >
-                <div className="md:pr-[111px] md:text-right">CONNECT</div>
-                <div className="max-w-[475px] space-y-1.5">
+          {/* ===============================================================
+              05 / SOCIAL MEDIA GROWTH — Managed Accounts & Digital Reach
+          ================================================================ */}
+          <section id="growth" className="scroll-mt-[64px] px-[9px]">
+            <div
+              className="mb-[20px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+              style={{
+                borderTop: `1px solid ${dividerColor}`,
+                color: c.muted,
+              }}
+            >
+              <span>05 / SOCIAL MEDIA GROWTH &amp; MEDIA MANAGEMENT</span>
+              <span>
+                {String(socialGrowthItems.length).padStart(2, '0')} ACCOUNTS
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-[10px] md:grid-cols-3">
+              {socialGrowthItems.map((item, idx) => (
+                <article
+                  key={item.id}
+                  className="flex flex-col justify-between p-4 md:p-5"
+                  style={{
+                    backgroundColor: c.pill,
+                    border: `1px solid ${dividerColor}`,
+                  }}
+                >
                   <div>
-                    <button
-                      type="button"
-                      onClick={handleCopyEmail}
-                      className="underline-offset-[2px] hover:underline"
+                    <div
+                      className="flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.12em]"
+                      style={{ color: c.muted }}
                     >
-                      {copiedEmail ? 'COPIED TO CLIPBOARD' : emailAddress}
-                    </button>{' '}
-                    <span style={{ color: c.hair }}>| MAIL</span>
-                  </div>
-                  <div>
-                    <a
-                      href={instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline-offset-[2px] hover:underline"
+                      <span>{String(idx + 1).padStart(2, '0')} · {item.platform}</span>
+                      <span>{item.period}</span>
+                    </div>
+
+                    <h3 className="mt-3 text-[15px] font-medium uppercase tracking-[-0.02em]">
+                      {item.account}
+                    </h3>
+                    <p
+                      className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.06em]"
+                      style={{ color: '#ff5a3d' }}
                     >
-                      @ADRIANBAHRI
-                    </a>{' '}
-                    <span style={{ color: c.hair }}>| INSTAGRAM</span>
-                  </div>
-                  <div>
-                    <a
-                      href={linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline-offset-[2px] hover:underline"
+                      {item.handle} — {item.role}
+                    </p>
+
+                    <p
+                      className="mt-3.5 text-[11.5px] leading-[1.55]"
+                      style={{ color: c.ink2 }}
                     >
-                      ADRIAN BAHRI
-                    </a>{' '}
-                    <span style={{ color: c.hair }}>| LINKEDIN</span>
+                      {item.focus}
+                    </p>
                   </div>
-                  <div>
-                    <a
-                      href={githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline-offset-[2px] hover:underline"
-                    >
-                      ADRIANBAHRI
-                    </a>{' '}
-                    <span style={{ color: c.hair }}>| GITHUB</span>
+
+                  <ul
+                    className="mt-5 space-y-1.5 pt-3 text-[10.5px] leading-[1.45]"
+                    style={{
+                      borderTop: `1px solid ${dividerColor}`,
+                      color: c.muted,
+                    }}
+                  >
+                    {item.highlights.map((hl, hIdx) => (
+                      <li key={hIdx} className="flex items-start gap-2">
+                        <span
+                          className="mt-[5px] inline-block h-[4px] w-[4px] shrink-0"
+                          style={{ backgroundColor: '#ff5a3d' }}
+                        />
+                        <span>{hl}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* ===============================================================
+              06 / ABOUT — Exact Gaurav Mishra 2-Column Swiss Grid
+          ================================================================ */}
+          <section
+            id="about"
+            className="scroll-mt-[64px] px-4 pt-6 uppercase leading-[15.9px] md:px-0"
+          >
+            <div
+              className="mx-[9px] mb-[40px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+              style={{
+                borderTop: `1px solid ${dividerColor}`,
+                color: c.muted,
+              }}
+            >
+              <span>06 / ABOUT &amp; CONNECT</span>
+              <span>MAKASSAR · INDONESIA</span>
+            </div>
+
+            {/* 1. WHO AM I */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-0">
+              <div className="md:pr-[111px] md:text-right">WHO AM I</div>
+              <div className="max-w-[475px] space-y-4">
+                <p>
+                  I&apos;M ADRIAN BAHRI (DRI4N), A CREATIVE TECHNOLOGIST &amp;
+                  VISUAL DESIGNER BASED IN MAKASSAR, INDONESIA. MY WORK IS
+                  ROOTED IN BRANDING, EDITORIAL LAYOUTS, MOTION DIRECTION, AND
+                  DIGITAL SYSTEMS WITH A FOCUS ON TRANSLATING IDEAS INTO CLEAR
+                  FORM.
+                </p>
+                <p>
+                  ALONGSIDE ENGINEERING FULL-STACK PLATFORMS, I MAINTAIN AN
+                  INDEPENDENT VISUAL PRACTICE DRIVEN BY CURIOSITY — EXPLORING
+                  PRINT, FILM, PHOTOGRAPHY, SOCIAL GROWTH, AND GRAPHIC IDENTITY.
+                </p>
+              </div>
+            </div>
+
+            {/* 2. WORK EXPERIENCE (Synced with Database) */}
+            <div
+              className="mt-[48px] grid grid-cols-1 gap-3 pt-[40px] md:mt-[64px] md:grid-cols-2 md:gap-0 md:pt-[52px]"
+              style={{ borderTop: `1px solid ${dividerColor}` }}
+            >
+              <div className="md:pr-[111px] md:text-right">WORK EXPERIENCE</div>
+              <div className="max-w-[475px] space-y-7">
+                {experiences.map((exp) => (
+                  <div key={exp.id} className="space-y-2.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="font-semibold">
+                        {exp.company} | {exp.role}
+                      </span>
+                      <span style={{ color: c.muted }}>{exp.period}</span>
+                    </div>
+                    {exp.description && (
+                      <p style={{ color: c.ink2 }}>{exp.description}</p>
+                    )}
                   </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={(e) => navigateWithCirclePortal('/', router, e)}
-                      className="underline-offset-[2px] hover:underline"
-                    >
-                      DRI4N.COM
-                    </button>{' '}
-                    <span style={{ color: c.hair }}>| DEV PORTFOLIO</span>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. SKILLS */}
+            <div
+              className="mt-[48px] grid grid-cols-1 gap-3 pt-[40px] md:mt-[64px] md:grid-cols-2 md:gap-0 md:pt-[52px]"
+              style={{ borderTop: `1px solid ${dividerColor}` }}
+            >
+              <div className="md:pr-[111px] md:text-right">SKILLS</div>
+              <div className="max-w-[475px] space-y-6">
+                <div className="space-y-1">
+                  <p>CREATIVE DIRECTION</p>
+                  <p>BRAND &amp; VISUAL IDENTITY</p>
+                  <p>EDITORIAL, PRINT &amp; INFOGRAPHIC DESIGN</p>
+                  <p>MOTION &amp; VIDEO EDITING</p>
+                  <p>PHOTOGRAPHY &amp; COLOR GRADING</p>
+                  <p>SOCIAL MEDIA GROWTH &amp; CONTENT SYSTEMS</p>
+                </div>
+                {creativeTools.length > 0 && (
+                  <div className="space-y-1" style={{ color: c.muted }}>
+                    {creativeTools.map((t) => (
+                      <p key={t.name}>{t.name}</p>
+                    ))}
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* 4. CONNECT */}
+            <div
+              className="mt-[48px] grid grid-cols-1 gap-3 pt-[40px] md:mt-[64px] md:grid-cols-2 md:gap-0 md:pt-[52px]"
+              style={{ borderTop: `1px solid ${dividerColor}` }}
+            >
+              <div className="md:pr-[111px] md:text-right">CONNECT</div>
+              <div className="max-w-[475px] space-y-1.5">
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="underline-offset-[2px] hover:underline"
+                  >
+                    {copiedEmail ? 'COPIED TO CLIPBOARD' : emailAddress}
+                  </button>{' '}
+                  <span style={{ color: c.hair }}>| MAIL</span>
+                </div>
+                <div>
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-[2px] hover:underline"
+                  >
+                    @ADRIANBAHRI
+                  </a>{' '}
+                  <span style={{ color: c.hair }}>| INSTAGRAM</span>
+                </div>
+                <div>
+                  <a
+                    href={linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-[2px] hover:underline"
+                  >
+                    ADRIAN BAHRI
+                  </a>{' '}
+                  <span style={{ color: c.hair }}>| LINKEDIN</span>
+                </div>
+                <div>
+                  <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-[2px] hover:underline"
+                  >
+                    ADRIANBAHRI
+                  </a>{' '}
+                  <span style={{ color: c.hair }}>| GITHUB</span>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={(e) => navigateWithCirclePortal('/', router, e)}
+                    className="underline-offset-[2px] hover:underline"
+                  >
+                    DRI4N.COM
+                  </button>{' '}
+                  <span style={{ color: c.hair }}>| DEV PORTFOLIO</span>
                 </div>
               </div>
-            </section>
-          )}
+            </div>
+          </section>
 
           {/* ===============================================================
               MINIMAL RIGHT-ALIGNED SWISS FOOTER + THIN 1PX TOP DIVIDER
           ================================================================ */}
           <footer
-            className="mx-[9px] mt-[100px] flex flex-col items-start gap-4 pb-[80px] pt-[36px] uppercase leading-[15.9px] md:mt-[180px] md:flex-row md:items-center md:justify-end md:gap-[32px] md:pb-[140px] md:pl-[8px] md:pr-[6.7%] md:pt-[44px]"
+            className="mx-[9px] flex flex-col items-start gap-4 pb-[80px] pt-[36px] uppercase leading-[15.9px] md:flex-row md:items-center md:justify-end md:gap-[32px] md:pb-[120px] md:pl-[8px] md:pr-[6.7%] md:pt-[44px]"
             style={{
               letterSpacing: '-0.34px',
               borderTop: `1px solid ${dividerColor}`,
@@ -1630,7 +1604,7 @@ export default function ArtSiteView({
           >
             <button
               type="button"
-              onClick={() => selectTab('archive')}
+              onClick={scrollToTop}
               className="hover:underline underline-offset-[2px]"
             >
               ©ADRIAN BAHRI
