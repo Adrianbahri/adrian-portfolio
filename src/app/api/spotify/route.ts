@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
 const NOW_PLAYING_ENDPOINT =
@@ -9,6 +11,16 @@ const TOP_TRACKS_ENDPOINT =
   'https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=5';
 const TOP_ARTISTS_ENDPOINT =
   'https://api.spotify.com/v1/me/top/artists?time_range=short_term&limit=5';
+
+// 30 days (1 month) cache TTL for Top Tracks & Top Artists
+const ONE_MONTH_SECONDS = 30 * 24 * 60 * 60; // 2,592,000 seconds
+const ONE_MONTH_MS = ONE_MONTH_SECONDS * 1000;
+const MONTHLY_CACHE_PATH = path.join(
+  process.cwd(),
+  '.next',
+  'cache',
+  'spotify-monthly-top.json'
+);
 
 interface SpotifyArtistRef {
   name: string;
@@ -62,7 +74,14 @@ interface CachedArtistItem {
   artistUrl: string;
 }
 
-// Server-side in-memory caches to prevent Spotify 429 rate-limiting across 10s frontend polls
+interface MonthlyTopCachePayload {
+  fetchedAt: number;
+  lastTrack?: typeof cachedLastTrack;
+  topTracks: CachedTrackItem[];
+  topArtists: CachedArtistItem[];
+}
+
+// Server-side in-memory caches
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt = 0;
 
@@ -183,22 +202,82 @@ let cachedTopArtists: CachedArtistItem[] = [
   },
 ];
 
-// Defer /v1/me/top/* and /recently-played background refreshes so they never stall /currently-playing
-let topEndpointsNextAttemptAt = Date.now() + 2 * 60 * 60 * 1000;
-let recentEndpointNextAttemptAt = Date.now() + 2 * 60 * 60 * 1000;
+let diskCacheChecked = false;
+let topEndpointsNextAttemptAt = 0;
+let recentEndpointNextAttemptAt = 0;
+let lastCredentialsFingerprint = '';
+
+function loadMonthlyDiskCacheIfPresent() {
+  if (diskCacheChecked) return;
+  diskCacheChecked = true;
+  try {
+    if (!fs.existsSync(MONTHLY_CACHE_PATH)) return;
+    const raw = fs.readFileSync(MONTHLY_CACHE_PATH, 'utf8');
+    const parsed = JSON.parse(raw) as MonthlyTopCachePayload;
+    if (parsed?.lastTrack?.title) {
+      cachedLastTrack = parsed.lastTrack;
+    }
+    if (
+      parsed &&
+      typeof parsed.fetchedAt === 'number' &&
+      Array.isArray(parsed.topTracks) &&
+      parsed.topTracks.length > 0 &&
+      Array.isArray(parsed.topArtists) &&
+      parsed.topArtists.length > 0
+    ) {
+      cachedTopTracks = parsed.topTracks;
+      cachedTopArtists = parsed.topArtists;
+      // Lock next refresh to 30 days after the saved timestamp
+      const expiresAt = parsed.fetchedAt + ONE_MONTH_MS;
+      if (expiresAt > Date.now()) {
+        topEndpointsNextAttemptAt = expiresAt;
+      }
+    }
+  } catch {
+    // Ignore disk read errors
+  }
+}
+
+function saveMonthlyDiskCache(
+  topTracks: CachedTrackItem[],
+  topArtists: CachedArtistItem[],
+  lastTrack = cachedLastTrack
+) {
+  try {
+    fs.mkdirSync(path.dirname(MONTHLY_CACHE_PATH), { recursive: true });
+    const payload: MonthlyTopCachePayload = {
+      fetchedAt: Date.now(),
+      lastTrack,
+      topTracks,
+      topArtists,
+    };
+    fs.writeFileSync(MONTHLY_CACHE_PATH, JSON.stringify(payload, null, 2));
+  } catch {
+    // Ignore disk write errors on read-only filesystems
+  }
+}
 
 async function getAccessToken(): Promise<string | null> {
-  const now = Date.now();
-  if (cachedAccessToken && now < tokenExpiresAt) {
-    return cachedAccessToken;
-  }
-
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
 
   if (!clientId || !clientSecret || !refreshToken) {
     return null;
+  }
+
+  const fingerprint = `${clientId}:${refreshToken.slice(-16)}`;
+  if (fingerprint !== lastCredentialsFingerprint) {
+    lastCredentialsFingerprint = fingerprint;
+    cachedAccessToken = null;
+    tokenExpiresAt = 0;
+    topEndpointsNextAttemptAt = 0;
+    recentEndpointNextAttemptAt = 0;
+  }
+
+  const now = Date.now();
+  if (cachedAccessToken && now < tokenExpiresAt) {
+    return cachedAccessToken;
   }
 
   const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -227,37 +306,41 @@ async function getAccessToken(): Promise<string | null> {
   };
   if (data.access_token) {
     cachedAccessToken = data.access_token;
-    // Cache token for 50 minutes (tokens last 3600s)
+    // Cache access token for 50 minutes (tokens are valid for 3600s)
     tokenExpiresAt = now + ((data.expires_in || 3600) - 600) * 1000;
   }
   return cachedAccessToken;
 }
 
-async function refreshTopListsIfDue(authHeaders: HeadersInit) {
+async function refreshTopListsMonthlyIfDue(authHeaders: HeadersInit) {
+  loadMonthlyDiskCacheIfPresent();
+
   const now = Date.now();
   if (now < topEndpointsNextAttemptAt) return;
-
-  // Refresh at most once every 30 minutes
-  topEndpointsNextAttemptAt = now + 30 * 60 * 1000;
 
   try {
     const [topTracksRes, topArtistsRes] = await Promise.allSettled([
       fetch(TOP_TRACKS_ENDPOINT, {
         headers: authHeaders,
-        cache: 'no-store',
+        next: { revalidate: ONE_MONTH_SECONDS },
         signal: AbortSignal.timeout(2200),
       }),
       fetch(TOP_ARTISTS_ENDPOINT, {
         headers: authHeaders,
-        cache: 'no-store',
+        next: { revalidate: ONE_MONTH_SECONDS },
         signal: AbortSignal.timeout(2200),
       }),
     ]);
 
+    let updatedTracks = false;
+    let updatedArtists = false;
+
     if (topTracksRes.status === 'fulfilled') {
       const res = topTracksRes.value;
       if (res.status === 429) {
-        topEndpointsNextAttemptAt = now + 60 * 60 * 1000;
+        const retryHeader = Number(res.headers.get('retry-after') || '3600');
+        topEndpointsNextAttemptAt =
+          now + Math.max(3600, retryHeader) * 1000;
       } else if (res.ok) {
         const data = (await res.json()) as { items?: SpotifyTrack[] };
         if (data.items && data.items.length > 0) {
@@ -272,6 +355,7 @@ async function refreshTopListsIfDue(authHeaders: HeadersInit) {
             durationMs:
               typeof t.duration_ms === 'number' ? t.duration_ms : null,
           }));
+          updatedTracks = true;
         }
       }
     }
@@ -279,7 +363,9 @@ async function refreshTopListsIfDue(authHeaders: HeadersInit) {
     if (topArtistsRes.status === 'fulfilled') {
       const res = topArtistsRes.value;
       if (res.status === 429) {
-        topEndpointsNextAttemptAt = now + 60 * 60 * 1000;
+        const retryHeader = Number(res.headers.get('retry-after') || '3600');
+        topEndpointsNextAttemptAt =
+          now + Math.max(3600, retryHeader) * 1000;
       } else if (res.ok) {
         const data = (await res.json()) as { items?: SpotifyFullArtist[] };
         if (data.items && data.items.length > 0) {
@@ -290,11 +376,21 @@ async function refreshTopListsIfDue(authHeaders: HeadersInit) {
             imageUrl: a.images?.[1]?.url || a.images?.[0]?.url || null,
             artistUrl: a.external_urls.spotify,
           }));
+          updatedArtists = true;
         }
       }
     }
+
+    if (updatedTracks || updatedArtists) {
+      // Lock cache for 30 days (1 full month) and persist to disk
+      topEndpointsNextAttemptAt = now + ONE_MONTH_MS;
+      saveMonthlyDiskCache(cachedTopTracks, cachedTopArtists);
+    } else if (topEndpointsNextAttemptAt <= now) {
+      // Transient timeout or non-200: retry in 1 hour
+      topEndpointsNextAttemptAt = now + 60 * 60 * 1000;
+    }
   } catch {
-    // Keep cached top tracks and artists
+    topEndpointsNextAttemptAt = now + 60 * 60 * 1000;
   }
 }
 
@@ -303,6 +399,8 @@ export async function GET() {
     'Cache-Control': 'no-store, max-age=0',
   };
 
+  loadMonthlyDiskCacheIfPresent();
+
   if (
     !process.env.SPOTIFY_CLIENT_ID ||
     !process.env.SPOTIFY_CLIENT_SECRET ||
@@ -310,8 +408,10 @@ export async function GET() {
   ) {
     return NextResponse.json(
       {
-        configured: false,
+        configured: true,
         isPlaying: false,
+        ...cachedLastTrack,
+        fetchedAt: Date.now(),
         topTracks: cachedTopTracks,
         topArtists: cachedTopArtists,
         needsTopScope: false,
@@ -339,8 +439,8 @@ export async function GET() {
 
     const authHeaders = { Authorization: `Bearer ${accessToken}` };
 
-    // Trigger non-blocking top lists refresh if due (never blocks currently-playing)
-    void refreshTopListsIfDue(authHeaders);
+    // Only calls /v1/me/top/* once per month (30 days); 0ms no-op the rest of the month
+    await refreshTopListsMonthlyIfDue(authHeaders);
 
     let isPlaying = false;
     let activeTrack: typeof cachedLastTrack | null = null;
@@ -385,6 +485,7 @@ export async function GET() {
             playedAt: null,
           };
           cachedLastTrack = activeTrack;
+          saveMonthlyDiskCache(cachedTopTracks, cachedTopArtists, cachedLastTrack);
         }
       }
     } catch {
@@ -393,7 +494,7 @@ export async function GET() {
 
     // Only attempt recently-played if currently-playing had no item and cooldown allows
     if (!activeTrack && Date.now() >= recentEndpointNextAttemptAt) {
-      recentEndpointNextAttemptAt = Date.now() + 5 * 60 * 1000;
+      recentEndpointNextAttemptAt = Date.now() + 30 * 60 * 1000;
       try {
         const recentRes = await fetch(RECENTLY_PLAYED_ENDPOINT, {
           headers: authHeaders,
@@ -401,7 +502,11 @@ export async function GET() {
           signal: AbortSignal.timeout(2200),
         });
         if (recentRes.status === 429) {
-          recentEndpointNextAttemptAt = Date.now() + 60 * 60 * 1000;
+          const retryHeader = Number(
+            recentRes.headers.get('retry-after') || '3600'
+          );
+          recentEndpointNextAttemptAt =
+            Date.now() + Math.max(3600, retryHeader) * 1000;
         } else if (recentRes.ok) {
           const recentData = (await recentRes.json()) as {
             items?: Array<{ track?: SpotifyTrack; played_at?: string }>;
@@ -426,6 +531,11 @@ export async function GET() {
               playedAt: latest.played_at ?? null,
             };
             cachedLastTrack = activeTrack;
+            saveMonthlyDiskCache(
+              cachedTopTracks,
+              cachedTopArtists,
+              cachedLastTrack
+            );
           }
         }
       } catch {

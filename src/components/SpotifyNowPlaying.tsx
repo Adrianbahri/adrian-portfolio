@@ -187,7 +187,7 @@ export default function SpotifyNowPlaying() {
   }
 
   const isPlaying = Boolean(data?.isPlaying);
-  const hasTrack = Boolean(data?.configured && data?.title);
+  const hasTrack = Boolean(data?.title);
   const relativeTime = formatRelativePlayedAt(data?.playedAt);
   const href = hasTrack ? data?.songUrl || 'https://open.spotify.com' : undefined;
 

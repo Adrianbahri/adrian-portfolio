@@ -178,14 +178,16 @@ export async function GET() {
       const allRawRepos = (await reposRes.json()) as GitHubRepoRaw[];
       if (Array.isArray(allRawRepos) && allRawRepos.length > 0) {
         const rawRepos = allRawRepos.filter(isAdrianRepo);
-        totalRepos = rawRepos.length;
-        privateRepos = rawRepos.filter((r) => r.private).length;
-        publicRepos = totalRepos - privateRepos;
-        orgReposCount = rawRepos.filter(
-          (r) =>
-            r.owner?.login &&
-            r.owner.login.toLowerCase() !== GITHUB_USERNAME.toLowerCase()
-        ).length;
+        if (hasToken) {
+          totalRepos = rawRepos.length;
+          privateRepos = rawRepos.filter((r) => r.private).length;
+          publicRepos = totalRepos - privateRepos;
+          orgReposCount = rawRepos.filter(
+            (r) =>
+              r.owner?.login &&
+              r.owner.login.toLowerCase() !== GITHUB_USERNAME.toLowerCase()
+          ).length;
+        }
 
         const excluded = new Set([
           GITHUB_USERNAME.toLowerCase(),
