@@ -1,17 +1,46 @@
 'use client';
 
 import { motion } from '@/lib/motion';
-import { useState } from 'react';
-import { Mail, Globe, Camera, ArrowUpRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ArrowUpRight, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+
+type ContactField = 'name' | 'email' | 'subject' | 'message';
+type FieldErrors = Partial<Record<ContactField, string>>;
+
+function validateField(field: ContactField, value: string): string | undefined {
+  const trimmed = value.trim();
+  if (field === 'name') {
+    if (!trimmed) return 'Please enter your name.';
+    if (trimmed.length < 2) return 'Name must be at least 2 characters.';
+  }
+  if (field === 'email') {
+    if (!trimmed) return 'Please enter your email address.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      return 'Please enter a valid email address.';
+    }
+  }
+  if (field === 'subject') {
+    if (!trimmed) return 'Please enter a subject.';
+  }
+  if (field === 'message') {
+    if (!trimmed) return 'Please enter a message.';
+    if (trimmed.length < 10) return 'Message should be at least 10 characters.';
+  }
+  return undefined;
+}
 
 export default function ContactPage() {
   const { settings } = useSiteSettings();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Partial<Record<ContactField, boolean>>>({});
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +48,24 @@ export default function ContactPage() {
     message: '',
     website: '' // Honeypot field
   });
+
+  const handleFieldChange = (field: ContactField, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (touched[field]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: validateField(field, value),
+      }));
+    }
+  };
+
+  const handleFieldBlur = (field: ContactField) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, formData[field]),
+    }));
+  };
 
   const socials = [
     { 
@@ -45,6 +92,7 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     
     // 1. Honeypot check
     if (formData.website) {
@@ -53,12 +101,27 @@ export default function ContactPage() {
       return;
     }
 
-    // 2. Rate limiting check (12 hours cooldown)
+    // 2. Inline validation check with focusable error summary
+    const nextErrors: FieldErrors = {
+      name: validateField('name', formData.name),
+      email: validateField('email', formData.email),
+      subject: validateField('subject', formData.subject),
+      message: validateField('message', formData.message),
+    };
+    const hasErrors = Object.values(nextErrors).some(Boolean);
+    if (hasErrors) {
+      setTouched({ name: true, email: true, subject: true, message: true });
+      setFieldErrors(nextErrors);
+      requestAnimationFrame(() => errorSummaryRef.current?.focus());
+      return;
+    }
+
+    // 3. Rate limiting check (12 hours cooldown)
     const lastSent = localStorage.getItem('last_message_sent');
     const TWELVE_HOURS = 12 * 60 * 60 * 1000;
     if (lastSent && Date.now() - parseInt(lastSent) < TWELVE_HOURS) {
       setCooldown(true);
-      setTimeout(() => setCooldown(false), 3000);
+      setTimeout(() => setCooldown(false), 4000);
       return;
     }
 
@@ -68,10 +131,10 @@ export default function ContactPage() {
       const { error } = await supabase
         .from('messages')
         .insert([{
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim()
         }]);
 
       if (error) throw error;
@@ -86,17 +149,25 @@ export default function ContactPage() {
       }).catch(err => console.error('Email notification error:', err));
 
       setSuccess(true);
+      setFieldErrors({});
+      setTouched({});
       setFormData({ name: '', email: '', subject: '', message: '', website: '' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending message:', error);
-      alert(`Failed to send message: ${error.message || 'Unknown error'}`);
+      const message =
+        error instanceof Error ? error.message : 'Unable to send your message right now. Please try again.';
+      setSubmitError(message);
     } finally {
       setLoading(false);
     }
   };
 
+  const activeErrorEntries = (Object.entries(fieldErrors) as [ContactField, string | undefined][]).filter(
+    (entry): entry is [ContactField, string] => Boolean(entry[1])
+  );
+
   return (
-    <main className="min-h-screen bg-transparent relative overflow-hidden">
+    <main id="main-content" className="min-h-screen bg-transparent relative overflow-hidden">
       {/* Background Decorative Lines (Reference Style) */}
       <div className="pointer-events-none fixed inset-y-0 left-1/2 z-0 hidden w-[min(calc(100vw-2.5rem),64rem)] -translate-x-1/2 border-x border-on-dark/5 md:block"></div>
       
@@ -140,16 +211,42 @@ export default function ContactPage() {
                   </p>
                 </div>
                 <button 
+                  type="button"
                   onClick={() => setSuccess(false)}
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary hover:text-on-dark transition-colors"
+                  className="text-xs font-bold uppercase tracking-[0.2em] text-primary hover:text-on-dark transition-colors cursor-pointer min-h-[44px] px-4"
                 >
                   Send another message
                 </button>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleSubmit} noValidate className="space-y-8">
+                {/* Focusable Error Summary for Keyboard & Screen Reader Users */}
+                {activeErrorEntries.length > 0 && (
+                  <div
+                    ref={errorSummaryRef}
+                    role="alert"
+                    tabIndex={-1}
+                    aria-labelledby="contact-error-summary-title"
+                    className="p-4 bg-red-500/10 border border-red-500/30 rounded-[4px] space-y-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                  >
+                    <h2 id="contact-error-summary-title" className="text-xs font-mono font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
+                      <AlertCircle size={14} aria-hidden="true" />
+                      Please fix the following fields
+                    </h2>
+                    <ul className="space-y-1 text-xs text-red-500/90 list-disc pl-5">
+                      {activeErrorEntries.map(([field, msg]) => (
+                        <li key={field}>
+                          <a href={`#contact-${field}`} className="underline hover:text-red-400">
+                            {msg}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Honeypot - DO NOT FILL */}
-                <div className="absolute -left-[5000px] top-auto size-px overflow-hidden">
+                <div className="absolute -left-[5000px] top-auto size-px overflow-hidden" aria-hidden="true">
                   <label htmlFor="website">Website</label>
                   <input 
                     id="website" 
@@ -161,70 +258,142 @@ export default function ContactPage() {
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-body-muted font-mono">Name</label>
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-name" className="block text-[11px] font-bold uppercase tracking-[0.18em] text-body-muted font-mono">
+                      Name
+                    </label>
                     <input 
+                      id="contact-name"
                       required
                       type="text" 
+                      autoComplete="name"
                       placeholder="Your name"
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-surface-75/50 border border-border-subtle px-4 py-3 text-sm text-on-dark focus:border-primary/50 focus:outline-none transition-all rounded-[3px] placeholder:text-body-muted/40"
+                      onChange={(e) => handleFieldChange('name', e.target.value)}
+                      onBlur={() => handleFieldBlur('name')}
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? 'contact-name-error' : undefined}
+                      className={`w-full min-h-[44px] bg-surface-75/50 border px-4 py-3 text-sm text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:border-primary transition-all rounded-[3px] placeholder:text-body-muted/60 ${
+                        fieldErrors.name ? 'border-red-500/70' : 'border-border-subtle'
+                      }`}
                     />
+                    {fieldErrors.name && (
+                      <p id="contact-name-error" className="text-xs text-red-500 flex items-center gap-1.5">
+                        <AlertCircle size={12} aria-hidden="true" />
+                        {fieldErrors.name}
+                      </p>
+                    )}
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-body-muted font-mono">Email</label>
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-email" className="block text-[11px] font-bold uppercase tracking-[0.18em] text-body-muted font-mono">
+                      Email
+                    </label>
                     <input 
+                      id="contact-email"
                       required
                       type="email" 
+                      autoComplete="email"
                       placeholder="you@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-surface-75/50 border border-border-subtle px-4 py-3 text-sm text-on-dark focus:border-primary/50 focus:outline-none transition-all rounded-[3px] placeholder:text-body-muted/40"
+                      onChange={(e) => handleFieldChange('email', e.target.value)}
+                      onBlur={() => handleFieldBlur('email')}
+                      aria-invalid={Boolean(fieldErrors.email)}
+                      aria-describedby={fieldErrors.email ? 'contact-email-error' : undefined}
+                      className={`w-full min-h-[44px] bg-surface-75/50 border px-4 py-3 text-sm text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:border-primary transition-all rounded-[3px] placeholder:text-body-muted/60 ${
+                        fieldErrors.email ? 'border-red-500/70' : 'border-border-subtle'
+                      }`}
                     />
+                    {fieldErrors.email && (
+                      <p id="contact-email-error" className="text-xs text-red-500 flex items-center gap-1.5">
+                        <AlertCircle size={12} aria-hidden="true" />
+                        {fieldErrors.email}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-body-muted font-mono">Subject</label>
+                <div className="space-y-2.5">
+                  <label htmlFor="contact-subject" className="block text-[11px] font-bold uppercase tracking-[0.18em] text-body-muted font-mono">
+                    Subject
+                  </label>
                   <input 
+                    id="contact-subject"
                     required
                     type="text" 
                     placeholder="What should we talk about?"
                     value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    className="w-full bg-surface-75/50 border border-border-subtle px-4 py-3 text-sm text-on-dark focus:border-primary/50 focus:outline-none transition-all rounded-[3px] placeholder:text-body-muted/40"
+                    onChange={(e) => handleFieldChange('subject', e.target.value)}
+                    onBlur={() => handleFieldBlur('subject')}
+                    aria-invalid={Boolean(fieldErrors.subject)}
+                    aria-describedby={fieldErrors.subject ? 'contact-subject-error' : undefined}
+                    className={`w-full min-h-[44px] bg-surface-75/50 border px-4 py-3 text-sm text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:border-primary transition-all rounded-[3px] placeholder:text-body-muted/60 ${
+                      fieldErrors.subject ? 'border-red-500/70' : 'border-border-subtle'
+                    }`}
                   />
+                  {fieldErrors.subject && (
+                    <p id="contact-subject-error" className="text-xs text-red-500 flex items-center gap-1.5">
+                      <AlertCircle size={12} aria-hidden="true" />
+                      {fieldErrors.subject}
+                    </p>
+                  )}
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-body-muted font-mono">Message</label>
+                <div className="space-y-2.5">
+                  <label htmlFor="contact-message" className="block text-[11px] font-bold uppercase tracking-[0.18em] text-body-muted font-mono">
+                    Message
+                  </label>
                   <textarea 
+                    id="contact-message"
                     required
                     rows={6}
                     placeholder="Tell me a little about the project or the idea."
                     value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full bg-surface-75/50 border border-border-subtle px-4 py-4 text-sm text-on-dark focus:border-primary/50 focus:outline-none transition-all rounded-[3px] resize-none placeholder:text-body-muted/40"
+                    onChange={(e) => handleFieldChange('message', e.target.value)}
+                    onBlur={() => handleFieldBlur('message')}
+                    aria-invalid={Boolean(fieldErrors.message)}
+                    aria-describedby={fieldErrors.message ? 'contact-message-error' : undefined}
+                    className={`w-full bg-surface-75/50 border px-4 py-4 text-sm text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:border-primary transition-all rounded-[3px] resize-none placeholder:text-body-muted/60 ${
+                      fieldErrors.message ? 'border-red-500/70' : 'border-border-subtle'
+                    }`}
                   ></textarea>
+                  {fieldErrors.message && (
+                    <p id="contact-message-error" className="text-xs text-red-500 flex items-center gap-1.5">
+                      <AlertCircle size={12} aria-hidden="true" />
+                      {fieldErrors.message}
+                    </p>
+                  )}
                 </div>
+
+                {submitError && (
+                  <motion.div 
+                    role="alert"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3.5 bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-medium flex items-center gap-2 rounded-[3px]"
+                  >
+                    <AlertCircle size={14} aria-hidden="true" className="shrink-0" />
+                    <span>{submitError}</span>
+                  </motion.div>
+                )}
 
                 {cooldown && (
                   <motion.div 
+                    role="status"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest text-center rounded-[3px]"
+                    className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-medium text-center rounded-[3px]"
                   >
-                    Slow down! Please wait a few minutes before sending another message.
+                    Slow down! Please wait a little while before sending another message.
                   </motion.div>
                 )}
 
                 <button 
+                  type="submit"
                   disabled={loading || cooldown}
-                  className="bg-on-dark text-canvas px-8 py-3 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-primary transition-all rounded-[3px] flex items-center gap-3 disabled:opacity-50 group w-full justify-center"
+                  className="bg-on-dark text-canvas min-h-[46px] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all rounded-[3px] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer group w-full justify-center"
                 >
-                  {loading ? <Loader2 size={14} className="animate-spin" /> : cooldown ? 'Wait a bit...' : 'Send Message'}
-                  {!loading && !cooldown && <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
+                  {loading ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : cooldown ? 'Wait a bit...' : 'Send Message'}
+                  {!loading && !cooldown && <ArrowUpRight size={14} aria-hidden="true" className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
                 </button>
               </form>
             )}
@@ -239,32 +408,35 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <ul className="space-y-4">
-              {socials.map((social) => (
-                <li key={social.name}>
-                  <a 
-                    href={social.href} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="group flex items-center justify-between py-2 border-b border-border-subtle/50 text-sm text-body-muted hover:text-primary transition-colors"
-                  >
-                    <span className="font-mono text-[10px] uppercase tracking-widest">{social.name}</span>
-                    <span className="text-on-dark/40 group-hover:text-primary transition-colors font-sans">{social.label}</span>
-                  </a>
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {socials.map((social) => {
+                const isExternal = social.href.startsWith('http');
+                return (
+                  <li key={social.name}>
+                    <a 
+                      href={social.href} 
+                      target={isExternal ? '_blank' : undefined}
+                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                      className="group flex min-h-[44px] items-center justify-between py-2 border-b border-border-subtle/50 text-sm text-body-muted hover:text-primary transition-colors"
+                    >
+                      <span className="font-mono text-[11px] uppercase tracking-widest">{social.name}</span>
+                      <span className="text-on-dark/80 group-hover:text-primary transition-colors font-sans">{social.label}</span>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </aside>
 
         </section>
       </div>
 
-      <footer className="section-container border-t border-border-subtle py-12 flex justify-between items-center text-[10px] font-mono text-body-muted/40 uppercase tracking-widest">
+      <footer className="section-container border-t border-border-subtle py-12 flex flex-col sm:flex-row gap-4 justify-between items-center text-[11px] font-mono text-body-muted uppercase tracking-widest">
         <p>© 2026 DRIAN. ALL RIGHTS RESERVED.</p>
         <div className="flex gap-6">
-          <Link href="/blog" className="hover:text-on-dark">Blog</Link>
-          <Link href="/projects" className="hover:text-on-dark">Projects</Link>
-          <Link href="/contact" className="text-on-dark">Contact</Link>
+          <Link href="/blog" className="hover:text-on-dark transition-colors">Blog</Link>
+          <Link href="/projects" className="hover:text-on-dark transition-colors">Projects</Link>
+          <Link href="/contact" aria-current="page" className="text-on-dark">Contact</Link>
         </div>
       </footer>
     </main>

@@ -309,6 +309,9 @@ export default function RootLayout({
         />
       </head>
       <body className={cn(inter.variable, dmMono.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] font-sans antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         <ProjectModeProvider>
           <Suspense fallback={null}>
             <AuthRecoveryHandler />

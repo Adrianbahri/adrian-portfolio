@@ -314,7 +314,7 @@ CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated U
 
           <div className="flex items-center gap-4 pt-2">
             <a 
-              href="/admin/sync"
+              href="/setting/sync"
               className="bg-[#3ecf8e] text-[#171717] px-6 py-2.5 rounded-md text-[13px] font-semibold hover:bg-[#24b47e] transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-[#3ecf8e]/10"
             >
               Go to Sync Page

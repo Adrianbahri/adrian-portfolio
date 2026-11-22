@@ -39,12 +39,12 @@ interface AdminNavLink {
 }
 
 const CREATIVE_ROUTES = [
-  '/admin/designs',
-  '/admin/magazines',
-  '/admin/videos',
-  '/admin/gallery',
-  '/admin/growth',
-  '/admin/creative',
+  '/setting/designs',
+  '/setting/magazines',
+  '/setting/videos',
+  '/setting/gallery',
+  '/setting/growth',
+  '/setting/creative',
 ];
 
 function isCreativePath(pathname: string) {
@@ -96,9 +96,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       // ignore
     }
     if (nextMode === 'creative') {
-      router.push('/admin/designs');
+      router.push('/setting/designs');
     } else {
-      router.push('/admin');
+      router.push('/setting');
     }
   };
 
@@ -108,31 +108,31 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const devLinks: AdminNavLink[] = [
-    { name: 'Overview & Bio CMS', href: '/admin', icon: User, exact: true },
+    { name: 'Overview & Bio CMS', href: '/setting', icon: User, exact: true },
     {
       name: 'Technical Projects',
-      href: '/admin/projects?type=developer',
-      matchPath: '/admin/projects',
+      href: '/setting/projects?type=developer',
+      matchPath: '/setting/projects',
       icon: FolderKanban,
     },
-    { name: 'Writing / Articles', href: '/admin/articles', icon: ScrollText },
-    { name: 'Work Experience', href: '/admin/experience', icon: Briefcase },
-    { name: 'Achievements', href: '/admin/achievements', icon: Trophy },
+    { name: 'Writing / Articles', href: '/setting/articles', icon: ScrollText },
+    { name: 'Work Experience', href: '/setting/experience', icon: Briefcase },
+    { name: 'Achievements', href: '/setting/achievements', icon: Trophy },
     {
       name: 'Activities & Org',
-      href: '/admin/activities',
+      href: '/setting/activities',
       icon: Users,
     },
-    { name: 'Inbox Messages', href: '/admin/messages', icon: Inbox },
+    { name: 'Inbox Messages', href: '/setting/messages', icon: Inbox },
   ];
 
   const creativeLinks: AdminNavLink[] = [
-    { name: 'Design Projects', href: '/admin/designs', icon: Palette },
-    { name: 'Print & Infografis', href: '/admin/magazines', icon: BookOpen },
-    { name: 'Video & Motion', href: '/admin/videos', icon: Video },
-    { name: 'Photography (HQ)', href: '/admin/gallery', icon: ImageIcon },
-    { name: 'Social Media Growth', href: '/admin/growth', icon: TrendingUp },
-    { name: 'Creative Spotlight', href: '/admin/creative', icon: Sparkles },
+    { name: 'Design Projects', href: '/setting/designs', icon: Palette },
+    { name: 'Print & Infografis', href: '/setting/magazines', icon: BookOpen },
+    { name: 'Video & Motion', href: '/setting/videos', icon: Video },
+    { name: 'Photography (HQ)', href: '/setting/gallery', icon: ImageIcon },
+    { name: 'Social Media Growth', href: '/setting/growth', icon: TrendingUp },
+    { name: 'Creative Spotlight', href: '/setting/creative', icon: Sparkles },
   ];
 
   const activeLinks = mode === 'creative' ? creativeLinks : devLinks;
@@ -264,10 +264,10 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             System
           </p>
           <Link
-            href="/admin/sync"
+            href="/setting/sync"
             className={cn(
               'flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[7px] border transition-all',
-              pathname.startsWith('/admin/sync')
+              pathname.startsWith('/setting/sync')
                 ? accentBg
                 : 'border-transparent text-[#9a9a9a] hover:text-[#f1eee9] hover:bg-[#1f1f1f]'
             )}
@@ -275,7 +275,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             <RefreshCw
               size={14}
               className={
-                pathname.startsWith('/admin/sync')
+                pathname.startsWith('/setting/sync')
                   ? accentText
                   : 'text-[#707070]'
               }

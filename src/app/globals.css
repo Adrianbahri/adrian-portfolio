@@ -54,7 +54,7 @@
     --border-subtle: #e8e9ed;
     --border-strong: #d5d7de;
     --on-dark: #121212;
-    --body-muted: #64748b;
+    --body-muted: #475569;
     --grid-line: rgba(0, 0, 0, 0.035);
     --grid-line-strong: rgba(0, 0, 0, 0.07);
     --shadow-main: rgba(0, 0, 0, 0.04);
@@ -84,6 +84,17 @@
     @apply bg-canvas text-on-dark antialiased font-sans;
     transition: background-color 0.3s ease, color 0.3s ease;
     font-feature-settings: "ss01", "ss02", "cv01", "cv11";
+  }
+
+  /* Accessible keyboard focus indicator (WCAG 2.2 AA) */
+  :is(a, button, input, textarea, select, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* Remove 300ms tap delay on mobile touch devices */
+  a, button, [role="button"] {
+    touch-action: manipulation;
   }
 }
 
@@ -182,6 +193,44 @@
 /* Native smooth scroll (Lenis removed for lightweight performance) */
 html {
   scroll-behavior: smooth;
+}
+
+/* Skip to main content link (keyboard & screen reader accessibility) */
+.skip-to-content {
+  position: fixed;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  transition: top 0.15s ease;
+}
+.skip-to-content:focus-visible {
+  top: 16px;
+  outline: 2px solid var(--on-dark);
+  outline-offset: 2px;
+}
+
+/* Respect user reduced motion preferences (WCAG 2.2) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Custom Scrollbar Utility */

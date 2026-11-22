@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
@@ -34,6 +34,8 @@ export default function ShahriyarDetailShell({
 }: ShahriyarDetailShellProps) {
   const router = useRouter();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const pdfOpenRef = useRef(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
@@ -44,6 +46,33 @@ export default function ShahriyarDetailShell({
     router.prefetch('/');
     signalPortalRouteReady(window.location.pathname);
   }, [router, backHref]);
+
+  // Track reading scroll progress for long case studies & articles
+  useEffect(() => {
+    let rafId = 0;
+    const updateProgress = () => {
+      rafId = 0;
+      const scrollTop = window.scrollY;
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) {
+        setScrollProgress(0);
+        return;
+      }
+      setScrollProgress(Math.min(1, Math.max(0, scrollTop / maxScroll)));
+    };
+    const onScroll = () => {
+      if (!rafId) rafId = window.requestAnimationFrame(updateProgress);
+    };
+    updateProgress();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
 
   const switchTheme = (
     next: 'dark' | 'light',
@@ -59,13 +88,30 @@ export default function ShahriyarDetailShell({
   };
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        navigateWithCirclePortal(backHref, router);
-      }
+    const onPdfState = (e: Event) => {
+      const detail = (e as CustomEvent<{ open?: boolean }>).detail;
+      pdfOpenRef.current = Boolean(detail?.open);
     };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || pdfOpenRef.current) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      navigateWithCirclePortal(backHref, router);
+    };
+    window.addEventListener('pdf-reader-state', onPdfState);
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('pdf-reader-state', onPdfState);
+      window.removeEventListener('keydown', onKeyDown);
+    };
   }, [router, backHref]);
 
   return (
@@ -103,7 +149,8 @@ export default function ShahriyarDetailShell({
               <span>Back</span>
             </Link>
 
-            <div
+            <nav
+              aria-label="Breadcrumb"
               className="hidden sm:flex min-w-0 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em]"
               style={{ color: 'var(--art-ink-muted)' }}
             >
@@ -114,11 +161,11 @@ export default function ShahriyarDetailShell({
                   e.preventDefault();
                   navigateWithCirclePortal('/', router, e);
                 }}
-                className="shrink-0 opacity-75 hover:opacity-100"
+                className="shrink-0 opacity-75 hover:opacity-100 transition-opacity"
               >
                 INDEX
               </Link>
-              <span className="shrink-0">/</span>
+              <span className="shrink-0" aria-hidden="true">/</span>
               <Link
                 href={backHref}
                 onClick={(e) => {
@@ -126,18 +173,19 @@ export default function ShahriyarDetailShell({
                   e.preventDefault();
                   navigateWithCirclePortal(backHref, router, e);
                 }}
-                className="shrink-0 opacity-75 hover:opacity-100"
+                className="shrink-0 opacity-75 hover:opacity-100 transition-opacity"
               >
                 {sectionName}
               </Link>
-              <span className="shrink-0">/</span>
+              <span className="shrink-0" aria-hidden="true">/</span>
               <span
+                aria-current="page"
                 className="truncate"
                 style={{ color: 'var(--art-ink)' }}
               >
                 {breadcrumbTitle}
               </span>
-            </div>
+            </nav>
 
             <div className="flex shrink-0 items-center gap-3">
               {/* Segmented Theme Toggle */}
@@ -165,7 +213,7 @@ export default function ShahriyarDetailShell({
                   aria-checked={theme === 'light'}
                   aria-label="Light mode"
                   onClick={(e) => switchTheme('light', e)}
-                  className="relative z-10 flex h-full w-1/2 items-center justify-center"
+                  className="relative z-10 flex h-full w-1/2 items-center justify-center cursor-pointer"
                   style={{
                     color:
                       theme === 'light'
@@ -173,7 +221,7 @@ export default function ShahriyarDetailShell({
                         : 'var(--art-ink-muted)',
                   }}
                 >
-                  <Sun size={12} />
+                  <Sun size={12} aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -181,7 +229,7 @@ export default function ShahriyarDetailShell({
                   aria-checked={theme === 'dark'}
                   aria-label="Dark mode"
                   onClick={(e) => switchTheme('dark', e)}
-                  className="relative z-10 flex h-full w-1/2 items-center justify-center"
+                  className="relative z-10 flex h-full w-1/2 items-center justify-center cursor-pointer"
                   style={{
                     color:
                       theme === 'dark'
@@ -189,7 +237,7 @@ export default function ShahriyarDetailShell({
                         : 'var(--art-ink-muted)',
                   }}
                 >
-                  <Moon size={12} />
+                  <Moon size={12} aria-hidden="true" />
                 </button>
               </div>
 
@@ -205,10 +253,25 @@ export default function ShahriyarDetailShell({
               </span>
             </div>
           </div>
+
+          {/* Reading Progress Indicator */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left"
+            style={{
+              backgroundColor: 'var(--art-marker)',
+              transform: `scaleX(${scrollProgress})`,
+              opacity: scrollProgress > 0.01 ? 0.9 : 0,
+              transition: 'opacity 150ms ease',
+            }}
+          />
         </header>
 
         {/* 2-Column Editorial Detail Layout */}
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 pb-16 pt-6 sm:px-8 sm:pb-24 sm:pt-10 md:flex-row md:gap-14 lg:gap-20">
+        <main
+          id="main-content"
+          className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 pb-16 pt-6 sm:px-8 sm:pb-24 sm:pt-10 md:flex-row md:gap-14 lg:gap-20"
+        >
           {/* Left Sticky Metadata Aside (248px) */}
           <aside className="md:sticky md:top-24 md:w-[248px] md:self-start">
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 md:grid-cols-1 md:gap-y-5">
@@ -233,7 +296,7 @@ export default function ShahriyarDetailShell({
 
           {/* Right Reading / Case Study Column */}
           <article className="min-w-0 max-w-[680px] flex-1">{children}</article>
-        </div>
+        </main>
       </div>
     </div>
   );

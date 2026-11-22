@@ -6,8 +6,8 @@
   --art-paper: #f1eee9;
   --art-paper-raised: #f8f6f2;
   --art-ink: #171717;
-  --art-ink-soft: #645d53;
-  --art-ink-muted: #737373;
+  --art-ink-soft: #595249;
+  --art-ink-muted: #595959;
   --art-line: #e5e5e5;
   --art-hairline: rgba(26, 25, 23, 0.08);
   --art-hairline-strong: rgba(26, 25, 23, 0.18);
@@ -333,5 +333,40 @@ html[data-agent-building="true"] [data-agent-slot][data-agent-built="true"] {
   .art-custom-cursor-active,
   .art-custom-cursor-active * {
     cursor: none !important;
+  }
+}
+
+/* Scoped high-contrast focus ring inside .dev-shell */
+.dev-shell :is(a, button, input, textarea, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--art-marker);
+  outline-offset: 2px;
+}
+
+/* Keep the scissors affordance visible on touch / coarse-pointer devices where hover does not exist */
+@media (hover: none), (pointer: coarse) {
+  .dev-scissors-handle {
+    opacity: 0.92 !important;
+  }
+}
+
+/* Respect prefers-reduced-motion inside the editorial shell */
+@media (prefers-reduced-motion: reduce) {
+  .art-rule-dashed::after,
+  .dev-scaffold-card::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .dev-award-card:hover,
+  .dev-resume-book-scene:hover .dev-resume-book {
+    transform: none !important;
+  }
+  html[data-agent-building="true"] [data-agent-slot] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

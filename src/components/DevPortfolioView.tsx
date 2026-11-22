@@ -1225,12 +1225,12 @@ export default function DevPortfolioView({
         aria-checked={theme === 'light'}
         aria-label="Light mode"
         onClick={(e) => switchTheme('light', e)}
-        className="relative z-10 flex h-full w-1/2 items-center justify-center transition-opacity"
+        className="relative z-10 flex h-full w-1/2 items-center justify-center transition-opacity cursor-pointer"
         style={{
           color: theme === 'light' ? 'var(--art-ink)' : 'var(--art-ink-muted)',
         }}
       >
-        <Sun size={12} />
+        <Sun size={12} aria-hidden="true" />
       </button>
       <button
         type="button"
@@ -1238,12 +1238,12 @@ export default function DevPortfolioView({
         aria-checked={theme === 'dark'}
         aria-label="Dark mode"
         onClick={(e) => switchTheme('dark', e)}
-        className="relative z-10 flex h-full w-1/2 items-center justify-center transition-opacity"
+        className="relative z-10 flex h-full w-1/2 items-center justify-center transition-opacity cursor-pointer"
         style={{
           color: theme === 'dark' ? 'var(--art-ink)' : 'var(--art-ink-muted)',
         }}
       >
-        <Moon size={12} />
+        <Moon size={12} aria-hidden="true" />
       </button>
     </div>
   );
@@ -1258,31 +1258,34 @@ export default function DevPortfolioView({
     >
       <div className="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between px-5 sm:px-8">
         <button
+          type="button"
           onClick={() => navigateTo('home')}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-colors cursor-pointer"
           style={{
             backgroundColor: 'var(--art-tile)',
             color: 'var(--art-ink)',
             border: '1px solid var(--art-line)',
           }}
         >
-          <ArrowLeft size={13} />
+          <ArrowLeft size={13} aria-hidden="true" />
           <span>Back</span>
         </button>
 
-        <div
+        <nav
+          aria-label="Breadcrumb"
           className="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em]"
           style={{ color: 'var(--art-ink-muted)' }}
         >
           <button
+            type="button"
             onClick={() => navigateTo('home')}
-            className="opacity-75 transition-opacity hover:opacity-100"
+            className="opacity-75 transition-opacity hover:opacity-100 cursor-pointer"
           >
             INDEX
           </button>
-          <span>/</span>
-          <span style={{ color: 'var(--art-ink)' }}>{sectionLabel}</span>
-        </div>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" style={{ color: 'var(--art-ink)' }}>{sectionLabel}</span>
+        </nav>
 
         <div className="flex items-center gap-3">
           <span
@@ -1315,6 +1318,7 @@ export default function DevPortfolioView({
           ================================================================== */}
           {activeView === 'home' && (
             <main
+              id="main-content"
               key="dev-home"
               className="mx-auto max-w-[560px] px-4 pb-16 pt-6 sm:px-0 sm:pb-20 sm:pt-[14vh]"
             >
@@ -1621,9 +1625,9 @@ export default function DevPortfolioView({
                       color: 'var(--art-marker-text)',
                       border: '1px solid var(--art-marker)',
                     }}
-                    className="pointer-events-none absolute top-1/2 flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-opacity duration-150"
+                    className="dev-scissors-handle pointer-events-none absolute top-1/2 flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-opacity duration-150"
                   >
-                    <Scissors size={13} />
+                    <Scissors size={13} aria-hidden="true" />
                   </div>
                 </div>
               ) : (
@@ -1697,7 +1701,7 @@ export default function DevPortfolioView({
                             e.stopPropagation();
                             flipDeckCard(-1, 1);
                           }}
-                          className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] opacity-0 transition-all duration-200 group-hover:opacity-100 hover:text-[var(--art-marker-text)]"
+                          className="flex h-6 w-6 items-center justify-center rounded-[5px] opacity-100 sm:opacity-0 transition-all duration-200 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 hover:text-[var(--art-marker-text)] cursor-pointer"
                           style={{
                             backgroundColor: 'var(--art-paper)',
                             border: '1px solid var(--art-line)',
@@ -1716,7 +1720,7 @@ export default function DevPortfolioView({
                             e.stopPropagation();
                             flipDeckCard(1, -1);
                           }}
-                          className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] opacity-0 transition-all duration-200 group-hover:opacity-100 hover:text-[var(--art-marker-text)]"
+                          className="flex h-6 w-6 items-center justify-center rounded-[5px] opacity-100 sm:opacity-0 transition-all duration-200 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 hover:text-[var(--art-marker-text)] cursor-pointer"
                           style={{
                             backgroundColor: 'var(--art-paper)',
                             border: '1px solid var(--art-line)',

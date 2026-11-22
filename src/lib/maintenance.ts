@@ -32,7 +32,7 @@ export function isMaintenanceModeForHost(host?: string | null): boolean {
  */
 export const MAINTENANCE_BYPASS_PREFIXES = [
   '/maintenance',
-  '/admin',
+  '/setting',
   '/login',
   '/reset-password',
   '/api',

@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: ['/', '/art', '/projects', '/blog', '/api/assets/'],
-        disallow: ['/admin', '/login', '/reset-password', '/maintenance'],
+        disallow: ['/setting', '/admin', '/login', '/reset-password', '/maintenance'],
       },
       {
         userAgent: [
@@ -32,7 +32,7 @@ export default function robots(): MetadataRoute.Robots {
           'Applebot-Extended',
         ],
         allow: ['/', '/art', '/projects', '/blog', '/llms.txt', '/llms-full.txt', '/api/assets/'],
-        disallow: ['/admin', '/login', '/reset-password', '/maintenance'],
+        disallow: ['/setting', '/admin', '/login', '/reset-password', '/maintenance'],
       },
     ],
     host: baseUrl,

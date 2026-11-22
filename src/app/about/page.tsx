@@ -59,7 +59,7 @@ export default function AboutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-transparent pb-24 relative">
+    <main id="main-content" className="min-h-screen bg-transparent pb-24 relative">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

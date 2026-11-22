@@ -29,8 +29,8 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/art', request.url))
   }
 
-  // 3. Only run Supabase auth checks for /admin and /login
-  const isProtectedRoute = pathname.startsWith('/admin') || pathname === '/login'
+  // 3. Only run Supabase auth checks for /setting and /login
+  const isProtectedRoute = pathname.startsWith('/setting') || pathname === '/login'
   if (!isProtectedRoute) {
     return NextResponse.next()
   }
@@ -39,7 +39,7 @@ export default async function proxy(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    if (pathname.startsWith('/admin')) {
+    if (pathname.startsWith('/setting')) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
     return NextResponse.next()
@@ -99,17 +99,17 @@ export default async function proxy(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Protect /admin routes
-  if (pathname.startsWith('/admin')) {
+  // Protect /setting routes
+  if (pathname.startsWith('/setting')) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
-  // Redirect /login to /admin if already logged in
+  // Redirect /login to /setting if already logged in
   if (pathname === '/login') {
     if (session) {
-      return NextResponse.redirect(new URL('/admin', request.url))
+      return NextResponse.redirect(new URL('/setting', request.url))
     }
   }
 
