@@ -1404,61 +1404,74 @@ export default function DevPortfolioView({
                 </div>
               </header>
 
-              {/* Editorial Dev Bio */}
+              {/* Editorial Dev Bio (Fully editable from /setting Bio Narrative) */}
+              {(() => {
+                const heroGreeting =
+                  settings.hero_greeting || "Hey there, I'm Adrian Bahri (Dri4n)";
+                const heroSubtitle =
+                  settings.hero_subtitle ||
+                  'a creative technologist & full-stack developer based in';
+                const heroStrike =
+                  settings.hero_strike !== undefined
+                    ? settings.hero_strike
+                    : 'labs, late-night commits,';
+                const heroCity = settings.hero_city || 'Makassar';
+                const heroBio1 =
+                  settings.hero_bio_1 ||
+                  'By day I build digital systems & data workflows at [blue:PK Identitas Unhas], and modernize web platforms as an intern at [orange:UKK Sains Unhas].';
+                const heroBio2 =
+                  settings.hero_bio_2 ||
+                  'I love crafting fast, expressive [pink:full-stack web apps] with Next.js, TypeScript, and Bun + SQLite.';
+
+                let markCounter = 0;
+                const renderMarkedBio = (raw: string) => {
+                  const parts = raw.split(/(\[(?:blue|orange|pink|green|yellow):[^\]]+\])/g);
+                  return parts.map((part, idx) => {
+                    const m = part.match(/^\[(blue|orange|pink|green|yellow):([^\]]+)\]$/);
+                    if (!m) return <span key={idx}>{part}</span>;
+                    markCounter += 1;
+                    const num = markCounter;
+                    return (
+                      <span key={idx}>
+                        <span className={`art-mark art-mark-${m[1]}`}>{m[2]}</span>
+                        {bioExpanded && (
+                          <sup
+                            className="ml-0.5 font-mono text-[10px]"
+                            style={{ color: 'var(--art-marker-text)' }}
+                          >
+                            {num}
+                          </sup>
+                        )}
+                      </span>
+                    );
+                  });
+                };
+
+                return (
               <section className="space-y-3.5 text-[14px] leading-[22px] sm:space-y-4 sm:text-[15px] sm:leading-[24px]">
                 <div>
                   <h1 className="font-normal" style={{ color: 'var(--art-ink)' }}>
-                    Hey there, I&apos;m Adrian Bahri (Dri4n)
+                    {heroGreeting}
                   </h1>
                   <p style={{ color: 'var(--art-ink-soft)' }}>
-                    a creative technologist &amp; full-stack developer based in{' '}
-                    {bioExpanded && (
+                    {heroSubtitle}{' '}
+                    {bioExpanded && heroStrike && (
                       <span className="mr-1 line-through opacity-55">
-                        labs, late-night commits,
+                        {heroStrike}
                       </span>
                     )}
-                    Makassar
+                    {heroCity}
                   </p>
                 </div>
 
-                <p style={{ color: 'var(--art-ink-soft)' }}>
-                  By day I build digital systems &amp; data workflows at{' '}
-                  <span className="art-mark art-mark-blue">PK Identitas Unhas</span>
-                  {bioExpanded && (
-                    <sup
-                      className="ml-0.5 font-mono text-[10px]"
-                      style={{ color: 'var(--art-marker-text)' }}
-                    >
-                      1
-                    </sup>
-                  )}
-                  , and modernize web platforms as an intern at{' '}
-                  <span className="art-mark art-mark-orange">UKK Sains Unhas</span>
-                  {bioExpanded && (
-                    <sup
-                      className="ml-0.5 font-mono text-[10px]"
-                      style={{ color: 'var(--art-marker-text)' }}
-                    >
-                      2
-                    </sup>
-                  )}
-                  .
-                </p>
+                {heroBio1 && (
+                  <p style={{ color: 'var(--art-ink-soft)' }}>
+                    {renderMarkedBio(heroBio1)}
+                  </p>
+                )}
 
                 <p style={{ color: 'var(--art-ink-soft)' }}>
-                  I love crafting fast, expressive{' '}
-                  <span className="art-mark art-mark-pink">
-                    full-stack web apps
-                  </span>
-                  {bioExpanded && (
-                    <sup
-                      className="ml-0.5 font-mono text-[10px]"
-                      style={{ color: 'var(--art-marker-text)' }}
-                    >
-                      3
-                    </sup>
-                  )}{' '}
-                  with Next.js, TypeScript, and Supabase. Currently:{' '}
+                  {renderMarkedBio(heroBio2)} Currently:{' '}
                   <span style={{ color: 'var(--art-ink)' }}>{statusText}</span>.
                 </p>
 
@@ -1554,6 +1567,8 @@ export default function DevPortfolioView({
                   </div>
                 </div>
               </section>
+                );
+              })()}
 
               {/* Interactive Drag-Along-the-Line Bio Cut (28 individual falling dashes!) */}
               {!bioExpanded ? (
