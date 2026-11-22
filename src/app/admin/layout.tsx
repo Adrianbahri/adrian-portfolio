@@ -4,27 +4,62 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
-  LayoutGrid,
   FolderKanban,
   ScrollText,
   Briefcase,
   RefreshCw,
   LogOut,
   Globe,
-  Settings,
   User,
-  Search,
   Users,
   Image as ImageIcon,
   Video,
-  Inbox
+  Inbox,
+  Trophy,
+  Palette,
+  BookOpen,
+  TrendingUp,
+  Sparkles,
+  Code2,
+  Menu,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
+type AdminMode = 'dev' | 'creative';
+
+interface AdminNavLink {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  exact?: boolean;
+  matchPath?: string;
+}
+
+const CREATIVE_ROUTES = [
+  '/admin/designs',
+  '/admin/magazines',
+  '/admin/videos',
+  '/admin/gallery',
+  '/admin/growth',
+  '/admin/creative',
+];
+
+function isCreativePath(pathname: string) {
+  return CREATIVE_ROUTES.some((p) => pathname.startsWith(p));
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="h-screen bg-[#1c1c1c] flex items-center justify-center text-[#707070]">Loading Admin...</div>}>
+    <Suspense
+      fallback={
+        <div className="h-screen bg-[#121212] flex items-center justify-center font-mono text-xs uppercase tracking-widest text-[#707070]">
+          Loading Studio Admin...
+        </div>
+      }
+    >
       <AdminLayoutContent>{children}</AdminLayoutContent>
     </Suspense>
   );
@@ -34,165 +69,310 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const [mode, setMode] = useState<AdminMode>(() =>
+    isCreativePath(pathname) ? 'creative' : 'dev'
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Sync mode automatically when navigating between dev & creative routes
+  useEffect(() => {
+    const inferred: AdminMode = isCreativePath(pathname) ? 'creative' : 'dev';
+    setMode(inferred);
+    try {
+      localStorage.setItem('dri4n-admin-mode', inferred);
+    } catch {
+      // ignore storage errors
+    }
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  const switchMode = (nextMode: AdminMode) => {
+    if (nextMode === mode) return;
+    setMode(nextMode);
+    try {
+      localStorage.setItem('dri4n-admin-mode', nextMode);
+    } catch {
+      // ignore
+    }
+    if (nextMode === 'creative') {
+      router.push('/admin/designs');
+    } else {
+      router.push('/admin');
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/';
   };
 
-  const [isProjectsOpen, setIsProjectsOpen] = useState(
-    pathname.startsWith('/admin/projects') || 
-    ['/admin/gallery', '/admin/videos', '/admin/designs', '/admin/creative', '/admin/magazines'].some(path => pathname.startsWith(path))
-  );
-  const [isActivitiesOpen, setIsActivitiesOpen] = useState(pathname.startsWith('/admin/activities'));
-
-  const links = [
-    { name: 'Universal CMS', href: '/admin', icon: User },
+  const devLinks: AdminNavLink[] = [
+    { name: 'Overview & Bio CMS', href: '/admin', icon: User, exact: true },
     {
-      name: 'Projects',
-      href: '/admin/projects',
+      name: 'Technical Projects',
+      href: '/admin/projects?type=developer',
+      matchPath: '/admin/projects',
       icon: FolderKanban,
-      submenu: [
-        { name: 'Technical', href: '/admin/projects?type=developer' },
-        { name: 'Creative Spotlight', href: '/admin/creative' },
-        { name: 'Gallery', href: '/admin/gallery' },
-        { name: 'Videos', href: '/admin/videos' },
-        { name: 'Designs', href: '/admin/designs' },
-        { name: 'Magazines & Print', href: '/admin/magazines' },
-      ]
     },
-    { name: 'Articles', href: '/admin/articles', icon: ScrollText },
-    { name: 'Experience', href: '/admin/experience', icon: Briefcase },
+    { name: 'Writing / Articles', href: '/admin/articles', icon: ScrollText },
+    { name: 'Work Experience', href: '/admin/experience', icon: Briefcase },
+    { name: 'Achievements', href: '/admin/achievements', icon: Trophy },
     {
-      name: 'Activities',
+      name: 'Activities & Org',
       href: '/admin/activities',
       icon: Users,
-      submenu: [
-        { name: 'Organizations', href: '/admin/activities?type=organizations' },
-        { name: 'Volunteering', href: '/admin/activities?type=volunteering' },
-      ]
     },
-    { name: 'Messages', href: '/admin/messages', icon: Inbox },
-    { name: 'Sync Database', href: '/admin/sync', icon: RefreshCw },
+    { name: 'Inbox Messages', href: '/admin/messages', icon: Inbox },
   ];
 
-  return (
-    <div className="dark flex h-screen bg-[#1c1c1c] text-white overflow-hidden font-sans selection:bg-[#3ecf8e]/30 selection:text-[#3ecf8e]">
-      {/* Sidebar - Supabase Canvas Night */}
-      <aside className="w-64 flex-shrink-0 bg-[#1c1c1c] border-r border-[#2e2e2e] flex flex-col">
-        <div className="p-4">
-          <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border border-[#2e2e2e] bg-[#202020] hover:bg-[#252525] transition-all text-left group">
-            <div className="w-5 h-5 rounded bg-[#3ecf8e] flex items-center justify-center text-[#171717] font-bold text-[10px]">A</div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[12px] font-medium leading-tight text-[#ededed] truncate">Adrianbahri</span>
-              <span className="text-[10px] text-[#707070] leading-tight truncate">Default Project</span>
+  const creativeLinks: AdminNavLink[] = [
+    { name: 'Design Projects', href: '/admin/designs', icon: Palette },
+    { name: 'Print & Infografis', href: '/admin/magazines', icon: BookOpen },
+    { name: 'Video & Motion', href: '/admin/videos', icon: Video },
+    { name: 'Photography (HQ)', href: '/admin/gallery', icon: ImageIcon },
+    { name: 'Social Media Growth', href: '/admin/growth', icon: TrendingUp },
+    { name: 'Creative Spotlight', href: '/admin/creative', icon: Sparkles },
+  ];
+
+  const activeLinks = mode === 'creative' ? creativeLinks : devLinks;
+  const accentText = mode === 'creative' ? 'text-[#f59e0b]' : 'text-[#ff5a3d]';
+  const accentBg =
+    mode === 'creative'
+      ? 'bg-[#f59e0b]/12 text-[#fbbf24] border-[#f59e0b]/30'
+      : 'bg-[#ff5a3d]/12 text-[#ff5a3d] border-[#ff5a3d]/30';
+
+  const currentFullUrl = `${pathname}${
+    searchParams.toString() ? '?' + searchParams.toString() : ''
+  }`;
+
+  const renderSidebarInner = () => (
+    <>
+      {/* Brand + Dual Mode Switcher */}
+      <div className="p-4 border-b border-[#262626] space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className={cn(
+                'w-6 h-6 rounded-[6px] flex items-center justify-center font-mono font-bold text-[11px] shrink-0 transition-colors',
+                mode === 'creative'
+                  ? 'bg-[#f59e0b] text-[#121212]'
+                  : 'bg-[#ff5a3d] text-white'
+              )}
+            >
+              D
             </div>
-            <Settings size={12} className="text-[#707070] opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
-        </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[12.5px] font-semibold tracking-tight text-[#f1eee9] truncate">
+                DRI4N STUDIO
+              </span>
+              <span className="font-mono text-[9.5px] uppercase tracking-wider text-[#737373] truncate">
+                {mode === 'creative' ? 'dri4n.com/art' : 'dri4n.com'}
+              </span>
+            </div>
+          </div>
 
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar">
-          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#707070]">Project</p>
-          {links.map((link: any) => {
-            const Icon = link.icon;
-            const hasSubmenu = !!link.submenu;
-            const isActive = hasSubmenu 
-              ? (link.name === 'Projects' ? isProjectsOpen : isActivitiesOpen)
-              : (link.href === '/admin' ? pathname === '/admin' : pathname.startsWith(link.href));
-            const isOpen = link.name === 'Projects' ? isProjectsOpen : (link.name === 'Activities' ? isActivitiesOpen : false);
-            const setIsOpen = link.name === 'Projects' ? setIsProjectsOpen : (link.name === 'Activities' ? setIsActivitiesOpen : () => {});
-
-            return (
-              <div key={link.href} className="flex flex-col">
-                <div className="flex items-center group">
-                  <Link
-                    href={link.href}
-                    onClick={(e) => {
-                      if (hasSubmenu) {
-                        setIsOpen(!isOpen);
-                      }
-                    }}
-                    className={cn(
-                      "flex-1 flex items-center gap-2.5 px-3 py-1.5 text-[13px] transition-all rounded-md",
-                      isActive && !hasSubmenu
-                        ? "bg-[#2e2e2e] text-[#ededed]"
-                        : "text-[#9a9a9a] hover:text-[#ededed] hover:bg-[#252525]"
-                    )}
-                  >
-                    <Icon size={14} className={isActive ? "text-[#3ecf8e]" : "text-[#707070] group-hover:text-[#ededed] transition-colors"} />
-                    <span>{link.name}</span>
-                  </Link>
-                  {hasSubmenu && (
-                    <button
-                      onClick={() => setIsOpen(!isOpen)}
-                      className="p-1.5 text-[#707070] hover:text-[#ededed] transition-colors"
-                    >
-                      <div className={cn("w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] transition-transform", isOpen ? "rotate-0 border-t-[#3ecf8e]" : "-rotate-90 border-t-[#707070]")} />
-                    </button>
-                  )}
-                </div>
-
-                {hasSubmenu && isOpen && (
-                  <div className="ml-6 mt-0.5 mb-1 pl-3 border-l border-[#2e2e2e] space-y-0.5 animate-in slide-in-from-left-2 duration-300">
-                    {link.submenu.map((sub: any) => {
-                      const currentFullUrl = `${pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-                      const isSubActive = currentFullUrl === sub.href;
-                      return (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 text-[12px] transition-all rounded-md group/sub",
-                            isSubActive
-                              ? "text-[#3ecf8e] font-medium bg-[#3ecf8e]/5"
-                              : "text-[#707070] hover:text-[#ededed] hover:bg-[#252525]"
-                          )}
-                        >
-                          {isSubActive && <div className="w-1 h-1 rounded-full bg-[#3ecf8e] animate-pulse" />}
-                          {!isSubActive && <div className="w-1 h-1 rounded-full bg-transparent group-hover/sub:bg-[#707070]" />}
-                          {sub.name}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-[#2e2e2e] space-y-2">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-3 py-2 text-[#9a9a9a] hover:text-[#ededed] text-[13px] transition-all rounded-md hover:bg-[#252525]"
-          >
-            <Globe size={14} />
-            <span>Visit Site</span>
-          </Link>
           <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-[#9a9a9a] hover:text-[#ff2201] text-[13px] transition-all rounded-md hover:bg-[#ff2201]/5"
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="lg:hidden p-1.5 rounded-md text-[#8a8a8a] hover:text-white hover:bg-[#222222]"
+            aria-label="Close sidebar"
           >
-            <LogOut size={14} />
-            <span>Logout</span>
+            <X size={16} />
           </button>
         </div>
+
+        {/* 2-Mode Segmented Workspace Switcher (DEV vs CREATIVE) */}
+        <div
+          role="tablist"
+          aria-label="Admin workspace mode"
+          className="grid grid-cols-2 gap-1 p-1 rounded-[8px] bg-[#121212] border border-[#262626]"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'dev'}
+            onClick={() => switchMode('dev')}
+            className={cn(
+              'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-[6px] font-mono text-[10.5px] uppercase tracking-[0.08em] transition-all',
+              mode === 'dev'
+                ? 'bg-[#ff5a3d] text-white font-semibold shadow-sm'
+                : 'text-[#8a8a8a] hover:text-[#ededed]'
+            )}
+          >
+            <Code2 size={12} />
+            <span>DEV</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'creative'}
+            onClick={() => switchMode('creative')}
+            className={cn(
+              'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-[6px] font-mono text-[10.5px] uppercase tracking-[0.08em] transition-all',
+              mode === 'creative'
+                ? 'bg-[#f59e0b] text-[#121212] font-semibold shadow-sm'
+                : 'text-[#8a8a8a] hover:text-[#ededed]'
+            )}
+          >
+            <Palette size={12} />
+            <span>CREATIVE</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mode-Specific Navigation Links */}
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto custom-scrollbar">
+        <p className="px-2.5 pb-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#666666]">
+          {mode === 'creative' ? 'Creative Content' : 'Developer Content'}
+        </p>
+
+        {activeLinks.map((link) => {
+          const Icon = link.icon;
+          const isActive = link.exact
+            ? pathname === link.href
+            : link.matchPath
+            ? pathname.startsWith(link.matchPath)
+            : pathname.startsWith(link.href) || currentFullUrl === link.href;
+
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                'flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[7px] border transition-all',
+                isActive
+                  ? accentBg
+                  : 'border-transparent text-[#9a9a9a] hover:text-[#f1eee9] hover:bg-[#1f1f1f]'
+              )}
+            >
+              <Icon
+                size={14}
+                className={cn(
+                  'shrink-0',
+                  isActive ? accentText : 'text-[#707070]'
+                )}
+              />
+              <span className="truncate">{link.name}</span>
+            </Link>
+          );
+        })}
+
+        {/* Shared System Tools */}
+        <div className="pt-4 mt-4 border-t border-[#242424] space-y-1">
+          <p className="px-2.5 pb-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#666666]">
+            System
+          </p>
+          <Link
+            href="/admin/sync"
+            className={cn(
+              'flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[7px] border transition-all',
+              pathname.startsWith('/admin/sync')
+                ? accentBg
+                : 'border-transparent text-[#9a9a9a] hover:text-[#f1eee9] hover:bg-[#1f1f1f]'
+            )}
+          >
+            <RefreshCw
+              size={14}
+              className={
+                pathname.startsWith('/admin/sync')
+                  ? accentText
+                  : 'text-[#707070]'
+              }
+            />
+            <span>Sync &amp; Cache</span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Bottom Footer Actions */}
+      <div className="p-3 border-t border-[#262626] space-y-1">
+        <Link
+          href={mode === 'creative' ? '/art' : '/'}
+          target="_blank"
+          className="flex items-center justify-between gap-2 px-3 py-2 text-[#9a9a9a] hover:text-[#f1eee9] text-[12.5px] transition-all rounded-[7px] hover:bg-[#1f1f1f]"
+        >
+          <span className="flex items-center gap-2.5">
+            <Globe size={14} />
+            <span>{mode === 'creative' ? 'Open dri4n.com/art' : 'Open dri4n.com'}</span>
+          </span>
+          <ExternalLink size={12} className="opacity-60" />
+        </Link>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-[#9a9a9a] hover:text-[#ff5a3d] text-[12.5px] transition-all rounded-[7px] hover:bg-[#ff5a3d]/10"
+        >
+          <LogOut size={14} />
+          <span>Logout</span>
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="dark flex h-screen bg-[#121212] text-[#f1eee9] overflow-hidden font-sans selection:bg-[#ff5a3d]/30 selection:text-[#ff5a3d]">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 flex-shrink-0 bg-[#171717] border-r border-[#262626] flex-col">
+        {renderSidebarInner()}
       </aside>
 
+      {/* Mobile Drawer Sidebar */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 flex lg:hidden bg-black/70 backdrop-blur-xs"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <aside
+            className="w-72 max-w-[84vw] bg-[#171717] border-r border-[#262626] flex flex-col h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {renderSidebarInner()}
+          </aside>
+        </div>
+      )}
+
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#171717]">
-        <header className="h-10 border-b border-[#2e2e2e] flex items-center px-6 bg-[#1c1c1c] justify-between">
-          <div />
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-2 py-0.5 rounded border border-[#2e2e2e] text-[10px] text-[#707070] bg-[#252525]/30">
-              <div className="w-1 h-1 rounded-full bg-[#3ecf8e]" />
-              System Online
+      <div className="flex-1 flex flex-col min-w-0 bg-[#121212]">
+        <header className="h-12 border-b border-[#262626] flex items-center px-4 sm:px-6 bg-[#171717] justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-1.5 rounded-md border border-[#262626] text-[#a3a3a3] hover:text-white hover:bg-[#222222]"
+              aria-label="Open menu"
+            >
+              <Menu size={15} />
+            </button>
+
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[5px] border font-mono text-[10px] uppercase tracking-[0.1em]',
+                  accentBg
+                )}
+              >
+                {mode === 'creative' ? <Palette size={10} /> : <Code2 size={10} />}
+                {mode === 'creative' ? 'CREATIVE MODE' : 'DEV MODE'}
+              </span>
+              <span className="hidden sm:inline font-mono text-[11px] text-[#707070] truncate">
+                {pathname}
+              </span>
             </div>
-            <div className="w-6 h-6 rounded-full bg-[#2e2e2e] border border-[#3e3e3e] flex items-center justify-center text-[9px] font-bold text-[#707070]">AB</div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-[6px] border border-[#262626] font-mono text-[10px] text-[#8a8a8a] bg-[#121212]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#34d399]" />
+              <span>api.dri4n.com</span>
+            </div>
+            <div className="w-7 h-7 rounded-full bg-[#242424] border border-[#333333] flex items-center justify-center font-mono text-[10px] font-semibold text-[#d4d4d4]">
+              AB
+            </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-6">
+
+        <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-4 sm:p-6">
           <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0">
             {children}
           </div>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { purgeSystemCache } from '@/lib/utils';
-import { compressToWebP } from '@/lib/image';
 import { Trash2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
 import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
@@ -28,14 +27,14 @@ export default function AdminGallery() {
     setIsUploading(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
-        const compressedFile = await compressToWebP(file);
-        const fileExt = compressedFile.name.split('.').pop();
+        // Preserve 100% original photography quality — never compress gallery photos to WebP
+        const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `gallery/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('portfolio-assets')
-          .upload(filePath, compressedFile);
+          .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
