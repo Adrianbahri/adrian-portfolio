@@ -181,28 +181,12 @@ export function ArtCursor({
       if (c) markerColor = c;
     };
 
-    const isElementVisiblyRendered = (el: HTMLElement): boolean => {
-      if (el.closest('.sr-only, [aria-hidden="true"]')) return false;
-      let cur: HTMLElement | null = el;
-      while (cur && cur !== document.body) {
-        const style = getComputedStyle(cur);
-        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) < 0.05) {
-          return false;
-        }
-        if (
-          (style.overflow === 'hidden' || style.overflowY === 'hidden') &&
-          cur.getBoundingClientRect().height < 6
-        ) {
-          return false;
-        }
-        cur = cur.parentElement;
-      }
-      return true;
-    };
-
     const scanSurfaces = (force = false) => {
+      if (document.documentElement.getAttribute('data-agent-building') === 'true') {
+        return;
+      }
       const now = performance.now();
-      if (!force && now - lastSurfaceScan < 420) return;
+      if (!force && now - lastSurfaceScan < 1200) return;
       lastSurfaceScan = now;
 
       const vw = window.innerWidth;
@@ -213,11 +197,11 @@ export function ArtCursor({
       const next: SurfaceRect[] = [];
       for (let i = 0; i < nodes.length; i++) {
         const el = nodes[i];
+        if (el.offsetParent === null) continue;
         const r = el.getBoundingClientRect();
         if (r.width < 24 || r.height < 12) continue;
         if (r.bottom < 0 || r.top > vh - 14 || r.right < 0 || r.left > vw) continue;
         if (r.width > vw * 0.92 && r.height > vh * 0.7) continue;
-        if (!isElementVisiblyRendered(el)) continue;
         next.push({
           left: r.left,
           right: r.right,

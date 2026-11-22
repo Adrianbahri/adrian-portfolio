@@ -93,10 +93,15 @@ function startPollingIfNeeded() {
 
   if (pollTimer === null) {
     if (currentData === null && initialTimer === null) {
+      const delayMs =
+        typeof document !== 'undefined' &&
+        document.documentElement.getAttribute('data-agent-building') === 'true'
+          ? 1600
+          : 250;
       initialTimer = window.setTimeout(() => {
         initialTimer = null;
         fetchLatestSpotify();
-      }, 120);
+      }, delayMs);
     } else if (currentData !== null && Date.now() - lastFetchAt > 8_000) {
       fetchLatestSpotify();
     }

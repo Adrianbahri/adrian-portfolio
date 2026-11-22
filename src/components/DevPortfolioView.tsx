@@ -1,6 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  startTransition,
+} from 'react';
 import { flushSync } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -757,8 +764,45 @@ export default function DevPortfolioView({
             .order('created_at', { ascending: false }),
         ]);
 
+        const waitUntilIntroIdle = () =>
+          new Promise<void>((resolve) => {
+            if (
+              typeof document === 'undefined' ||
+              document.documentElement.getAttribute('data-agent-building') !==
+                'true'
+            ) {
+              resolve();
+              return;
+            }
+            let settled = false;
+            const done = () => {
+              if (settled) return;
+              settled = true;
+              observer.disconnect();
+              window.clearTimeout(cap);
+              resolve();
+            };
+            const observer = new MutationObserver(() => {
+              if (
+                document.documentElement.getAttribute('data-agent-building') !==
+                'true'
+              ) {
+                done();
+              }
+            });
+            observer.observe(document.documentElement, {
+              attributes: true,
+              attributeFilter: ['data-agent-building'],
+            });
+            const cap = window.setTimeout(done, 2100);
+          });
+
+        // Wait for the 120fps opening cursor animation to finish before committing heavy 7-table React state updates
+        await waitUntilIntroIdle();
+
         const nextCache: NonNullable<typeof devMemCache> = {};
 
+        startTransition(() => {
         if (galleryRes.data?.length) {
           const validPhotos = galleryRes.data
             .filter((g: any) => g.image_url)
@@ -925,6 +969,7 @@ export default function DevPortfolioView({
           setActivities(mergedActivities);
           nextCache.activities = mergedActivities;
         }
+        });
 
         if (Object.keys(nextCache).length > 0) {
           devMemCache = nextCache;

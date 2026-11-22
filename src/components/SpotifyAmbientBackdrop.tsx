@@ -29,7 +29,7 @@ export default function SpotifyAmbientBackdrop() {
     };
 
     if (html.getAttribute('data-agent-building') !== 'true') {
-      scheduleEnable(180);
+      scheduleEnable(520);
       return () => {
         if (timer !== null) window.clearTimeout(timer);
       };
@@ -38,7 +38,7 @@ export default function SpotifyAmbientBackdrop() {
     const observer = new MutationObserver(() => {
       if (html.getAttribute('data-agent-building') !== 'true') {
         observer.disconnect();
-        scheduleEnable(240);
+        scheduleEnable(320);
       }
     });
     observer.observe(html, {

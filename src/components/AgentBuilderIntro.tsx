@@ -14,10 +14,10 @@ interface AgentSpec {
   startMs: number;
 }
 
-const GLIDE_MS = 300;
-const DRAG_MS = 380;
-const HOLD_BOX_MS = 240;
-const FADE_OUT_MS = 300;
+const GLIDE_MS = 240;
+const DRAG_MS = 300;
+const HOLD_BOX_MS = 180;
+const FADE_OUT_MS = 240;
 
 const AGENTS: AgentSpec[] = [
   {
@@ -29,7 +29,7 @@ const AGENTS: AgentSpec[] = [
     enterFrom: 'left',
     slot: 'hero',
     status: 'framing hero',
-    startMs: 80,
+    startMs: 40,
   },
   {
     id: 'ui',
@@ -40,7 +40,7 @@ const AGENTS: AgentSpec[] = [
     enterFrom: 'right',
     slot: 'top-tiles',
     status: 'drawing grid',
-    startMs: 740,
+    startMs: 460,
   },
   {
     id: 'content',
@@ -51,7 +51,7 @@ const AGENTS: AgentSpec[] = [
     enterFrom: 'left',
     slot: 'writing',
     status: 'placing writing',
-    startMs: 1400,
+    startMs: 880,
   },
   {
     id: 'systems',
@@ -62,7 +62,7 @@ const AGENTS: AgentSpec[] = [
     enterFrom: 'right',
     slot: 'bottom-tiles',
     status: 'wiring tiles',
-    startMs: 2060,
+    startMs: 1300,
   },
 ];
 
@@ -170,6 +170,16 @@ export default function AgentBuilderIntro({
         return { agent, el, rect, spawnX, spawnY, ctrlX, ctrlY };
       }).filter((p): p is NonNullable<typeof p> => p !== null);
 
+      // Set each selection box's final size ONCE upfront so the rAF loop ONLY animates GPU transform/opacity (zero layout thrashing!)
+      for (const plan of plans) {
+        const boxEl = boxRefs.current[plan.agent.id];
+        if (boxEl) {
+          boxEl.style.width = `${plan.rect.width + 4}px`;
+          boxEl.style.height = `${plan.rect.height + 4}px`;
+          boxEl.style.transformOrigin = '0 0';
+        }
+      }
+
       const totalEndMs =
         Math.max(...AGENTS.map((a) => a.startMs)) +
         GLIDE_MS +
@@ -204,17 +214,17 @@ export default function AgentBuilderIntro({
             const inv = 1 - t;
             const x = inv * inv * spawnX + 2 * inv * t * ctrlX + t * t * rect.left;
             const y = inv * inv * spawnY + 2 * inv * t * ctrlY + t * t * rect.top;
-            cursorEl.style.opacity = String(Math.min(1, local / 110));
+            cursorEl.style.opacity = String(Math.min(1, local / 100));
             cursorEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
             boxEl.style.opacity = '0';
             continue;
           }
 
-          // Phase 2: Drag diagonally from top-left to bottom-right, drawing the real Figma frame!
+          // Phase 2: Drag diagonally using pure GPU transform scale (zero width/height layout reflow!)
           if (local < GLIDE_MS + DRAG_MS) {
-            const t = easeInOutCubic((local - GLIDE_MS) / DRAG_MS);
-            const curW = Math.max(12, rect.width * t);
-            const curH = Math.max(12, rect.height * t);
+            const t = Math.max(0.04, easeInOutCubic((local - GLIDE_MS) / DRAG_MS));
+            const curW = rect.width * t;
+            const curH = rect.height * t;
             const curX = rect.left + curW;
             const curY = rect.top + curH;
 
@@ -222,9 +232,7 @@ export default function AgentBuilderIntro({
             cursorEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
 
             boxEl.style.opacity = '1';
-            boxEl.style.transform = `translate3d(${rect.left - 2}px, ${rect.top - 2}px, 0)`;
-            boxEl.style.width = `${curW + 4}px`;
-            boxEl.style.height = `${curH + 4}px`;
+            boxEl.style.transform = `translate3d(${rect.left - 2}px, ${rect.top - 2}px, 0) scale(${t}, ${t})`;
 
             if (dimEl) {
               dimEl.textContent = `${Math.round(curW)} × ${Math.round(curH)}`;
@@ -247,10 +255,8 @@ export default function AgentBuilderIntro({
           const driftX = agent.enterFrom === 'left' ? 18 : -18;
           const driftY = 10;
 
-          // Keep box locked at exact final dimensions while fading out cleanly
-          boxEl.style.transform = `translate3d(${rect.left - 2}px, ${rect.top - 2}px, 0)`;
-          boxEl.style.width = `${rect.width + 4}px`;
-          boxEl.style.height = `${rect.height + 4}px`;
+          // Keep box locked at scale(1, 1) while fading out cleanly on GPU
+          boxEl.style.transform = `translate3d(${rect.left - 2}px, ${rect.top - 2}px, 0) scale(1, 1)`;
 
           if (postDrag < HOLD_BOX_MS) {
             boxEl.style.opacity = '1';

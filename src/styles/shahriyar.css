@@ -383,8 +383,9 @@ html[data-agent-building="true"] [data-agent-slot][data-agent-built="true"] {
   to { transform: rotate(360deg); }
 }
 
-/* Full-page subtle blurred album-art ambient wash (modern & minimalist) */
+/* Full-page subtle blurred album-art ambient wash (GPU-composited, zero filter transitions) */
 .dev-page-ambient {
+  contain: strict;
   -webkit-mask-image: radial-gradient(
     ellipse 105% 88% at 50% 22%,
     rgba(0, 0, 0, 1) 0%,
@@ -402,21 +403,23 @@ html[data-agent-building="true"] [data-agent-slot][data-agent-built="true"] {
 }
 .dev-page-ambient-img {
   opacity: 0;
-  filter: blur(92px) saturate(1.55) contrast(1.04);
-  transition: opacity 1.5s cubic-bezier(0.22, 1, 0.36, 1), filter 1.2s ease;
+  transform: translateZ(0) scale(1.22);
+  will-change: opacity;
+  filter: blur(42px) saturate(1.45);
+  transition: opacity 1.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .dev-page-ambient-img[data-ready="true"] {
-  opacity: 0.17;
+  opacity: 0.16;
 }
 .dev-page-ambient-img[data-ready="true"][data-playing="true"] {
-  opacity: 0.28;
+  opacity: 0.26;
 }
 .dev-page-ambient-img[data-playing="false"] {
-  filter: blur(92px) saturate(1.15) grayscale(35%);
+  filter: blur(42px) saturate(1.1) grayscale(35%);
 }
 .dev-shell[data-dev-theme="dark"] .dev-page-ambient-img {
   opacity: 0;
-  filter: blur(96px) saturate(1.4);
+  filter: blur(44px) saturate(1.35);
 }
 .dev-shell[data-dev-theme="dark"] .dev-page-ambient-img[data-ready="true"] {
   opacity: 0.13;
@@ -425,7 +428,7 @@ html[data-agent-building="true"] [data-agent-slot][data-agent-built="true"] {
   opacity: 0.22;
 }
 .dev-shell[data-dev-theme="dark"] .dev-page-ambient-img[data-playing="false"] {
-  filter: blur(96px) saturate(1.05) grayscale(40%);
+  filter: blur(44px) saturate(1.05) grayscale(40%);
 }
 
 /* Subtle ambient album-art tint behind the Spotify cassette (refined & high-contrast) */
