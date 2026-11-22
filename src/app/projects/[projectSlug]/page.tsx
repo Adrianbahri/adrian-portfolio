@@ -1,18 +1,21 @@
+import { cache } from 'react';
 import { fetchPublicTable } from '@/lib/supabase';
 import { Metadata } from 'next';
 import ProjectDetailClient from '@/components/ProjectDetailClient';
+
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ projectSlug: string }>;
 }
 
-async function getProjectBySlug(slug: string) {
+const getProjectBySlug = cache(async (slug: string) => {
   const rows = await fetchPublicTable<any>(
     'projects',
     `select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`
   );
   return rows[0] || null;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { projectSlug } = await params;

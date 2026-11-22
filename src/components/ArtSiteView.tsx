@@ -8,7 +8,11 @@ import { supabase } from '@/lib/supabase';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { workData as staticWorkData } from '@/data/experience';
 import { techStack } from '@/data/techstack';
-import { runThemeTransition } from '@/lib/themeTransition';
+import {
+  applyThemePreference,
+  runThemeTransition,
+  subscribeThemeStorage,
+} from '@/lib/themeTransition';
 import {
   navigateWithCirclePortal,
   signalPortalRouteReady,
@@ -364,11 +368,13 @@ export default function ArtSiteView({
     if (next === theme) return;
     runThemeTransition(() => {
       setTheme(next);
-      localStorage.setItem('theme', next);
-      if (next === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
+      applyThemePreference(next);
     }, e);
   };
+
+  useEffect(() => {
+    return subscribeThemeStorage((next) => setTheme(next));
+  }, []);
 
   const scrollToSection = (section: ArtSection) => {
     setSelectedWork(null);

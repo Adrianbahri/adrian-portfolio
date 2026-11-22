@@ -66,7 +66,7 @@ const AGENTS: AgentSpec[] = [
   },
 ];
 
-const SESSION_KEY = 'dri4n-agent-intro-v4';
+let hasPlayedThisPageLoad = false;
 
 function easeOutCubic(t: number): number {
   const u = 1 - Math.min(1, Math.max(0, t));
@@ -119,12 +119,18 @@ export default function AgentBuilderIntro({
     ).matches;
     if (prefersReduced) return;
 
-    try {
-      if (sessionStorage.getItem(SESSION_KEY) === '1') return;
-      sessionStorage.setItem(SESSION_KEY, '1');
-    } catch {
-      // ignore storage restrictions
+    // Do not start or consume the intro while a sub-view hash (#resources, #work, etc.) is active
+    const currentHash = window.location.hash.replace('#', '');
+    if (
+      ['work', 'experience', 'services', 'writing', 'resources'].includes(
+        currentHash
+      )
+    ) {
+      return;
     }
+
+    if (hasPlayedThisPageLoad) return;
+    hasPlayedThisPageLoad = true;
 
     const root = document.documentElement;
     root.setAttribute('data-agent-building', 'true');

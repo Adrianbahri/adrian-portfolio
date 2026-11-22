@@ -63,19 +63,619 @@ const CanvaIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const techStack = [
-  // --- ROW 1 ---
-  { name: 'React', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/react" /> },
-  { name: 'Next.js', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/nextdotjs" /> },
-  { name: 'Flutter', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/flutter" /> },
-  { name: 'Firebase', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/firebase" /> },
-  { name: 'Figma', mode: 'creative', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/figma" /> },
+const AntigravityIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="w-6 h-6"
+  >
+    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
+    <path d="M12 13V7" />
+    <circle cx="12" cy="5" r="1" fill="currentColor" />
+  </svg>
+);
 
-  // --- ROW 2 ---
-  { name: 'Python', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/python" /> },
-  { name: 'Google Colab', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/googlecolab" /> },
-  { name: 'WordPress', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/wordpress" /> },
-  { name: 'Tailwind', mode: 'developer', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/tailwindcss" /> },
+const CodexIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="w-6 h-6"
+  >
+    <polygon points="12 2 21 7 21 17 12 22 3 17 3 7 12 2" />
+    <polyline points="9.5 9.5 7 12 9.5 14.5" />
+    <polyline points="14.5 9.5 17 12 14.5 14.5" />
+    <line x1="13" y1="9" x2="11" y2="15" />
+  </svg>
+);
+
+const SqlIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="w-6 h-6 opacity-75 group-hover:opacity-100 transition-opacity"
+  >
+    <ellipse cx="12" cy="5" rx="8" ry="3" />
+    <path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
+    <path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+  </svg>
+);
+
+export interface TechProjectRef {
+  title: string;
+  tag: string;
+  href?: string;
+}
+
+export type TechCategory =
+  | 'ai'
+  | 'languages'
+  | 'frameworks'
+  | 'databases'
+  | 'backend';
+
+export interface TechStackItem {
+  name: string;
+  mode: 'developer' | 'creative';
+  category?: TechCategory;
+  usage?: number;
+  role?: string;
+  featured?: boolean;
+  projects?: TechProjectRef[];
+  icon: () => React.ReactNode;
+}
+
+export const techStack: TechStackItem[] = [
+  // AI workflow tools
+  {
+    name: 'Antigravity',
+    mode: 'developer',
+    category: 'ai',
+    usage: 98,
+    role: 'AI pair programming & refactoring',
+    featured: true,
+    projects: [
+      { title: 'Dri4n Portfolio (dri4n.com)', tag: 'LIVE', href: '/' },
+      { title: 'UKK Unhas UI & API Platform', tag: 'ORG SYSTEM', href: '/projects/ukk-unhas' },
+      { title: 'PK Identitas Web & Rekap Analytics', tag: 'ORG SYSTEM' },
+      { title: 'Portal Desa Bonto Somba', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/desa-bonto-somba' },
+      { title: 'Arsip Digital Tonasa', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Kakaskasen 2 Encyclopedia', tag: 'PUBLIC', href: '/projects/kakaskasen-2' },
+    ],
+    icon: () => <AntigravityIcon />,
+  },
+  {
+    name: 'Codex',
+    mode: 'developer',
+    category: 'ai',
+    usage: 95,
+    role: 'Code generation & test scaffolding',
+    featured: true,
+    projects: [
+      { title: 'Dri4n Portfolio (dri4n.com)', tag: 'LIVE', href: '/' },
+      { title: 'UKK Unhas Modular Migration', tag: 'ORG SYSTEM', href: '/projects/ukk-unhas' },
+      { title: 'PK Identitas Analytics Dashboard', tag: 'ORG SYSTEM' },
+      { title: 'Arsip Digital Tonasa', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Kakaskasen 2 Encyclopedia', tag: 'PUBLIC', href: '/projects/kakaskasen-2' },
+    ],
+    icon: () => <CodexIcon />,
+  },
+
+  // Programming, query, and markup languages
+  {
+    name: 'TypeScript',
+    mode: 'developer',
+    category: 'languages',
+    usage: 92,
+    role: '13 repos · static typing',
+    projects: [
+      { title: 'Dri4n Portfolio (dri4n.com)', tag: 'NEXT.JS 16', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+      { title: 'PK Identitas Portal & Rekap Analytics', tag: 'NEXT.JS 15/16' },
+      { title: 'UKK Unhas UI Monorepo', tag: 'TURBOREPO', href: '/projects/ukk-unhas' },
+      { title: 'Arsip Digital Tonasa', tag: 'WEB APP', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Sposmed Drive Cloud Storage', tag: 'FULL-STACK' },
+      { title: "Solusi Digitalta' Official Portal", tag: 'ASTRO + TS' },
+      { title: 'Kakaskasen 2 Encyclopedia', tag: 'WEB APP', href: '/projects/kakaskasen-2' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/typescript" />,
+  },
+  {
+    name: 'JavaScript',
+    mode: 'developer',
+    category: 'languages',
+    usage: 88,
+    role: '27 repos · client & runtime',
+    projects: [
+      { title: 'PK Identitas Web & PM2 Cluster', tag: 'PRODUCTION' },
+      { title: 'Website Profil Desa Waginopo', tag: 'REACT 19', href: 'https://github.com/Adrianbahri/Web-Desa-Waginopo' },
+      { title: 'UKK Web Portal', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/UKK' },
+      { title: 'Sistem Kelola Data Mahasiswa', tag: 'CRUD APP', href: 'https://github.com/Adrianbahri/Web-Kelola-Data-Mahasiswa' },
+      { title: 'Perpustakaan Online', tag: 'WEB APP', href: 'https://github.com/Adrianbahri/Perpustakaan-Online' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/javascript" />,
+  },
+  {
+    name: 'SQL',
+    mode: 'developer',
+    category: 'languages',
+    usage: 85,
+    role: 'Raw queries, RLS & PL/pgSQL',
+    projects: [
+      { title: 'PK Identitas Web & Rekap Analytics (idenweb)', tag: 'RAW SQL / MYSQL' },
+      { title: 'Arsip Digital Tonasa (8 SQL Migrations & RLS)', tag: 'PL/PGSQL', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Dri4n Portfolio CMS & Storage Schema', tag: 'POSTGRES SQL', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+      { title: 'UKK Unhas Core Database Schema', tag: 'RELATIONAL SQL', href: '/projects/ukk-unhas' },
+      { title: 'Sposmed Drive File & Trash Schema', tag: 'SQLITE SQL' },
+    ],
+    icon: () => <SqlIcon />,
+  },
+  {
+    name: 'HTML5',
+    mode: 'developer',
+    category: 'languages',
+    usage: 82,
+    role: '20 repos · semantic markup',
+    projects: [
+      { title: 'PK Identitas Editorial Portal & Magazine', tag: 'EDITORIAL' },
+      { title: 'Portal Desa Bonto Somba', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/desa-bonto-somba' },
+      { title: 'Twibbon PK Identitas Unhas', tag: 'CAMPUS TOOL', href: 'https://github.com/Adrianbahri/Twibbon-PK-Identitas' },
+      { title: 'Admin Dashboard Layout', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Admin-Dashboard' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/html5" />,
+  },
+  {
+    name: 'CSS3',
+    mode: 'developer',
+    category: 'languages',
+    usage: 80,
+    role: '29 repos · keyframes & grid',
+    projects: [
+      { title: 'Dri4n Editorial & Tactile System', tag: 'CUSTOM CSS', href: '/' },
+      { title: 'PK Identitas Newspaper Typography', tag: 'EDITORIAL UI' },
+      { title: 'Portal Desa Bonto Somba', tag: 'RESPONSIVE', href: 'https://github.com/Adrianbahri/desa-bonto-somba' },
+      { title: 'Admin Dashboard Grid', tag: 'CSS GRID', href: 'https://github.com/Adrianbahri/Admin-Dashboard' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/css" />,
+  },
+  {
+    name: 'Python',
+    mode: 'developer',
+    category: 'languages',
+    usage: 68,
+    role: '8 repos · data & backend scripts',
+    projects: [
+      { title: 'NYC Green Taxi Kappa Architecture', tag: 'BIG DATA', href: 'https://github.com/Adrianbahri/big-data-project-architecture' },
+      { title: 'PK Identitas Data Scraper & Rekap Scripts', tag: 'DATA AUTOMATION' },
+      { title: 'UKK Unhas Storage & Image Automation', tag: 'AUTOMATION', href: '/projects/ukk-unhas' },
+      { title: 'Perpustakaan Online Backend', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Perpustakaan-Online' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/python" />,
+  },
+  {
+    name: 'PHP',
+    mode: 'developer',
+    category: 'languages',
+    usage: 62,
+    role: '7 repos · PHP 8.3/8.4 & APIs',
+    projects: [
+      { title: 'PK Identitas Backend & Static Cache Plugin', tag: 'PHP-FPM 8.3' },
+      { title: 'UKK Unhas Core REST API', tag: 'PHP 8.4', href: '/projects/ukk-unhas' },
+      { title: 'SIRIDA: OJS RPL Backend', tag: 'PUBLIC', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+      { title: 'Portal Desa Bonto Somba Backend', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/desa-bonto-somba' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/php" />,
+  },
+  {
+    name: 'Bash / Shell',
+    mode: 'developer',
+    category: 'languages',
+    usage: 56,
+    role: '6 repos · VPS & DevOps scripts',
+    projects: [
+      { title: 'PK Identitas Server & Audit Automation', tag: 'VPS OPS' },
+      { title: 'UKK Unhas Storage Sync & Deploy Scripts', tag: 'CI/CD', href: '/projects/ukk-unhas' },
+      { title: 'SIRIDA OJS Build & Test Automation', tag: 'PUBLIC', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+      { title: 'NYC Taxi Kappa Stream Runner (run_all.sh)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/big-data-project-architecture' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/gnubash" />,
+  },
+  {
+    name: 'Dart',
+    mode: 'developer',
+    category: 'languages',
+    usage: 48,
+    role: '3 repos · mobile app logic',
+    projects: [
+      { title: 'Eventku (EventHub) Mobile App', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Eventku_MobileApp' },
+      { title: 'Mobile Programming Lab Suite', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/D121231047-MOBILE2025-W1' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/dart" />,
+  },
+  {
+    name: 'Swift',
+    mode: 'developer',
+    category: 'languages',
+    usage: 34,
+    role: 'Native iOS & SwiftUI',
+    projects: [
+      { title: 'Swipi (CleanSwipe) iOS Gallery Cleaner', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Swipi' },
+      { title: 'Eventku iOS Native Runner', tag: 'IOS', href: 'https://github.com/Adrianbahri/Eventku_MobileApp' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/swift" />,
+  },
+
+  // Frameworks and UI libraries
+  {
+    name: 'Next.js',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 90,
+    role: '9 repos · App Router & ISR',
+    projects: [
+      { title: 'Dri4n Portfolio (Next.js 16)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+      { title: 'PK Identitas Portal, Rekap & Kontak (3 Apps)', tag: 'ISR / PM2' },
+      { title: 'UKK Unhas Landing & SciLabHub', tag: 'NEXT.JS 16', href: '/projects/ukk-unhas' },
+      { title: 'Arsip Digital Tonasa', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Kakaskasen 2 Encyclopedia', tag: 'PUBLIC', href: '/projects/kakaskasen-2' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/nextdotjs" />,
+  },
+  {
+    name: 'React',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 88,
+    role: '15 repos · React 19 & UI systems',
+    projects: [
+      { title: 'Dri4n Portfolio (React 19)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+      { title: 'Website Profil Desa Waginopo', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Web-Desa-Waginopo' },
+      { title: 'PK Identitas Portal & Recharts Dashboard', tag: 'ORG SYSTEM' },
+      { title: 'UKK Unhas UI & Admin Portal', tag: 'ORG SYSTEM', href: '/projects/ukk-unhas' },
+      { title: 'Sposmed Drive Cloud Storage UI', tag: 'REACT + VITE' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/react" />,
+  },
+  {
+    name: 'Tailwind CSS',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 86,
+    role: '15 repos · Tailwind v4 & tokens',
+    projects: [
+      { title: 'Dri4n Portfolio (Tailwind v4)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+      { title: 'PK Identitas Main & Rekap Dashboard', tag: 'TAILWIND v4' },
+      { title: 'UKK Unhas Shared UI Package', tag: 'DESIGN SYSTEM', href: '/projects/ukk-unhas' },
+      { title: 'SIRIDA OJS RPL & Desa Waginopo', tag: 'TAILWIND v4', href: '/projects/web-desa-waginopo' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/tailwindcss" />,
+  },
+  {
+    name: 'Vite',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 72,
+    role: '8 repos · frontend bundler',
+    projects: [
+      { title: 'Portal Desa Bonto Somba', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/desa-bonto-somba' },
+      { title: 'Website Profil Desa Waginopo', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Web-Desa-Waginopo' },
+      { title: 'Sposmed Drive Web Client', tag: 'VITE + TS' },
+      { title: 'UKK Unhas Admin & Laravel Vite', tag: 'BUILD TOOL', href: '/projects/ukk-unhas' },
+      { title: 'Bestie Lansia Web App', tag: 'PUBLIC', href: 'https://github.com/rerere-bit/Bestie-Lansia' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/vite" />,
+  },
+  {
+    name: 'Laravel',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 64,
+    role: '4 repos · Laravel 13, Blade & Inertia',
+    projects: [
+      { title: 'UKK Unhas Core Backend (Sanctum/Reverb/Sail)', tag: 'LARAVEL 13', href: '/projects/ukk-unhas' },
+      { title: 'SIRIDA: OJS RPL Backend Monolith', tag: 'PUBLIC', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+      { title: 'UKK Web Portal (Laravel + Inertia React)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/UKK' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/laravel" />,
+  },
+  {
+    name: 'Framer Motion',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 58,
+    role: '5 repos · layout & gesture transitions',
+    projects: [
+      { title: 'UKK Unhas UI Platform', tag: 'MOTION UI', href: '/projects/ukk-unhas' },
+      { title: 'Website Profil Desa Waginopo', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Web-Desa-Waginopo' },
+      { title: 'Kakaskasen 2 Digital Encyclopedia', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Web-Desa---Unfinished' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/framer" />,
+  },
+  {
+    name: 'Flutter',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 54,
+    role: 'Cross-platform mobile UI',
+    projects: [
+      { title: 'Eventku (EventHub) Mobile App', tag: 'PUBLIC', href: '/projects/eventku' },
+      { title: 'Mobile Programming Lab Suite', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/D121231047-MOBILE2025-W1' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/flutter" />,
+  },
+  {
+    name: 'Express.js',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 48,
+    role: 'REST API & presigned upload server',
+    projects: [
+      { title: 'Sposmed Drive Backend Server', tag: 'EXPRESS + TS' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/express" />,
+  },
+  {
+    name: 'Turborepo',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 44,
+    role: 'Multi-app monorepo build system',
+    projects: [
+      { title: 'UKK Unhas UI Monorepo (3 Apps + Shared UI)', tag: 'MONOREPO', href: '/projects/ukk-unhas' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/turborepo" />,
+  },
+  {
+    name: 'Astro',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 38,
+    role: 'Static & content-first web builds',
+    projects: [
+      { title: "Solusi Digitalta' Official Portal", tag: 'ASTRO + TAILWIND' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/astro" />,
+  },
+  {
+    name: 'Flask',
+    mode: 'developer',
+    category: 'frameworks',
+    usage: 35,
+    role: 'Python web service framework',
+    projects: [
+      { title: 'Perpustakaan Online Web Service', tag: 'FLASK', href: 'https://github.com/Adrianbahri/Perpustakaan-Online' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/flask" />,
+  },
+
+  // Databases, ORM, and data engineering
+  {
+    name: 'MySQL',
+    mode: 'developer',
+    category: 'databases',
+    usage: 82,
+    role: 'Relational DB & mysql2 driver',
+    projects: [
+      { title: 'PK Identitas Main & Rekap Analytics (idenweb)', tag: 'MYSQL 8.0 / MYSQL2' },
+      { title: 'UKK Unhas PDO MySQL Driver Support', tag: 'RELATIONAL DB', href: '/projects/ukk-unhas' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/mysql" />,
+  },
+  {
+    name: 'PostgreSQL',
+    mode: 'developer',
+    category: 'databases',
+    usage: 78,
+    role: 'Primary relational & RLS database',
+    projects: [
+      { title: 'UKK Unhas Core Backend (Postgres 16)', tag: 'POSTGRESQL', href: '/projects/ukk-unhas' },
+      { title: 'Arsip Digital Tonasa (PL/pgSQL & Triggers)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Dri4n Portfolio Database', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/postgresql" />,
+  },
+  {
+    name: 'Supabase',
+    mode: 'developer',
+    category: 'databases',
+    usage: 76,
+    role: 'Postgres BaaS, Auth & Storage',
+    projects: [
+      { title: 'Dri4n Portfolio CMS & Asset Storage', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/adrian-portfolio' },
+      { title: 'Arsip Digital Tonasa (Webhooks & Push)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/web-arsip-tonasa' },
+      { title: 'Eventku Campus Event Backend', tag: 'MOBILE BAAS', href: '/projects/eventku' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/supabase" />,
+  },
+  {
+    name: 'SQLite',
+    mode: 'developer',
+    category: 'databases',
+    usage: 72,
+    role: 'Embedded edge & in-memory DB',
+    projects: [
+      { title: 'Dri4n API Server (api.dri4n.com)', tag: 'BUN + SQLITE' },
+      { title: 'Sposmed Drive Metadata Store (better-sqlite3)', tag: 'EDGE SQLITE' },
+      { title: 'SIRIDA OJS RPL Automated Test Suite', tag: 'IN-MEMORY DB', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/sqlite" />,
+  },
+  {
+    name: 'Redis',
+    mode: 'developer',
+    category: 'databases',
+    usage: 58,
+    role: 'In-memory cache & session store',
+    projects: [
+      { title: 'PK Identitas High-Traffic Object Cache', tag: 'REDIS CACHE' },
+      { title: 'UKK Unhas Session & Queue Store (Redis 7)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/UKK' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/redis" />,
+  },
+  {
+    name: 'Prisma ORM',
+    mode: 'developer',
+    category: 'databases',
+    usage: 48,
+    role: 'Type-safe TypeScript SQL ORM',
+    projects: [
+      { title: 'Toko Oxi E-Commerce (Prisma + NextAuth)', tag: 'PUBLIC', href: 'https://github.com/Muhammad-Rizqullah-Akbar/toko-oxi-sikerent' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/prisma" />,
+  },
+  {
+    name: 'Jupyter',
+    mode: 'developer',
+    category: 'databases',
+    usage: 46,
+    role: 'Interactive data analytics notebooks',
+    projects: [
+      { title: 'PK Identitas Editorial & Foto Analytics', tag: 'DATA NOTEBOOKS' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/jupyter" />,
+  },
+  {
+    name: 'PySpark & Pandas',
+    mode: 'developer',
+    category: 'databases',
+    usage: 44,
+    role: 'Batch ML retraining & data frames',
+    projects: [
+      { title: 'NYC Taxi Tip Random Forest Predictor', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/big-data-project-architecture' },
+      { title: 'PK Identitas Rekap Data Processing', tag: 'PANDAS /PYARROW' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/apachespark" />,
+  },
+  {
+    name: 'Kafka & ClickHouse',
+    mode: 'developer',
+    category: 'databases',
+    usage: 38,
+    role: 'Kappa streaming & columnar OLAP',
+    projects: [
+      { title: 'NYC Green Taxi Tip Prediction (Kafka + Spark + ClickHouse)', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/big-data-project-architecture' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/apachekafka" />,
+  },
+
+  // Backend runtime, cloud, and DevOps infrastructure
+  {
+    name: 'Cloudflare R2 & CDN',
+    mode: 'developer',
+    category: 'backend',
+    usage: 74,
+    role: 'S3 object storage, WAF & edge CDN',
+    projects: [
+      { title: 'PK Identitas Media CDN & WAF (idenweb)', tag: 'R2 + WAF' },
+      { title: 'Sposmed Drive Direct-to-R2 Presigned Upload', tag: 'AWS S3 SDK' },
+      { title: 'Dri4n Domain & Edge Routing (dri4n.com)', tag: 'EDGE DNS' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/cloudflare" />,
+  },
+  {
+    name: 'Nginx & PM2',
+    mode: 'developer',
+    category: 'backend',
+    usage: 70,
+    role: 'VPS reverse proxy & process cluster',
+    projects: [
+      { title: 'PK Identitas Multi-Service VPS (3 PM2 Apps + Nginx)', tag: 'VPS INFRA' },
+      { title: 'UKK Unhas Production FPM + Nginx Container', tag: 'PRODUCTION', href: '/projects/ukk-unhas' },
+      { title: 'Sposmed Drive Low-RAM VPS Cluster', tag: 'PM2 ECOSYSTEM' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/nginx" />,
+  },
+  {
+    name: 'Node.js',
+    mode: 'developer',
+    category: 'backend',
+    usage: 68,
+    role: 'Server runtime & build tooling',
+    projects: [
+      { title: 'PK Identitas Next.js & Rekap Servers', tag: 'NODE RUNTIME' },
+      { title: 'SIRIDA OJS Node 22 Frontend Build Stage', tag: 'PUBLIC', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+      { title: 'LitoMonitor IoT Server', tag: 'IOT API', href: '/projects/litomonitor' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/nodedotjs" />,
+  },
+  {
+    name: 'Bun',
+    mode: 'developer',
+    category: 'backend',
+    usage: 65,
+    role: 'Fast JS/TS runtime & package manager',
+    projects: [
+      { title: 'Dri4n API Server (api.dri4n.com)', tag: 'BUN RUNTIME' },
+      { title: 'UKK Unhas UI & API Monorepo Tooling', tag: 'BUN LOCK', href: '/projects/ukk-unhas' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/bun" />,
+  },
+  {
+    name: 'Docker',
+    mode: 'developer',
+    category: 'backend',
+    usage: 62,
+    role: 'Compose & multi-stage containers',
+    projects: [
+      { title: 'UKK Unhas PHP 8.4-FPM, Postgres & Redis Stack', tag: 'DOCKER COMPOSE', href: '/projects/ukk-unhas' },
+      { title: 'SIRIDA OJS RPL Multi-Stage Containers', tag: 'PUBLIC', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+      { title: 'PK Identitas Local MySQL 8.0 Container', tag: 'DOCKER DB' },
+      { title: 'NYC Taxi Kafka/Spark/ClickHouse Cluster', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/big-data-project-architecture' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/docker" />,
+  },
+  {
+    name: 'WordPress Headless',
+    mode: 'developer',
+    category: 'backend',
+    usage: 56,
+    role: 'Headless REST API & editorial CMS',
+    projects: [
+      { title: 'PK Identitas Headless CMS (cms.identitasunhas.com)', tag: 'WP REST API' },
+      { title: 'Website Profil Desa Waginopo', tag: 'PUBLIC', href: '/projects/web-desa-waginopo' },
+      { title: 'Portal Desa Bonto Somba WP Backend', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/desa-bonto-somba' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/wordpress" />,
+  },
+  {
+    name: 'Firebase',
+    mode: 'developer',
+    category: 'backend',
+    usage: 50,
+    role: 'FCM push alerts & mobile Auth',
+    projects: [
+      { title: 'Eventku H-1 Push Notifications & Auth', tag: 'PUBLIC', href: 'https://github.com/Adrianbahri/Eventku_MobileApp' },
+      { title: 'Toko Oxi Firebase Integration', tag: 'PUBLIC', href: 'https://github.com/Muhammad-Rizqullah-Akbar/toko-oxi-sikerent' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/firebase" />,
+  },
+  {
+    name: 'Terraform',
+    mode: 'developer',
+    category: 'backend',
+    usage: 34,
+    role: 'Infrastructure as Code (HCL)',
+    projects: [
+      { title: 'SIRIDA: OJS RPL Cloud Provisioning (44KB HCL)', tag: 'PUBLIC', href: 'https://github.com/von-ai/ojs-rpl-backend' },
+    ],
+    icon: () => <RemoteIcon url="https://cdn.simpleicons.org/terraform" />,
+  },
+
+  // Creative suite tools
+  { name: 'Figma', mode: 'creative', icon: () => <RemoteIcon url="https://cdn.simpleicons.org/figma" /> },
   {
     name: 'CapCut', mode: 'creative',
     icon: () => (
@@ -86,8 +686,6 @@ export const techStack = [
       </div>
     )
   },
-
-  // --- ROW 3 ---
   {
     name: 'Lightroom', mode: 'creative',
     icon: () => (

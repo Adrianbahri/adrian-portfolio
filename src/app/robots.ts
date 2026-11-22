@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/art', '/projects', '/blog', '/api/assets/'],
+        allow: ['/', '/art', '/about', '/contact', '/projects', '/blog', '/api/assets/'],
         disallow: ['/setting', '/admin', '/login', '/reset-password', '/maintenance'],
       },
       {
@@ -31,7 +31,7 @@ export default function robots(): MetadataRoute.Robots {
           'Applebot',
           'Applebot-Extended',
         ],
-        allow: ['/', '/art', '/projects', '/blog', '/llms.txt', '/llms-full.txt', '/api/assets/'],
+        allow: ['/', '/art', '/about', '/contact', '/projects', '/blog', '/llms.txt', '/llms-full.txt', '/api/assets/'],
         disallow: ['/setting', '/admin', '/login', '/reset-password', '/maintenance'],
       },
     ],

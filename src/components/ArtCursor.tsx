@@ -119,12 +119,15 @@ export function ArtCursor({
   const lastLabelRef = useRef<string | null>(null);
   const enableDebrisRef = useRef(enableDebris);
   const sweepDebrisRef = useRef<(() => void) | null>(null);
+  const onEnableDebrisRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const prev = enableDebrisRef.current;
     enableDebrisRef.current = enableDebris;
     if (prev && !enableDebris) {
       sweepDebrisRef.current?.();
+    } else if (!prev && enableDebris) {
+      onEnableDebrisRef.current?.();
     }
   }, [enableDebris]);
 
@@ -155,16 +158,21 @@ export function ArtCursor({
 
     const resizeCanvas = () => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) return false;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const targetW = Math.round(w * dpr);
+      const targetH = Math.round(h * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      return true;
     };
 
     const refreshMarkerColor = () => {
@@ -230,8 +238,13 @@ export function ArtCursor({
 
     const stepPhysics = () => {
       const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) {
+      if (!canvas) {
+        running = false;
+        return;
+      }
+      resizeCanvas();
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
         running = false;
         return;
       }
@@ -505,9 +518,16 @@ export function ArtCursor({
     };
 
     sweepDebrisRef.current = sweepDebrisOneByOne;
+    onEnableDebrisRef.current = () => {
+      resizeCanvas();
+      refreshMarkerColor();
+      scanSurfaces(true);
+    };
 
     const spawnPhysicsSquare = (x: number, y: number, vxHint: number) => {
       if (prefersReduced || !enableDebrisRef.current || pdfOpen) return;
+      resizeCanvas();
+      if (!markerColor) refreshMarkerColor();
       const now = performance.now();
       const dx = x - lastSpawnX;
       const dy = y - lastSpawnY;

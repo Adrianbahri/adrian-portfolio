@@ -4,27 +4,29 @@ import { supabase } from '@/lib/supabase';
 let cachedSettings: Record<string, string> | null = null;
 let inflightPromise: Promise<Record<string, string>> | null = null;
 
+export function invalidateSiteSettingsCache() {
+  cachedSettings = null;
+  inflightPromise = null;
+}
+
 export function useSiteSettings(initialSettings?: Record<string, string>) {
   const hasInitial = Boolean(
     initialSettings && Object.keys(initialSettings).length > 0
   );
-  if (hasInitial && !cachedSettings && initialSettings) {
-    cachedSettings = initialSettings;
-  }
 
+  // Always initialize from SSR initialSettings so first client render matches server HTML (zero hydration mismatch)
   const [settings, setSettings] = useState<Record<string, string>>(
-    cachedSettings || initialSettings || {}
+    initialSettings || {}
   );
-  const [loading, setLoading] = useState(!cachedSettings && !hasInitial);
+  const [loading, setLoading] = useState(!hasInitial);
 
   useEffect(() => {
-    if (cachedSettings) {
-      setSettings(cachedSettings);
-      setLoading(false);
-      return;
-    }
-
     let active = true;
+
+    if (cachedSettings && Object.keys(cachedSettings).length > 0) {
+      setSettings((prev) => ({ ...prev, ...cachedSettings }));
+      setLoading(false);
+    }
 
     async function load() {
       try {
@@ -49,9 +51,15 @@ export function useSiteSettings(initialSettings?: Record<string, string>) {
         }
 
         const map = await inflightPromise;
-        if (active) setSettings(map);
-      } catch (err: any) {
-        if (err?.code !== 'PGRST116') {
+        if (active && Object.keys(map).length > 0) {
+          setSettings((prev) => ({ ...prev, ...map }));
+        }
+      } catch (err: unknown) {
+        const code =
+          typeof err === 'object' && err !== null && 'code' in err
+            ? (err as { code?: string }).code
+            : undefined;
+        if (code !== 'PGRST116') {
           console.warn('Site settings not found or RLS restricted. Using defaults.');
         }
       } finally {

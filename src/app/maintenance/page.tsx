@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { FiGithub, FiInstagram, FiLinkedin } from 'react-icons/fi';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { applyThemePreference, subscribeThemeStorage } from '@/lib/themeTransition';
 import { ART_DOMAIN, PRIMARY_DOMAIN, isArtHost } from '@/lib/sites';
 
 const MAIN_UPGRADE_TASKS = [
@@ -92,23 +93,18 @@ export default function MaintenancePage() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
       setIsDark(false);
-      document.documentElement.classList.remove('dark');
+      applyThemePreference('light', { persist: false });
     } else {
       setIsDark(true);
-      document.documentElement.classList.add('dark');
+      applyThemePreference('dark', { persist: false });
     }
+    return subscribeThemeStorage((next) => setIsDark(next === 'dark'));
   }, []);
 
   const toggleTheme = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    applyThemePreference(nextDark ? 'dark' : 'light');
   };
 
   // Live WITA (Makassar) clock

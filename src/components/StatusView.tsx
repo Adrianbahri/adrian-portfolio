@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight, Moon, RotateCcw, Sun } from 'lucide-react';
 import { ArtCursor } from '@/components/ArtCursor';
-import { runThemeTransition } from '@/lib/themeTransition';
+import {
+  applyThemePreference,
+  runThemeTransition,
+  subscribeThemeStorage,
+} from '@/lib/themeTransition';
 import { navigateWithCirclePortal } from '@/lib/portalTransition';
 import '@/styles/shahriyar.css';
 
@@ -28,6 +32,7 @@ export default function StatusView({ code, onReset }: StatusViewProps) {
     if (saved === 'light' || saved === 'dark') {
       setTheme(saved);
     }
+    return subscribeThemeStorage((next) => setTheme(next));
   }, []);
 
   const switchTheme = (
@@ -37,9 +42,7 @@ export default function StatusView({ code, onReset }: StatusViewProps) {
     if (next === theme) return;
     runThemeTransition(() => {
       setTheme(next);
-      localStorage.setItem('theme', next);
-      if (next === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
+      applyThemePreference(next);
     }, e);
   };
 

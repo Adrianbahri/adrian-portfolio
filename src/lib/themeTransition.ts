@@ -1,5 +1,56 @@
 import { flushSync } from 'react-dom';
 
+export type ThemePreference = 'light' | 'dark';
+
+/**
+ * Synchronizes root `.dark` class, `<meta name="color-scheme">`, and `localStorage`
+ * safely (never throws if storage is blocked).
+ */
+export function applyThemePreference(
+  next: ThemePreference,
+  options: { persist?: boolean } = {}
+) {
+  const { persist = true } = options;
+
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    const colorSchemeMeta = document.querySelector<HTMLMetaElement>(
+      'meta[name="color-scheme"]'
+    );
+    if (colorSchemeMeta) {
+      colorSchemeMeta.content = next;
+    }
+  }
+
+  if (persist && typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem('theme', next);
+    } catch {
+      // Ignore storage errors when site data is restricted
+    }
+  }
+}
+
+/**
+ * Keeps theme state in sync across open browser tabs via the `storage` event.
+ */
+export function subscribeThemeStorage(
+  onThemeChange: (next: ThemePreference) => void
+) {
+  if (typeof window === 'undefined') return () => {};
+
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== 'theme') return;
+    if (event.newValue === 'light' || event.newValue === 'dark') {
+      applyThemePreference(event.newValue, { persist: false });
+      onThemeChange(event.newValue);
+    }
+  };
+
+  window.addEventListener('storage', onStorage);
+  return () => window.removeEventListener('storage', onStorage);
+}
+
 /**
  * Triggers a smooth circular reveal View Transition radiating from the clicked toggle button.
  * Falls back gracefully when View Transitions API is unavailable or reduced-motion is preferred.

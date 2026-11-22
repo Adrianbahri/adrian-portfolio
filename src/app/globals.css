@@ -46,6 +46,7 @@
 
 @layer base {
   :root {
+    color-scheme: light dark;
     --canvas: #ffffff;
     --studio: #fbfbfb;
     --surface-75: #f9fafb;
@@ -60,6 +61,14 @@
     --shadow-main: rgba(0, 0, 0, 0.04);
     --primary: #ea580c;
     --primary-hover: #c2410c;
+    accent-color: var(--primary);
+
+    &:has(> head > meta[name="color-scheme"][content="dark"]) {
+      color-scheme: dark;
+    }
+    &:has(> head > meta[name="color-scheme"][content="light"]) {
+      color-scheme: light;
+    }
   }
 
   .dark {
@@ -233,20 +242,29 @@ html {
   }
 }
 
-/* Custom Scrollbar Utility */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+/* Custom Scrollbar Utility (standard scrollbar-color + WebKit fallback) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-border-strong;
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  @apply bg-body-muted;
+@supports not (scrollbar-color: auto) {
+  .custom-scrollbar {
+    scrollbar-width: auto;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--body-muted);
+  }
 }
 /* Fix for browser autofill transparency */
 input:-webkit-autofill,

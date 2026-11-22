@@ -108,14 +108,21 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect, title = "
     setIsUploading(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
-        const compressedFile = await compressToWebP(file);
-        const fileExt = compressedFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const isAnimated = ext === 'gif' || ext === 'webp';
+        const uploadFile = isAnimated ? file : await compressToWebP(file);
+        const fileExt = isAnimated
+          ? ext
+          : uploadFile.name.split('.').pop() || 'webp';
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
         const filePath = `gallery/${fileName}`;
+
+        const formData = new FormData();
+        formData.append('file', uploadFile);
 
         const { error: uploadError } = await supabase.storage
           .from('portfolio-assets')
-          .upload(filePath, compressedFile);
+          .upload(filePath, formData);
 
         if (uploadError) throw uploadError;
 

@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { ArtCursor } from '@/components/ArtCursor';
-import { runThemeTransition } from '@/lib/themeTransition';
+import {
+  applyThemePreference,
+  runThemeTransition,
+  subscribeThemeStorage,
+} from '@/lib/themeTransition';
 import {
   navigateWithCirclePortal,
   signalPortalRouteReady,
@@ -45,6 +49,7 @@ export default function ShahriyarDetailShell({
     router.prefetch(backHref);
     router.prefetch('/');
     signalPortalRouteReady(window.location.pathname);
+    return subscribeThemeStorage((next) => setTheme(next));
   }, [router, backHref]);
 
   // Track reading scroll progress for long case studies & articles
@@ -81,9 +86,7 @@ export default function ShahriyarDetailShell({
     if (next === theme) return;
     runThemeTransition(() => {
       setTheme(next);
-      localStorage.setItem('theme', next);
-      if (next === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
+      applyThemePreference(next);
     }, e);
   };
 
@@ -124,10 +127,10 @@ export default function ShahriyarDetailShell({
       <div className="relative z-10">
         {/* Sticky Top Bar (Exact Shahriyar Article/Project Bar) */}
         <header
-          className="sticky top-0 z-40 w-full"
+          className="sticky top-0 z-40 w-full backdrop-blur-md"
           style={{
-            backgroundColor: 'var(--art-ground)',
-            borderBottom: '1px solid var(--art-line)',
+            backgroundColor: 'transparent',
+            borderBottom: '1px solid var(--art-hairline)',
           }}
         >
           <div className="mx-auto flex h-[56px] max-w-[1200px] items-center justify-between gap-4 px-5 sm:px-8">

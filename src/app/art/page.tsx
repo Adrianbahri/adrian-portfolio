@@ -1,14 +1,19 @@
-import { supabase } from '@/lib/supabase';
+import { fetchPublicTable } from '@/lib/supabase';
 import ArtSiteView from '@/components/ArtSiteView';
+
+export const revalidate = 60;
 
 export default async function ArtHomePage() {
   let initialSettings: Record<string, string> = {};
 
   try {
-    const { data } = await supabase.from('site_settings').select('key, value');
-    if (data) {
-      initialSettings = data.reduce(
-        (acc: Record<string, string>, item: { key: string; value: string }) => {
+    const rows = await fetchPublicTable<{ key: string; value: string }>(
+      'site_settings',
+      'select=key,value'
+    );
+    if (rows.length > 0) {
+      initialSettings = rows.reduce(
+        (acc: Record<string, string>, item) => {
           acc[item.key] = item.value;
           return acc;
         },

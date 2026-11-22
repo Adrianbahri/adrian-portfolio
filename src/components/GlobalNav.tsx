@@ -12,6 +12,7 @@ import { isMaintenanceModeForHost, shouldBypassMaintenance } from '@/lib/mainten
 import { isArtHost } from '@/lib/sites';
 
 import { useProjectMode } from '@/context/ProjectModeContext';
+import { applyThemePreference, subscribeThemeStorage } from '@/lib/themeTransition';
 
 const navLinks = [
   { name: 'About', href: '/about' },
@@ -41,29 +42,25 @@ export default function GlobalNav() {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    // Initial theme setup
+    // Initial theme setup + cross-tab sync
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     if (savedTheme === 'light') {
       setIsDark(false);
-      document.documentElement.classList.remove('dark');
+      applyThemePreference('light', { persist: false });
     } else if (savedTheme === 'dark' || systemPrefersDark) {
       setIsDark(true);
-      document.documentElement.classList.add('dark');
+      applyThemePreference('dark', { persist: false });
     }
+
+    return subscribeThemeStorage((next) => setIsDark(next === 'dark'));
   }, []);
 
   const toggleTheme = () => {
     const newDark = !isDark;
     setIsDark(newDark);
-    if (newDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    applyThemePreference(newDark ? 'dark' : 'light');
   };
 
   const [menuOpen, setMenuOpen] = useState(false);

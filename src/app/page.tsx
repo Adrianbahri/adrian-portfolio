@@ -1,5 +1,7 @@
 import DevPortfolioView from '@/components/DevPortfolioView';
-import { supabase } from '@/lib/supabase';
+import { fetchPublicTable } from '@/lib/supabase';
+
+export const revalidate = 60;
 
 export default async function Home() {
   let initialSettings: Record<string, string> = {};
@@ -9,27 +11,43 @@ export default async function Home() {
   let articles: any[] = [];
 
   try {
-    const [settingsRes, projRes, expRes, achRes, artRes] = await Promise.all([
-      supabase.from('site_settings').select('key, value'),
-      supabase.from('projects').select('title, slug, category, description').order('created_at', { ascending: false }),
-      supabase.from('experiences').select('title, company, timeline, description').order('created_at', { ascending: false }),
-      supabase.from('achievements').select('title, event, year, description').order('created_at', { ascending: false }),
-      supabase.from('articles').select('title, slug, category, description').order('created_at', { ascending: false }),
-    ]);
+    const [settingsRows, projRows, expRows, achRows, artRows] =
+      await Promise.all([
+        fetchPublicTable<{ key: string; value: string }>(
+          'site_settings',
+          'select=key,value'
+        ),
+        fetchPublicTable<any>(
+          'projects',
+          'select=title,slug,category,description&order=created_at.desc'
+        ),
+        fetchPublicTable<any>(
+          'experiences',
+          'select=title,company,timeline,description&order=created_at.desc'
+        ),
+        fetchPublicTable<any>(
+          'achievements',
+          'select=title,event,year,description&order=created_at.desc'
+        ),
+        fetchPublicTable<any>(
+          'articles',
+          'select=title,slug,category,description&order=created_at.desc'
+        ),
+      ]);
 
-    if (settingsRes.data) {
-      initialSettings = settingsRes.data.reduce(
-        (acc: Record<string, string>, item: { key: string; value: string }) => {
+    if (settingsRows.length > 0) {
+      initialSettings = settingsRows.reduce(
+        (acc: Record<string, string>, item) => {
           acc[item.key] = item.value;
           return acc;
         },
         {}
       );
     }
-    projects = projRes.data || [];
-    experiences = expRes.data || [];
-    achievements = achRes.data || [];
-    articles = artRes.data || [];
+    projects = projRows;
+    experiences = expRows;
+    achievements = achRows;
+    articles = artRows;
   } catch (e) {
     console.error('Error fetching SSR data for dri4n.com:', e);
   }

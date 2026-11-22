@@ -1,18 +1,21 @@
+import { cache } from 'react';
 import { fetchPublicTable } from '@/lib/supabase';
 import { Metadata } from 'next';
 import BlogDetailClient from '@/components/BlogDetailClient';
+
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ postSlug: string }>;
 }
 
-async function getArticleBySlug(slug: string) {
+const getArticleBySlug = cache(async (slug: string) => {
   const rows = await fetchPublicTable<any>(
     'articles',
     `select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`
   );
   return rows[0] || null;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { postSlug } = await params;

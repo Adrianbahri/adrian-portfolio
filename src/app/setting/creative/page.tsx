@@ -114,7 +114,7 @@ CREATE POLICY "Allow auth all" ON creative_categories FOR ALL TO authenticated U
 
       if (data && data.length > 0) {
         // Map elements to state
-        const sortedData = [...data].sort((a, b) => a.order_index - b.order_index);
+        const sortedData = data.toSorted((a, b) => a.order_index - b.order_index);
         
         // Guarantee we have our 3 specific categories, filling default if some are missing
         const finalItems = items.map(defaultItem => {

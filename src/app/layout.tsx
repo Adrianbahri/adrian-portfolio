@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { DM_Mono, Inter } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
@@ -295,20 +296,21 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${dmMono.variable} font-sans`}>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}if(window.location.pathname==='/'&&!window.location.hash&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&sessionStorage.getItem('dri4n-agent-intro-v4')!=='1'){document.documentElement.setAttribute('data-agent-building','true');setTimeout(function(){document.documentElement.removeAttribute('data-agent-building')},6500)}}catch(e){}`,
-          }}
-        />
+        <meta name="color-scheme" content="light dark" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
         />
       </head>
       <body className={cn(inter.variable, dmMono.variable, "bg-[var(--color-canvas)] text-[var(--color-on-dark)] font-sans antialiased selection:bg-[var(--color-primary)] selection:text-white")}>
+        <Script id="dri4n-theme-init" strategy="beforeInteractive">
+          {`try{var t=localStorage.getItem('theme');var m=document.querySelector('meta[name="color-scheme"]');if(t==='light'){document.documentElement.classList.remove('dark');if(m)m.content='light'}else{document.documentElement.classList.add('dark');if(m)m.content='dark'}if(window.location.pathname==='/'&&!window.location.hash&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&sessionStorage.getItem('dri4n-agent-intro-v4')!=='1'){document.documentElement.setAttribute('data-agent-building','true');setTimeout(function(){document.documentElement.removeAttribute('data-agent-building')},6500)}}catch(e){}`}
+        </Script>
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>

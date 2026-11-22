@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from '@/lib/motion';
 import {
@@ -20,7 +21,16 @@ import {
   Trophy,
 } from 'lucide-react';
 import { ArtCursor, ScrambleKeychip } from '@/components/ArtCursor';
-import AgentBuilderIntro from '@/components/AgentBuilderIntro';
+import SpotifyNowPlaying from '@/components/SpotifyNowPlaying';
+
+const AgentBuilderIntro = dynamic(
+  () => import('@/components/AgentBuilderIntro'),
+  { ssr: false }
+);
+import SpotifyAmbientBackdrop, {
+  SpotifyFooterCredit,
+} from '@/components/SpotifyAmbientBackdrop';
+import GitHubActivity from '@/components/GitHubActivity';
 import { supabase } from '@/lib/supabase';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { techStack } from '@/data/techstack';
@@ -30,7 +40,11 @@ import { aboutData as staticAboutData } from '@/data/about';
 import { workData as staticWorkData } from '@/data/experience';
 import { achievementsData as staticAchievementsData } from '@/data/achievements';
 import { ART_PATH } from '@/lib/sites';
-import { runThemeTransition } from '@/lib/themeTransition';
+import {
+  applyThemePreference,
+  runThemeTransition,
+  subscribeThemeStorage,
+} from '@/lib/themeTransition';
 import {
   navigateWithCirclePortal,
   signalPortalRouteReady,
@@ -187,8 +201,8 @@ function parsePeriodRange(period: string): {
 function sortExperiencesNewestFirst(
   list: ExperienceTicket[]
 ): ExperienceTicket[] {
-  return [...list]
-    .sort((a, b) => {
+  return list
+    .toSorted((a, b) => {
       const ra = parsePeriodRange(a.year);
       const rb = parsePeriodRange(b.year);
       if (ra.isCurrent !== rb.isCurrent) return ra.isCurrent ? -1 : 1;
@@ -204,7 +218,7 @@ function sortExperiencesNewestFirst(
 function sortAchievementsNewestFirst(
   list: AchievementItem[]
 ): AchievementItem[] {
-  return [...list].sort((a, b) => {
+  return list.toSorted((a, b) => {
     const ya = parseInt((a.year || '').match(/\d{4}/)?.[0] || '0', 10);
     const yb = parseInt((b.year || '').match(/\d{4}/)?.[0] || '0', 10);
     return yb - ya;
@@ -296,10 +310,10 @@ export default function DevPortfolioView({
   const [activeSpineIdx, setActiveSpineIdx] = useState(3);
   const [activeServiceIdx, setActiveServiceIdx] = useState(0);
 
-  // Tearable Ticket & Tabs
+  // Tearable Ticket & Interactive Tech Stack Selection
   const [ticketTorn, setTicketTorn] = useState(false);
   const [ticketHovered, setTicketHovered] = useState(false);
-  const [resourceTab, setResourceTab] = useState<'stack' | 'principles'>('stack');
+  const [selectedToolName, setSelectedToolName] = useState<string | null>(null);
 
   const router = useRouter();
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
@@ -307,6 +321,35 @@ export default function DevPortfolioView({
     () => devMemCache?.artSlides || ART_PORTAL_SLIDES
   );
   const [artSlideIdx, setArtSlideIdx] = useState(0);
+  const [activityGifIdx, setActivityGifIdx] = useState(0);
+
+  const activityGifs = useMemo<string[]>(() => {
+    if (!settings.activity_gifs) return [];
+    try {
+      const parsed = JSON.parse(settings.activity_gifs);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (u): u is string => typeof u === 'string' && u.trim().length > 0
+        );
+      }
+    } catch {
+      // ignore invalid json
+    }
+    return [];
+  }, [settings.activity_gifs]);
+
+  // Smooth 5-second cross-fade rotation across uploaded Activity GIFs
+  useEffect(() => {
+    if (activityGifs.length <= 1) {
+      setActivityGifIdx(0);
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => {
+      setActivityGifIdx((prev) => (prev + 1) % activityGifs.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [activityGifs.length]);
 
   // Fast 2.4s cross-fade slideshow for the Creative Side preview tile on Home
   useEffect(() => {
@@ -328,12 +371,8 @@ export default function DevPortfolioView({
   };
   // Active Timeline Role, Pinch-to-Zoom, Competition Accordion, Resume Book & Copy
   const [expandedExpId, setExpandedExpId] = useState<string | null>(null);
-  const [activityFilter, setActivityFilter] = useState<
-    'all' | 'organization' | 'volunteering'
-  >('all');
-  const [expandedActivityId, setExpandedActivityId] = useState<string | null>(
-    null
-  );
+  const [activePassId, setActivePassId] = useState<string | null>(null);
+  const [passShuffleSeed, setPassShuffleSeed] = useState<number>(0);
   const [timelineZoom, setTimelineZoom] = useState<number>(1);
   const [isPinchingTimeline, setIsPinchingTimeline] = useState(false);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
@@ -459,7 +498,11 @@ export default function DevPortfolioView({
     }
     router.prefetch(ART_PATH);
     const readyCap = window.setTimeout(() => signalPortalRouteReady('/'), 420);
-    return () => window.clearTimeout(readyCap);
+    const unsubscribeTheme = subscribeThemeStorage((next) => setTheme(next));
+    return () => {
+      window.clearTimeout(readyCap);
+      unsubscribeTheme();
+    };
   }, [router]);
 
   // Pre-warm detail pages when entering #work or #writing so portal transitions are instant
@@ -483,9 +526,7 @@ export default function DevPortfolioView({
     setMorphKey(null);
     runThemeTransition(() => {
       setTheme(next);
-      localStorage.setItem('theme', next);
-      if (next === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
+      applyThemePreference(next);
     }, e);
   };
 
@@ -619,18 +660,51 @@ export default function DevPortfolioView({
         return;
       }
 
+      if (key === 'm') {
+        switchTheme(theme === 'dark' ? 'light' : 'dark');
+        return;
+      }
+
+      if (key === 'r' && settings.resume_url) {
+        window.dispatchEvent(
+          new CustomEvent('open-pdf-reader', {
+            detail: {
+              url: settings.resume_url,
+              title: 'Resume - Adrian Bahri',
+            },
+          })
+        );
+        return;
+      }
+
       if (activeView === 'home') {
-        if (key === 'w') navigateTo('work');
-        else if (key === 'a') navigateWithCirclePortal(ART_PATH, router);
-        else if (key === 'e' || key === 'g' || key === 's') navigateTo('experience');
-        else if (key === 'b') navigateTo('writing');
-        else if (key === 'r') navigateTo('resources');
+        if (key === 's') navigateTo('work');
+        else if (key === 'c') navigateWithCirclePortal(ART_PATH, router);
+        else if (key === 'w') navigateTo('writing');
+        else if (key === 't') navigateTo('experience');
+        else if (key === 'a') navigateTo('resources');
+      } else if (
+        activeView === 'experience' &&
+        key === 'enter' &&
+        activities.length > 0 &&
+        target?.tagName !== 'BUTTON' &&
+        target?.tagName !== 'A'
+      ) {
+        e.preventDefault();
+        setPassShuffleSeed((s) => s + 1);
+        setActivePassId((prevId) => {
+          const curIdx = Math.max(
+            0,
+            activities.findIndex((a) => a.id === prevId)
+          );
+          return activities[(curIdx + 1) % activities.length].id;
+        });
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [activeView, router]);
+  }, [activeView, router, activities, theme, settings.resume_url]);
 
   // Zero idle background timers for crisp, lightweight performance
 
@@ -1335,10 +1409,10 @@ export default function DevPortfolioView({
 
   const SubViewTopBar = ({ sectionLabel }: { sectionLabel: string }) => (
     <div
-      className="sticky top-0 z-40 w-full"
+      className="sticky top-0 z-40 w-full backdrop-blur-md"
       style={{
-        backgroundColor: 'var(--art-ground)',
-        borderBottom: '1px solid var(--art-line)',
+        backgroundColor: 'transparent',
+        borderBottom: '1px solid var(--art-hairline)',
       }}
     >
       <div className="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between px-5 sm:px-8">
@@ -1396,6 +1470,7 @@ export default function DevPortfolioView({
     >
       <ArtCursor enableDebris={activeView === 'home'} />
       <AgentBuilderIntro active={activeView === 'home'} />
+      <SpotifyAmbientBackdrop />
 
       <div className="relative z-10">
           {/* =================================================================
@@ -1429,6 +1504,7 @@ export default function DevPortfolioView({
                       alt="Adrian Bahri"
                       fill
                       priority
+                      sizes="60px"
                       className="object-cover"
                     />
                   </button>
@@ -1489,36 +1565,64 @@ export default function DevPortfolioView({
                 </div>
               </header>
 
-              {/* Editorial Dev Bio (Fully editable from /setting Bio Narrative) */}
+              {/* Editorial Dev Bio (2-Section Editable from /setting: Before Cut & After Cut) */}
               {(() => {
-                const heroGreeting =
-                  settings.hero_greeting || "Hey there, I'm Adrian Bahri (Dri4n)";
-                const heroSubtitle =
-                  settings.hero_subtitle ||
-                  'a creative technologist & full-stack developer based in';
-                const heroStrike =
-                  settings.hero_strike !== undefined
-                    ? settings.hero_strike
-                    : 'labs, late-night commits,';
-                const heroCity = settings.hero_city || 'Makassar';
-                const heroBio1 =
-                  settings.hero_bio_1 ||
-                  'By day I build digital systems & data workflows at [blue:PK Identitas Unhas], and modernize web platforms as an intern at [orange:UKK Sains Unhas].';
-                const heroBio2 =
-                  settings.hero_bio_2 ||
-                  'I love crafting fast, expressive [pink:full-stack web apps] with Next.js, TypeScript, and Bun + SQLite.';
+                const defaultBefore = `Hey there, I'm Adrian Bahri (Dri4n)\na creative technologist & full-stack developer based in [strike:labs, late-night commits,] Makassar\n\nBy day I build digital systems & data workflows at [blue:PK Identitas Unhas], and modernize web platforms as an intern at [orange:UKK Sains Unhas].\n\nI love crafting fast, expressive [pink:full-stack web apps] with Next.js, TypeScript, and Bun + SQLite.`;
+
+                const rawBefore =
+                  settings.bio_before_cut !== undefined &&
+                  settings.bio_before_cut.trim() !== ''
+                    ? settings.bio_before_cut
+                    : settings.hero_greeting || settings.hero_bio_1
+                    ? [
+                        `${settings.hero_greeting || "Hey there, I'm Adrian Bahri (Dri4n)"}\n${
+                          settings.hero_subtitle ||
+                          'a creative technologist & full-stack developer based in'
+                        } ${
+                          settings.hero_strike
+                            ? `[strike:${settings.hero_strike}] `
+                            : ''
+                        }${settings.hero_city || 'Makassar'}`,
+                        settings.hero_bio_1 || '',
+                        settings.hero_bio_2 || '',
+                      ]
+                        .filter(Boolean)
+                        .join('\n\n')
+                    : defaultBefore;
+
+                const rawAfter =
+                  settings.bio_after_cut !== undefined &&
+                  settings.bio_after_cut.trim() !== ''
+                    ? settings.bio_after_cut
+                    : settings.about_text || '';
 
                 let markCounter = 0;
                 const renderMarkedBio = (raw: string) => {
-                  const parts = raw.split(/(\[(?:blue|orange|pink|green|yellow):[^\]]+\])/g);
+                  const parts = raw.split(
+                    /(\[(?:blue|orange|pink|green|yellow|strike):[^\]]+\])/g
+                  );
                   return parts.map((part, idx) => {
-                    const m = part.match(/^\[(blue|orange|pink|green|yellow):([^\]]+)\]$/);
+                    const m = part.match(
+                      /^\[(blue|orange|pink|green|yellow|strike):([^\]]+)\]$/
+                    );
                     if (!m) return <span key={idx}>{part}</span>;
+                    if (m[1] === 'strike') {
+                      return (
+                        <span
+                          key={idx}
+                          className="line-through opacity-55"
+                        >
+                          {m[2]}
+                        </span>
+                      );
+                    }
                     markCounter += 1;
                     const num = markCounter;
                     return (
                       <span key={idx}>
-                        <span className={`art-mark art-mark-${m[1]}`}>{m[2]}</span>
+                        <span className={`art-mark art-mark-${m[1]}`}>
+                          {m[2]}
+                        </span>
                         {bioExpanded && (
                           <sup
                             className="ml-0.5 font-mono text-[10px]"
@@ -1532,33 +1636,59 @@ export default function DevPortfolioView({
                   });
                 };
 
+                const beforeBlocks = rawBefore
+                  .split(/\n{2,}/)
+                  .map((b) => b.trim())
+                  .filter(Boolean);
+                const afterBlocks = rawAfter
+                  .split(/\n{2,}/)
+                  .map((b) => b.trim())
+                  .filter(Boolean);
+
                 return (
               <section className="space-y-3.5 text-[14px] leading-[22px] sm:space-y-4 sm:text-[15px] sm:leading-[24px]">
-                <div>
-                  <h1 className="font-normal" style={{ color: 'var(--art-ink)' }}>
-                    {heroGreeting}
-                  </h1>
-                  <p style={{ color: 'var(--art-ink-soft)' }}>
-                    {heroSubtitle}{' '}
-                    {bioExpanded && heroStrike && (
-                      <span className="mr-1 line-through opacity-55">
-                        {heroStrike}
-                      </span>
-                    )}
-                    {heroCity}
-                  </p>
-                </div>
-
-                {heroBio1 && (
-                  <p style={{ color: 'var(--art-ink-soft)' }}>
-                    {renderMarkedBio(heroBio1)}
-                  </p>
-                )}
-
-                <p style={{ color: 'var(--art-ink-soft)' }}>
-                  {renderMarkedBio(heroBio2)} Currently:{' '}
-                  <span style={{ color: 'var(--art-ink)' }}>{statusText}</span>.
-                </p>
+                {beforeBlocks.map((block, bIdx) => {
+                  const lines = block.split('\n');
+                  const isLastBlock = bIdx === beforeBlocks.length - 1;
+                  return (
+                    <div key={bIdx}>
+                      {lines.map((line, lIdx) => {
+                        const isTitleLine = bIdx === 0 && lIdx === 0;
+                        const isVeryLastLine =
+                          isLastBlock && lIdx === lines.length - 1;
+                        if (isTitleLine) {
+                          return (
+                            <h1
+                              key={lIdx}
+                              className="font-normal"
+                              style={{ color: 'var(--art-ink)' }}
+                            >
+                              {renderMarkedBio(line)}
+                            </h1>
+                          );
+                        }
+                        return (
+                          <p
+                            key={lIdx}
+                            style={{ color: 'var(--art-ink-soft)' }}
+                          >
+                            {renderMarkedBio(line)}
+                            {isVeryLastLine && (
+                              <>
+                                {' '}
+                                Currently:{' '}
+                                <span style={{ color: 'var(--art-ink)' }}>
+                                  {statusText}
+                                </span>
+                                .
+                              </>
+                            )}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
 
                 {/* Unfolded Extended Bio — Smooth CSS Grid Accordion */}
                 <div
@@ -1571,29 +1701,31 @@ export default function DevPortfolioView({
                       className="space-y-4 pb-1 pt-2"
                       style={{ color: 'var(--art-ink-soft)' }}
                     >
-                      <p className="whitespace-pre-wrap">
-                        {settings.about_text ? (
-                          settings.about_text
-                        ) : (
-                          <>
-                            I&apos;m an Informatics Engineering student at{' '}
-                            <span className="art-mark art-mark-green">
-                              Hasanuddin University
-                            </span>
-                            <sup
-                              className="ml-0.5 font-mono text-[10px]"
-                              style={{ color: 'var(--art-marker-text)' }}
-                            >
-                              4
-                            </sup>{' '}
-                            passionate about{' '}
-                            <span className="art-mark art-mark-yellow">
-                              full-stack web engineering &amp; intelligent systems
-                            </span>
-                            —building fast, expressive software that feels alive.
-                          </>
-                        )}
-                      </p>
+                      {afterBlocks.length > 0 ? (
+                        afterBlocks.map((block, bIdx) => (
+                          <p key={bIdx} className="whitespace-pre-wrap">
+                            {renderMarkedBio(block)}
+                          </p>
+                        ))
+                      ) : (
+                        <p className="whitespace-pre-wrap">
+                          I&apos;m an Informatics Engineering student at{' '}
+                          <span className="art-mark art-mark-green">
+                            Hasanuddin University
+                          </span>
+                          <sup
+                            className="ml-0.5 font-mono text-[10px]"
+                            style={{ color: 'var(--art-marker-text)' }}
+                          >
+                            4
+                          </sup>{' '}
+                          passionate about{' '}
+                          <span className="art-mark art-mark-yellow">
+                            full-stack web engineering &amp; intelligent systems
+                          </span>
+                          , building fast, expressive software that feels alive.
+                        </p>
+                      )}
 
                       <ol
                         className="space-y-1.5 border-t pt-3 font-mono text-[11px] leading-[17px]"
@@ -1702,18 +1834,20 @@ export default function DevPortfolioView({
                     })}
                   </div>
 
-                  {/* Pointer-Following Animated Scissors (replaces cursor cleanly without any overlapping pill) */}
+                  {/* Pointer-Following Animated Scissors (resting on the left when idle, follows pointer on hover/drag) */}
                   <div
                     style={{
                       left: `${
                         isDraggingCut || isAutoCutting || cutProgress > 0
                           ? Math.min(98, cutProgress * 100)
-                          : cutHoverPct
+                          : isHoveringCut
+                          ? cutHoverPct
+                          : 3.5
                       }%`,
                       opacity:
                         isHoveringCut || isDraggingCut || isAutoCutting || cutProgress > 0
                           ? 1
-                          : 0,
+                          : 0.72,
                       transform: `translate(-50%, -50%) scale(${
                         isDraggingCut || isAutoCutting ? 1.15 : 1
                       }) rotate(${
@@ -1769,7 +1903,7 @@ export default function DevPortfolioView({
                   }}
                   onMouseEnter={() => setHoveredTile('work')}
                   onMouseLeave={() => setHoveredTile(null)}
-                  className="group relative col-span-2 min-h-[244px] w-full overflow-hidden rounded-[16px] p-4 text-left transition-colors duration-200 cursor-pointer sm:col-span-1 sm:min-h-0 sm:aspect-square"
+                  className="group relative col-span-2 min-h-[244px] w-full overflow-hidden rounded-[16px] p-4 text-left backdrop-blur-md transition-colors duration-200 cursor-pointer sm:col-span-1 sm:min-h-0 sm:aspect-square"
                   style={{
                     viewTransitionName:
                       morphKey === 'work' ? 'active-tile-morph' : undefined,
@@ -1803,16 +1937,12 @@ export default function DevPortfolioView({
                           }}
                           className="flex h-6 w-6 items-center justify-center rounded-[5px] opacity-100 sm:opacity-0 transition-all duration-200 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 hover:text-[var(--art-marker-text)] cursor-pointer"
                           style={{
-                            backgroundColor: 'var(--art-paper)',
+                            backgroundColor: 'var(--art-card-solid)',
                             border: '1px solid var(--art-line)',
                           }}
                         >
                           ‹
                         </button>
-                        <span className="tabular-nums px-0.5">
-                          {String(safeActiveProjectIdx + 1).padStart(2, '0')}/
-                          {String(deckProjects.length).padStart(2, '0')}
-                        </span>
                         <button
                           type="button"
                           aria-label="Next project card"
@@ -1822,7 +1952,7 @@ export default function DevPortfolioView({
                           }}
                           className="flex h-6 w-6 items-center justify-center rounded-[5px] opacity-100 sm:opacity-0 transition-all duration-200 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 hover:text-[var(--art-marker-text)] cursor-pointer"
                           style={{
-                            backgroundColor: 'var(--art-paper)',
+                            backgroundColor: 'var(--art-card-solid)',
                             border: '1px solid var(--art-line)',
                           }}
                         >
@@ -1905,7 +2035,7 @@ export default function DevPortfolioView({
                           aria-hidden={offset !== 0}
                           className="absolute inset-x-2 top-3 flex h-[152px] flex-col overflow-hidden rounded-[9px] shadow-[0_6px_18px_rgba(0,0,0,0.22)] will-change-transform"
                           style={{
-                            backgroundColor: 'var(--art-paper)',
+                            backgroundColor: 'var(--art-card-solid)',
                             border: '1px solid var(--art-line)',
                             transform,
                             opacity,
@@ -1915,13 +2045,17 @@ export default function DevPortfolioView({
                           }}
                         >
                           <div className="relative h-[96px] w-full shrink-0 overflow-hidden bg-black/25">
-                            {proj.image && !brokenImages[proj.image] ? (
+                            {proj.image &&
+                            !brokenImages[proj.image] &&
+                            (offset <= 2 || isExiting || isSettling) ? (
                               <Image
                                 src={proj.image}
                                 alt={proj.title}
                                 fill
                                 draggable={false}
                                 sizes="240px"
+                                fetchPriority={offset === 0 ? 'high' : 'low'}
+                                loading={offset === 0 ? 'eager' : 'lazy'}
                                 onError={() => markImageBroken(proj.image)}
                                 className={`object-cover transition-transform duration-500 ${
                                   offset === 0
@@ -1965,7 +2099,7 @@ export default function DevPortfolioView({
 
                   <ScrambleKeychip
                     label="SELECTED PROJECTS"
-                    shortcut="W"
+                    shortcut="S"
                     active={hoveredTile === 'work'}
                   />
 
@@ -1978,7 +2112,7 @@ export default function DevPortfolioView({
                           : 'var(--art-ink-muted)',
                     }}
                   >
-                    W
+                    S
                   </span>
                 </div>
 
@@ -2022,6 +2156,8 @@ export default function DevPortfolioView({
                               fill
                               unoptimized
                               sizes="(max-width: 640px) 100vw, 280px"
+                              loading={isActive ? 'eager' : 'lazy'}
+                              fetchPriority={isActive ? undefined : 'low'}
                               onError={() => markImageBroken(slide.image)}
                               className="object-cover"
                             />
@@ -2036,25 +2172,25 @@ export default function DevPortfolioView({
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                   </div>
 
-                  {/* Top-right subtle portal icon */}
-                  <span className="absolute right-3.5 top-3.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-transform duration-200 group-hover:scale-105">
-                    <ArrowUpRight size={13} />
-                  </span>
-
-                  <ScrambleKeychip
-                    label="CREATIVE SIDE"
-                    shortcut="A"
-                    active={hoveredTile === 'art'}
-                  />
-
-                  <div className="absolute inset-x-3.5 bottom-3.5 z-10 flex items-center justify-between gap-2">
+                  {/* Top bar: Creative Side label (consistent top-left) + portal icon */}
+                  <div className="absolute inset-x-3.5 top-3.5 z-10 flex items-center justify-between gap-2">
                     <span className="truncate rounded-[6px] bg-black/55 px-2.5 py-0.5 text-[12px] font-medium text-white backdrop-blur-md">
                       Creative Side
                     </span>
-                    <span className="shrink-0 font-mono text-[11px] text-white/80 group-hover:text-white">
-                      A
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-transform duration-200 group-hover:scale-105">
+                      <ArrowUpRight size={13} aria-hidden="true" />
                     </span>
                   </div>
+
+                  <ScrambleKeychip
+                    label="CREATIVE SIDE"
+                    shortcut="C"
+                    active={hoveredTile === 'art'}
+                  />
+
+                  <span className="absolute bottom-3.5 right-4 z-10 font-mono text-[11px] text-white/85 group-hover:text-white">
+                    C
+                  </span>
                 </button>
                 </div>
 
@@ -2065,7 +2201,7 @@ export default function DevPortfolioView({
                   onClick={() => navigateTo('writing')}
                   onMouseEnter={() => setHoveredTile('writing')}
                   onMouseLeave={() => setHoveredTile(null)}
-                  className="group relative col-span-2 flex min-h-[124px] w-full flex-row items-center justify-between gap-3.5 overflow-hidden rounded-[16px] p-3.5 text-left transition-colors duration-200 sm:min-h-[188px] sm:gap-4 sm:p-5"
+                  className="group relative col-span-2 flex min-h-[124px] w-full flex-row items-center justify-between gap-3.5 overflow-hidden rounded-[16px] p-3.5 text-left backdrop-blur-md transition-colors duration-200 sm:min-h-[188px] sm:gap-4 sm:p-5"
                   style={{
                     viewTransitionName:
                       morphKey === 'writing' ? 'active-tile-morph' : undefined,
@@ -2088,6 +2224,8 @@ export default function DevPortfolioView({
                         src={latestArticle.img}
                         alt={latestArticle.title}
                         fill
+                        sizes="(max-width: 640px) 92px, 144px"
+                        loading="lazy"
                         onError={() => markImageBroken(latestArticle.img)}
                         className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                       />
@@ -2128,7 +2266,7 @@ export default function DevPortfolioView({
 
                   <ScrambleKeychip
                     label="WRITING"
-                    shortcut="B"
+                    shortcut="W"
                     active={hoveredTile === 'writing'}
                   />
 
@@ -2141,7 +2279,7 @@ export default function DevPortfolioView({
                           : 'var(--art-ink-muted)',
                     }}
                   >
-                    B
+                    W
                   </span>
                 </button>
 
@@ -2155,7 +2293,7 @@ export default function DevPortfolioView({
                   onClick={() => navigateTo('experience')}
                   onMouseEnter={() => setHoveredTile('experience')}
                   onMouseLeave={() => setHoveredTile(null)}
-                  className="group relative col-span-1 flex min-h-[164px] w-full flex-col justify-between overflow-hidden rounded-[16px] p-3.5 text-left transition-colors duration-200 sm:min-h-0 sm:aspect-square sm:p-5"
+                  className="group relative col-span-1 flex min-h-[164px] w-full flex-col justify-between overflow-hidden rounded-[16px] p-3.5 text-left backdrop-blur-md transition-colors duration-200 sm:min-h-0 sm:aspect-square sm:p-5"
                   style={{
                     viewTransitionName:
                       morphKey === 'experience' ? 'active-tile-morph' : undefined,
@@ -2197,7 +2335,7 @@ export default function DevPortfolioView({
 
                   <ScrambleKeychip
                     label="TRACK RECORD"
-                    shortcut="E"
+                    shortcut="T"
                     active={hoveredTile === 'experience'}
                   />
 
@@ -2210,17 +2348,17 @@ export default function DevPortfolioView({
                           : 'var(--art-ink-muted)',
                     }}
                   >
-                    E
+                    T
                   </span>
                 </button>
 
-                {/* TILE 5: Resources [R] (12-spine miniature bookshelf flush at bottom, shortcut only!) */}
+                {/* TILE 5: Activity [R] (Full-bleed 5s auto-rotating GIF collection from Admin) */}
                 <button
                   type="button"
                   onClick={() => navigateTo('resources')}
                   onMouseEnter={() => setHoveredTile('resources')}
                   onMouseLeave={() => setHoveredTile(null)}
-                  className="group relative col-span-1 flex min-h-[164px] w-full flex-col justify-between overflow-hidden rounded-[16px] px-2.5 pt-3.5 pb-2.5 text-left transition-colors duration-200 sm:min-h-0 sm:aspect-square sm:px-4 sm:pt-5 sm:pb-3"
+                  className="group relative col-span-1 flex min-h-[164px] w-full flex-col justify-between overflow-hidden rounded-[16px] p-3 text-left backdrop-blur-md transition-colors duration-200 cursor-pointer sm:min-h-0 sm:aspect-square sm:p-4"
                   style={{
                     viewTransitionName:
                       morphKey === 'resources' ? 'active-tile-morph' : undefined,
@@ -2231,55 +2369,95 @@ export default function DevPortfolioView({
                         : '1px solid var(--art-line)',
                   }}
                 >
-                  <span
-                    className="px-1 text-[12.5px] sm:text-[13px]"
-                    style={{ color: 'var(--art-ink-muted)' }}
-                  >
-                    Resources
-                  </span>
+                  {activityGifs.length > 0 ? (
+                    <>
+                      {/* Full-bleed cross-fading GIF collection (5s interval, mounts only current + next for low memory) */}
+                      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        {activityGifs.map((gifUrl, idx) => {
+                          const currentIdx =
+                            activityGifIdx % activityGifs.length;
+                          const nextIdx =
+                            (currentIdx + 1) % activityGifs.length;
+                          const isCurrent = idx === currentIdx;
+                          const isNext = idx === nextIdx;
+                          if (!isCurrent && !isNext) return null;
+                          return (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={`${gifUrl}-${idx}`}
+                              src={gifUrl}
+                              alt={`Activity GIF ${idx + 1}`}
+                              loading={isCurrent ? 'eager' : 'lazy'}
+                              fetchPriority={isCurrent ? undefined : 'low'}
+                              decoding="async"
+                              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                                isCurrent ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            />
+                          );
+                        })}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/35" />
+                      </div>
 
-                  <div className="flex h-[102px] items-end justify-center gap-[2px] sm:h-[145px] sm:gap-[3.5px]">
-                    {BOOK_SPINES.map((spine, idx) => {
-                      const isElevated = idx === activeSpineIdx;
-                      return (
-                        <div
-                          key={spine.label}
-                          onMouseEnter={() => setActiveSpineIdx(idx)}
-                          className="flex w-[10px] max-h-[88px] items-center justify-center rounded-[2px] font-mono text-[5.5px] font-semibold tracking-wider shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] sm:w-[16px] sm:max-h-none sm:text-[7px]"
-                          style={{
-                            height: `${spine.h}px`,
-                            backgroundColor: spine.bg,
-                            color: spine.fg,
-                            transform: isElevated
-                              ? 'translateY(-13px) rotate(0deg)'
-                              : `translateY(0px) rotate(${spine.tilt}deg)`,
-                          }}
-                        >
-                          <span className="[writing-mode:vertical-rl] rotate-180 select-none">
-                            {spine.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                      <div className="relative z-10 flex items-center justify-between gap-2">
+                        <span className="truncate rounded-[6px] bg-black/55 px-2.5 py-0.5 text-[12px] font-medium text-white backdrop-blur-md">
+                          Activity
+                        </span>
+                      </div>
 
-                  <ScrambleKeychip
-                    label="RESOURCES"
-                    shortcut="R"
-                    active={hoveredTile === 'resources'}
-                  />
+                      <ScrambleKeychip
+                        label="ACTIVITY"
+                        shortcut="A"
+                        active={hoveredTile === 'resources'}
+                      />
 
-                  <span
-                    className="absolute bottom-3.5 right-4 z-10 font-mono text-[11px]"
-                    style={{
-                      color:
-                        hoveredTile === 'resources'
-                          ? 'var(--art-ink)'
-                          : 'var(--art-ink-muted)',
-                    }}
-                  >
-                    R
-                  </span>
+                      <span className="absolute bottom-3.5 right-4 z-10 font-mono text-[11px] text-white/85 group-hover:text-white">
+                        A
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        className="relative z-10 px-1 text-[12.5px] sm:text-[13px]"
+                        style={{ color: 'var(--art-ink-muted)' }}
+                      >
+                        Activity
+                      </span>
+
+                      <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            theme === 'dark'
+                              ? '/images/activity-frame-1-dark.png'
+                              : '/images/activity-frame-1.png'
+                          }
+                          alt="Activity desk illustration"
+                          width={220}
+                          height={220}
+                          className="h-[118px] w-[118px] object-contain transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105 sm:h-[172px] sm:w-[172px]"
+                        />
+                      </div>
+
+                      <ScrambleKeychip
+                        label="ACTIVITY"
+                        shortcut="A"
+                        active={hoveredTile === 'resources'}
+                      />
+
+                      <span
+                        className="absolute bottom-3.5 right-4 z-10 font-mono text-[11px]"
+                        style={{
+                          color:
+                            hoveredTile === 'resources'
+                              ? 'var(--art-ink)'
+                              : 'var(--art-ink-muted)',
+                        }}
+                      >
+                        A
+                      </span>
+                    </>
+                  )}
                 </button>
                 </div>
               </section>
@@ -2358,6 +2536,7 @@ export default function DevPortfolioView({
                     Instagram
                   </a>
                 </nav>
+                <SpotifyFooterCredit />
               </footer>
             </main>
           )}
@@ -2408,7 +2587,8 @@ export default function DevPortfolioView({
                   {projects.map((item, idx) => (
                     <article
                       key={item.id}
-                      className="group flex flex-col justify-between space-y-3"
+                      className="dev-enter-card group flex flex-col justify-between space-y-3 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1"
+                      style={{ ['--enter-delay' as string]: `${idx * 65}ms` }}
                     >
                       <div>
                         <Link
@@ -2632,7 +2812,7 @@ export default function DevPortfolioView({
                           ];
 
                     const activeRoleId = expandedExpId ?? experiences[0]?.id ?? null;
-                    const timelineRows = [...experiences].reverse();
+                    const timelineRows = experiences.toReversed();
                     const isZoomed = Math.abs(timelineZoom - 1) > 0.03;
 
                     return (
@@ -2737,7 +2917,7 @@ export default function DevPortfolioView({
 
                             {/* Clickable Horizontal Role Bars */}
                             <div className="relative z-10 space-y-2.5 pt-2">
-                              {timelineRows.map((exp) => {
+                              {timelineRows.map((exp, barIdx) => {
                                 const range = parsePeriodRange(exp.year);
                                 const clampedStart = Math.max(
                                   timelineMin,
@@ -2785,8 +2965,9 @@ export default function DevPortfolioView({
                                         border: isHighlight
                                           ? '1px solid transparent'
                                           : '1px solid var(--art-line)',
+                                        ['--bar-delay' as string]: `${barIdx * 95}ms`,
                                       }}
-                                      className="absolute top-0 flex h-[26px] items-center justify-between gap-1.5 rounded-[6px] px-2 text-left text-[11px] font-medium transition-opacity hover:opacity-90"
+                                      className="dev-timeline-bar absolute top-0 flex h-[26px] cursor-pointer items-center justify-between gap-1.5 rounded-[6px] px-2 text-left text-[11px] font-medium transition-[opacity,box-shadow] duration-200 hover:opacity-95 hover:shadow-md"
                                     >
                                       <span className="flex min-w-0 items-center gap-1.5">
                                         {exp.logoUrl && (
@@ -2802,7 +2983,7 @@ export default function DevPortfolioView({
                                       </span>
                                       {range.isCurrent && (
                                         <span
-                                          className="ml-1.5 h-2 w-2 shrink-0 rounded-full border"
+                                          className="dev-live-pulse ml-1.5 h-2 w-2 shrink-0 rounded-full border"
                                           style={{
                                             borderColor: isSelected
                                               ? 'var(--art-on-marker)'
@@ -2993,205 +3174,248 @@ export default function DevPortfolioView({
                     );
                   })()}
 
-                  {/* 1.5. ORGANIZATIONS & VOLUNTEERING (Interactive Filterable Bento Cards) */}
+                  {/* 1.5. COMMUNITY & CREW PASSES — Monochrome Editorial Lanyard Desk (Single Vermilion Accent) */}
                   {activities.length > 0 && (() => {
-                    const orgCount = activities.filter(
-                      (a) => a.kind === 'organization'
-                    ).length;
-                    const volCount = activities.filter(
-                      (a) => a.kind === 'volunteering'
-                    ).length;
-                    const visibleActivities =
-                      activityFilter === 'all'
-                        ? activities
-                        : activities.filter((a) => a.kind === activityFilter);
+                    const TILT_PRESETS = [-1.8, 1.4, -1.2, 1.6, -1.5, 1.1, -1.6, 1.3];
+
+                    const selectedIndex = Math.max(
+                      0,
+                      activities.findIndex((a) => a.id === activePassId)
+                    );
+                    const activePass =
+                      activities.find((a) => a.id === activePassId) ||
+                      activities[0];
+                    const isActivePassNow = activePass.timeline
+                      .toUpperCase()
+                      .includes('NOW');
 
                     return (
                       <div className="space-y-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
-                            <p
-                              className="font-mono text-[11px] uppercase tracking-[0.14em]"
-                              style={{ color: 'var(--art-ink-muted)' }}
-                            >
-                              Organizations &amp; Volunteering (
-                              {visibleActivities.length})
-                            </p>
-                          </div>
+                        {/* Section Header + Minimal Shuffle Control */}
+                        <div className="flex items-center justify-between gap-3">
+                          <p
+                            className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                            style={{ color: 'var(--art-ink-muted)' }}
+                          >
+                            Organizations &amp; Volunteering ({activities.length})
+                          </p>
 
-                          {/* Interactive Segmented Filter Pills */}
-                          <div
-                            role="tablist"
-                            aria-label="Filter activities"
-                            className="inline-flex items-center gap-1 rounded-full p-1"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPassShuffleSeed((s) => s + 1);
+                              const nextIdx =
+                                (selectedIndex + 1) % activities.length;
+                              setActivePassId(activities[nextIdx].id);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors duration-200 active:scale-95"
                             style={{
                               backgroundColor: 'var(--art-tile)',
+                              color: 'var(--art-ink-soft)',
                               border: '1px solid var(--art-line)',
                             }}
                           >
-                            {(
-                              [
-                                ['all', `All · ${activities.length}`],
-                                ['organization', `Org · ${orgCount}`],
-                                ['volunteering', `Volunteer · ${volCount}`],
-                              ] as const
-                            ).map(([key, label]) => {
-                              const active = activityFilter === key;
-                              return (
-                                <button
-                                  key={key}
-                                  type="button"
-                                  role="tab"
-                                  aria-selected={active}
-                                  onClick={() => {
-                                    setActivityFilter(key);
-                                    setExpandedActivityId(null);
-                                  }}
-                                  className="rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] transition-all duration-200"
-                                  style={{
-                                    backgroundColor: active
-                                      ? 'var(--art-marker)'
-                                      : 'transparent',
-                                    color: active
-                                      ? '#ffffff'
-                                      : 'var(--art-ink-muted)',
-                                  }}
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })}
-                          </div>
+                            <span>Shuffle</span>
+                            <kbd
+                              className="rounded-[4px] px-1.5 py-0.5 font-mono text-[9px] leading-none"
+                              style={{
+                                backgroundColor: 'var(--art-ground)',
+                                color: 'var(--art-ink)',
+                                border: '1px solid var(--art-line)',
+                              }}
+                            >
+                              ↵
+                            </kbd>
+                          </button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          {visibleActivities.map((act) => {
-                            const isOpen = expandedActivityId === act.id;
-                            const isActiveNow = act.timeline
+                        {/* Uniform Theme-Matched Tactile Lanyard Passes */}
+                        <div className="grid grid-cols-2 gap-3 pt-1 sm:grid-cols-4">
+                          {activities.map((act, idx) => {
+                            const isSelected = activePass.id === act.id;
+                            const baseTilt =
+                              TILT_PRESETS[
+                                (idx + passShuffleSeed) % TILT_PRESETS.length
+                              ];
+                            const isNow = act.timeline
                               .toUpperCase()
                               .includes('NOW');
-                            const isVolunteer = act.kind === 'volunteering';
 
                             return (
                               <button
                                 key={act.id}
                                 type="button"
-                                onClick={() =>
-                                  setExpandedActivityId((cur) =>
-                                    cur === act.id ? null : act.id
-                                  )
-                                }
-                                aria-expanded={isOpen}
-                                className="group flex flex-col justify-between rounded-[12px] p-4 text-left transition-all duration-200 hover:-translate-y-[1px]"
+                                onClick={() => setActivePassId(act.id)}
+                                className="group relative flex flex-col justify-between overflow-hidden rounded-[12px] text-left transition-all duration-250 ease-[cubic-bezier(0.22,1,0.36,1)] hover:z-10 hover:scale-[1.02] hover:!rotate-0"
                                 style={{
                                   backgroundColor: 'var(--art-tile)',
-                                  border: isOpen
+                                  border: isSelected
                                     ? '1px solid var(--art-marker)'
                                     : '1px solid var(--art-line)',
+                                  transform: isSelected
+                                    ? 'rotate(0deg) translateY(-3px)'
+                                    : `rotate(${baseTilt}deg)`,
                                 }}
                               >
-                                <div className="w-full space-y-2.5">
-                                  {/* Top Meta Row: Type Badge + Active/Timeline Pill */}
-                                  <div className="flex items-center justify-between gap-2">
+                                {/* Uniform Header Strip: Monochrome when idle, Vermilion Accent when selected */}
+                                <div
+                                  className="relative flex items-center justify-between px-2.5 pb-2 pt-3.5 transition-colors duration-200"
+                                  style={{
+                                    backgroundColor: isSelected
+                                      ? 'var(--art-marker)'
+                                      : 'var(--art-ground)',
+                                    color: isSelected
+                                      ? '#ffffff'
+                                      : 'var(--art-ink-muted)',
+                                    borderBottom: isSelected
+                                      ? '1px solid var(--art-marker)'
+                                      : '1px solid var(--art-line)',
+                                  }}
+                                >
+                                  {/* Tactile Lanyard Slot Cutout */}
+                                  <span
+                                    aria-hidden="true"
+                                    className="absolute left-1/2 top-1.5 h-[4px] w-7 -translate-x-1/2 rounded-full"
+                                    style={{
+                                      backgroundColor: isSelected
+                                        ? 'rgba(0, 0, 0, 0.28)'
+                                        : 'var(--art-tile)',
+                                      border: isSelected
+                                        ? 'none'
+                                        : '1px solid var(--art-line)',
+                                    }}
+                                  />
+                                  <span className="font-mono text-[9px] font-medium uppercase tracking-[0.12em]">
+                                    {act.kind === 'volunteering'
+                                      ? 'VOLUNTEER'
+                                      : 'ORGANIZATION'}
+                                  </span>
+                                  {isNow && (
                                     <span
-                                      className="inline-flex items-center gap-1.5 rounded-[5px] px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.1em]"
+                                      className="h-1.5 w-1.5 rounded-full"
                                       style={{
-                                        backgroundColor: isVolunteer
-                                          ? 'var(--art-marker-tint)'
-                                          : 'var(--art-ground)',
-                                        color: isVolunteer
-                                          ? 'var(--art-marker-text)'
-                                          : 'var(--art-ink-soft)',
-                                        border: isVolunteer
-                                          ? '1px solid var(--art-marker)'
-                                          : '1px solid var(--art-line)',
+                                        backgroundColor: isSelected
+                                          ? '#ffffff'
+                                          : 'var(--art-marker)',
                                       }}
-                                    >
-                                      {isVolunteer ? 'VOLUNTEER' : 'ORG'}
-                                    </span>
+                                    />
+                                  )}
+                                </div>
 
-                                    <span
-                                      className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.04em]"
-                                      style={{
-                                        color: isActiveNow
-                                          ? 'var(--art-marker-text)'
-                                          : 'var(--art-ink-muted)',
-                                      }}
+                                {/* Pass Body */}
+                                <div className="flex flex-1 flex-col justify-between gap-2.5 p-3">
+                                  <div>
+                                    <p
+                                      className="line-clamp-2 text-[12.5px] font-medium leading-[1.35]"
+                                      style={{ color: 'var(--art-ink)' }}
                                     >
-                                      {isActiveNow && (
-                                        <span
-                                          className="h-1.5 w-1.5 rounded-full animate-pulse"
-                                          style={{
-                                            backgroundColor: 'var(--art-marker)',
-                                          }}
-                                        />
-                                      )}
+                                      {act.company}
+                                    </p>
+                                    <p
+                                      className="mt-1 line-clamp-2 text-[11px] leading-[1.4]"
+                                      style={{ color: 'var(--art-ink-muted)' }}
+                                    >
+                                      {act.title}
+                                    </p>
+                                  </div>
+
+                                  {/* Micro Barcode + Timeline Footer */}
+                                  <div
+                                    className="flex items-end justify-between gap-1.5 border-t pt-2"
+                                    style={{ borderColor: 'var(--art-line)' }}
+                                  >
+                                    <span
+                                      className="truncate font-mono text-[9px] uppercase tracking-[0.04em]"
+                                      style={{ color: 'var(--art-ink-muted)' }}
+                                    >
                                       {act.timeline}
                                     </span>
-                                  </div>
-
-                                  {/* Role & Organization Title + Expand Indicator */}
-                                  <div className="flex items-start justify-between gap-2.5">
-                                    <div className="min-w-0">
-                                      <h3
-                                        className="text-[14px] font-medium leading-[1.3]"
-                                        style={{ color: 'var(--art-ink)' }}
-                                      >
-                                        {act.title}
-                                      </h3>
-                                      <p
-                                        className="mt-0.5 text-[12.5px]"
-                                        style={{ color: 'var(--art-ink-muted)' }}
-                                      >
-                                        {act.company}
-                                        {act.location
-                                          ? ` · ${act.location}`
-                                          : ''}
-                                      </p>
-                                    </div>
                                     <span
-                                      className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors"
-                                      style={{
-                                        backgroundColor: isOpen
-                                          ? 'var(--art-ink)'
-                                          : 'var(--art-ground)',
-                                        color: isOpen
-                                          ? 'var(--art-ground)'
-                                          : 'var(--art-ink-muted)',
-                                        border: '1px solid var(--art-line)',
-                                      }}
+                                      aria-hidden="true"
+                                      className="flex h-2.5 shrink-0 items-end gap-[1.5px] opacity-30"
+                                      style={{ color: 'var(--art-ink)' }}
                                     >
-                                      {isOpen ? (
-                                        <Minus size={11} />
-                                      ) : (
-                                        <Plus size={11} />
-                                      )}
+                                      <i className="block h-full w-[1.5px] bg-current" />
+                                      <i className="block h-[70%] w-[1px] bg-current" />
+                                      <i className="block h-full w-[2px] bg-current" />
+                                      <i className="block h-[80%] w-[1px] bg-current" />
+                                      <i className="block h-full w-[1.5px] bg-current" />
                                     </span>
-                                  </div>
-
-                                  {/* Smooth Expandable Impact Description */}
-                                  <div
-                                    className="dev-accordion"
-                                    data-open={isOpen ? 'true' : 'false'}
-                                  >
-                                    <div className="dev-accordion-inner">
-                                      {act.description && (
-                                        <p
-                                          className="mt-2 border-t pt-2.5 text-[13px] leading-[1.6]"
-                                          style={{
-                                            borderColor: 'var(--art-line)',
-                                            color: 'var(--art-ink-soft)',
-                                          }}
-                                        >
-                                          {act.description}
-                                        </p>
-                                      )}
-                                    </div>
                                   </div>
                                 </div>
                               </button>
                             );
                           })}
+                        </div>
+
+                        {/* Active Pass Spotlight Reader (Monochrome Editorial + Single Vermilion Accent) */}
+                        <div
+                          className="relative overflow-hidden rounded-[12px] p-5 transition-colors duration-200"
+                          style={{
+                            backgroundColor: 'var(--art-tile)',
+                            border: '1px solid var(--art-line)',
+                          }}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="absolute bottom-0 left-0 top-0 w-[2.5px]"
+                            style={{ backgroundColor: 'var(--art-marker)' }}
+                          />
+
+                          <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.1em]">
+                                <span style={{ color: 'var(--art-marker-text)' }}>
+                                  {activePass.kind === 'volunteering'
+                                    ? 'VOLUNTEERING'
+                                    : 'ORGANIZATION'}
+                                </span>
+                                <span style={{ color: 'var(--art-ink-muted)' }}>
+                                  · {activePass.timeline}
+                                </span>
+                                {activePass.location && (
+                                  <span style={{ color: 'var(--art-ink-muted)' }}>
+                                    · {activePass.location}
+                                  </span>
+                                )}
+                              </div>
+                              <h3
+                                className="text-[15.5px] font-medium leading-snug"
+                                style={{ color: 'var(--art-ink)' }}
+                              >
+                                {activePass.title}{' '}
+                                <span
+                                  className="font-normal"
+                                  style={{ color: 'var(--art-ink-muted)' }}
+                                >
+                                  @ {activePass.company}
+                                </span>
+                              </h3>
+                            </div>
+
+                            <span
+                              className="shrink-0 -rotate-2 rounded-[4px] px-2 py-0.5 font-mono text-[9.5px] font-medium uppercase tracking-[0.12em]"
+                              style={{
+                                border: isActivePassNow
+                                  ? '1px dashed var(--art-marker)'
+                                  : '1px dashed var(--art-hairline-strong)',
+                                color: isActivePassNow
+                                  ? 'var(--art-marker-text)'
+                                  : 'var(--art-ink-muted)',
+                              }}
+                            >
+                              {isActivePassNow ? 'ACTIVE' : 'COMPLETED'}
+                            </span>
+                          </div>
+
+                          {activePass.description && (
+                            <p
+                              className="mt-3 pl-2 text-[13.5px] leading-[1.65]"
+                              style={{ color: 'var(--art-ink-soft)' }}
+                            >
+                              {activePass.description}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
@@ -3689,11 +3913,11 @@ export default function DevPortfolioView({
           )}
 
           {/* =================================================================
-              SUB-VIEW 5: STACK & RESOURCES (#resources + Outbound to art.dri4n.com)
+              SUB-VIEW 5: ACTIVITY & DESK (#resources / #activity)
           ================================================================== */}
           {activeView === 'resources' && (
             <div key="dev-resources">
-              <SubViewTopBar sectionLabel="STACK & RESOURCES" />
+              <SubViewTopBar sectionLabel="ACTIVITY" />
 
               <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 pb-16 pt-5 sm:px-8 sm:pb-20 sm:pt-8 md:flex-row md:gap-12 lg:gap-16">
                 <aside className="space-y-4 md:sticky md:top-20 md:w-[248px] md:space-y-5 md:self-start">
@@ -3702,7 +3926,7 @@ export default function DevPortfolioView({
                       type="button"
                       onClick={() => navigateTo('home')}
                       data-cursor-label="home"
-                      className="flex h-[76px] w-[76px] shrink-0 items-end justify-center gap-[1.5px] overflow-hidden rounded-[12px] p-2 transition-transform hover:scale-[1.03] md:h-[120px] md:w-[120px] md:gap-[2px] md:p-2.5"
+                      className="relative flex h-[76px] w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-[12px] backdrop-blur-md transition-transform hover:scale-[1.03] cursor-pointer md:h-[120px] md:w-[120px]"
                       style={{
                         viewTransitionName:
                           morphKey === 'resources'
@@ -3712,154 +3936,387 @@ export default function DevPortfolioView({
                         border: '1px solid var(--art-line)',
                       }}
                     >
-                      {BOOK_SPINES.slice(0, 8).map((s) => (
-                        <span
-                          key={s.label}
-                          className="w-[6px] rounded-[2px] md:w-[9px]"
-                          style={{
-                            height: `${Math.round(s.h * 0.45)}px`,
-                            backgroundColor: s.bg,
-                          }}
+                      {activityGifs.length > 0 ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={activityGifs[activityGifIdx % activityGifs.length]}
+                          alt="Activity GIF"
+                          className="h-full w-full object-cover"
                         />
-                      ))}
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={
+                            theme === 'dark'
+                              ? '/images/activity-frame-1-dark.png'
+                              : '/images/activity-frame-1.png'
+                          }
+                          alt="Activity desk illustration"
+                          width={120}
+                          height={120}
+                          className="h-full w-full object-contain p-1.5"
+                        />
+                      )}
                     </button>
                     <div className="min-w-0 space-y-1 md:space-y-2">
                       <h1 className="text-[18px] font-semibold tracking-[-0.01em] md:text-[20px]">
-                        Stack &amp; resources
+                        Activity
                       </h1>
                       <p
                         className="text-[13px] leading-[19px] md:text-[14px] md:leading-[21px]"
                         style={{ color: 'var(--art-ink-soft)' }}
                       >
-                        The engineering stack, tools, and principles powering my
-                        web applications.
+                        Music on rotation, the engineering stack I build with,
+                        live GitHub activity, and more.
                       </p>
                     </div>
                   </div>
-
-                  {/* Dark Outbound Card to GitHub */}
-                  <a
-                    href={githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-cursor-label="visit"
-                    className="block rounded-[12px] p-4 transition-transform hover:-translate-y-0.5"
-                    style={{
-                      backgroundColor: '#171717',
-                      color: '#f1eee9',
-                      border: '1px solid #292929',
-                    }}
-                  >
-                    <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.12em] text-[#ff5a3d]">
-                      <span>OPEN SOURCE</span>
-                      <ArrowUpRight size={13} />
-                    </div>
-                    <p className="mt-2 text-[14px] font-medium">
-                      github.com/Adrianbahri
-                    </p>
-                    <p className="mt-1 text-[12px] text-[#a3a3a3]">
-                      Repositories, web experiments &amp; side projects.
-                    </p>
-                  </a>
                 </aside>
 
-                <div className="max-w-[720px] flex-1 space-y-6">
-                  <div
-                    className="flex items-center gap-6 border-b"
-                    style={{ borderColor: 'var(--art-line)' }}
+                <div className="max-w-[720px] flex-1 space-y-10">
+                  {/* 01 / ON ROTATION — Spotify Cassette Tape Player & Top This Month */}
+                  <section
+                    aria-labelledby="resources-music-heading"
+                    className="dev-enter-section space-y-3.5"
+                    style={{ ['--section-delay' as string]: '0ms' }}
                   >
+                    <div
+                      className="flex items-center justify-between border-b pb-2.5"
+                      style={{ borderColor: 'var(--art-line)' }}
+                    >
+                      <h2
+                        id="resources-music-heading"
+                        className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                        style={{ color: 'var(--art-ink)' }}
+                      >
+                        <span style={{ color: 'var(--art-marker-text)' }}>01</span>{' '}
+                        / ON ROTATION
+                      </h2>
+                      <span
+                        className="font-mono text-[10px] uppercase tracking-[0.12em]"
+                        style={{ color: 'var(--art-ink-muted)' }}
+                      >
+                        SPOTIFY
+                      </span>
+                    </div>
+                    <SpotifyNowPlaying />
+                  </section>
+
+                  {/* 02 / ENGINEERING & GITHUB */}
+                  <section
+                    aria-labelledby="resources-github-heading"
+                    className="dev-enter-section space-y-3.5"
+                    style={{ ['--section-delay' as string]: '110ms' }}
+                  >
+                    <div
+                      className="flex items-center justify-between border-b pb-2.5"
+                      style={{ borderColor: 'var(--art-line)' }}
+                    >
+                      <h2
+                        id="resources-github-heading"
+                        className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                        style={{ color: 'var(--art-ink)' }}
+                      >
+                        <span style={{ color: 'var(--art-marker-text)' }}>02</span>{' '}
+                        / ENGINEERING &amp; GITHUB
+                      </h2>
+                      <span
+                        className="font-mono text-[10px] uppercase tracking-[0.12em]"
+                        style={{ color: 'var(--art-ink-muted)' }}
+                      >
+                        PUBLIC &amp; PRIVATE ORGS
+                      </span>
+                    </div>
+
+                    <GitHubActivity />
+                  </section>
+
+                  {/* 03 / TECH STACK & AI WORKFLOW (Grouped by category, ranked by project usage %) */}
+                  <section
+                    aria-labelledby="resources-stack-heading"
+                    className="dev-enter-section dev-cv-auto space-y-5"
+                    style={{ ['--section-delay' as string]: '220ms' }}
+                  >
+                    <div
+                      className="flex items-center justify-between border-b pb-2.5"
+                      style={{ borderColor: 'var(--art-line)' }}
+                    >
+                      <h2
+                        id="resources-stack-heading"
+                        className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                        style={{ color: 'var(--art-ink)' }}
+                      >
+                        <span style={{ color: 'var(--art-marker-text)' }}>03</span>{' '}
+                        / TECH STACK &amp; AI WORKFLOW
+                      </h2>
+                      <span
+                        className="font-mono text-[10px] uppercase tracking-[0.12em]"
+                        style={{ color: 'var(--art-ink-muted)' }}
+                      >
+                        CLICK TO INSPECT · {String(devTools.length).padStart(2, '0')} TOOLS
+                      </span>
+                    </div>
+
                     {(
                       [
                         {
-                          id: 'stack',
-                          label: 'Tech Stack',
-                          count: devTools.length,
+                          key: 'ai',
+                          title: 'AI & Agentic Workflow',
+                          subtitle: 'Primary engineering multipliers',
                         },
                         {
-                          id: 'principles',
-                          label: 'Working Principles',
-                          count: principles.length,
+                          key: 'languages',
+                          title: 'Programming, Query & Markup Languages',
+                          subtitle: 'Core languages & raw SQL',
+                        },
+                        {
+                          key: 'frameworks',
+                          title: 'Frameworks & UI Libraries',
+                          subtitle: 'Web, mobile, motion & API frameworks',
+                        },
+                        {
+                          key: 'databases',
+                          title: 'Databases, ORM & Data Engineering',
+                          subtitle: 'Relational SQL, caches, ORMs & ML pipelines',
+                        },
+                        {
+                          key: 'backend',
+                          title: 'Backend Runtime, Cloud & DevOps Infra',
+                          subtitle: 'Runtimes, servers, storage & IaC',
                         },
                       ] as const
-                    ).map((tab) => {
-                      const isActive = resourceTab === tab.id;
+                    ).map((group) => {
+                      const groupTools = devTools.filter(
+                        (t) => (t.category || 'backend') === group.key
+                      );
+                      if (groupTools.length === 0) return null;
+
                       return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setResourceTab(tab.id)}
-                          className="relative pb-3 text-[14px] font-medium transition-colors"
-                          style={{
-                            color: isActive
-                              ? 'var(--art-ink)'
-                              : 'var(--art-ink-muted)',
-                          }}
-                        >
-                          <span>{tab.label}</span>
-                          <span className="ml-1.5 font-mono text-[11px] opacity-60">
-                            {tab.count}
-                          </span>
-                          {isActive && (
-                            <motion.span
-                              layoutId="dev-resource-tab-line"
-                              className="absolute inset-x-0 bottom-[-1px] h-[2px]"
-                              style={{ backgroundColor: 'var(--art-marker)' }}
-                            />
-                          )}
-                        </button>
+                        <div key={group.key} className="space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span
+                              className="font-mono text-[10px] uppercase tracking-[0.14em]"
+                              style={{ color: 'var(--art-ink)' }}
+                            >
+                              {group.title}
+                            </span>
+                            <span
+                              className="font-mono text-[9.5px]"
+                              style={{ color: 'var(--art-ink-muted)' }}
+                            >
+                              {group.subtitle} · {String(groupTools.length).padStart(2, '0')}
+                            </span>
+                          </div>
+
+                          <div
+                            className={`grid grid-cols-1 gap-3 ${
+                              group.key === 'ai'
+                                ? 'sm:grid-cols-2'
+                                : 'sm:grid-cols-2 lg:grid-cols-3'
+                            }`}
+                          >
+                            {groupTools.map((tool, idx) => {
+                              const pct = tool.usage ?? 75;
+                              const isFeatured = Boolean(tool.featured);
+                              const isOpen = selectedToolName === tool.name;
+                              const toolProjects = tool.projects ?? [];
+                              return (
+                                <div
+                                  key={tool.name}
+                                  className="group dev-enter-card dev-scaffold-card flex flex-col justify-between rounded-[12px] p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--art-marker)]"
+                                  style={{
+                                    backgroundColor:
+                                      isFeatured || isOpen
+                                        ? 'var(--art-paper-raised)'
+                                        : 'var(--art-tile)',
+                                    border: isOpen
+                                      ? '1px solid var(--art-marker)'
+                                      : isFeatured
+                                      ? '1px solid var(--art-hairline-strong)'
+                                      : '1px solid var(--art-line)',
+                                    ['--scaffold-delay' as string]: `${idx * 45}ms`,
+                                    ['--enter-delay' as string]: `${160 + idx * 40}ms`,
+                                  }}
+                                >
+                                  <button
+                                    type="button"
+                                    aria-expanded={isOpen}
+                                    data-cursor-label={
+                                      isOpen ? 'close' : 'projects'
+                                    }
+                                    onClick={() =>
+                                      setSelectedToolName((prev) =>
+                                        prev === tool.name ? null : tool.name
+                                      )
+                                    }
+                                    className="w-full cursor-pointer space-y-2.5 text-left"
+                                  >
+                                    <div className="flex items-center justify-between gap-2.5">
+                                      <div className="flex min-w-0 items-center gap-2.5">
+                                        <span
+                                          className="dev-hover-title flex h-8 w-8 shrink-0 items-center justify-center text-[19px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-rotate-6"
+                                          style={{
+                                            color:
+                                              isFeatured || isOpen
+                                                ? 'var(--art-marker-text)'
+                                                : 'var(--art-ink)',
+                                          }}
+                                        >
+                                          <tool.icon />
+                                        </span>
+                                        <div className="min-w-0">
+                                          <p className="dev-hover-title truncate text-[13px] font-medium leading-tight">
+                                            {tool.name}
+                                          </p>
+                                          {tool.role && (
+                                            <p
+                                              className="mt-0.5 truncate text-[10.5px]"
+                                              style={{
+                                                color: 'var(--art-ink-muted)',
+                                              }}
+                                            >
+                                              {tool.role}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <span
+                                        className="shrink-0 font-mono text-[11px] font-semibold tabular-nums"
+                                        style={{
+                                          color:
+                                            isFeatured || isOpen
+                                              ? 'var(--art-marker-text)'
+                                              : 'var(--art-ink)',
+                                        }}
+                                      >
+                                        {pct}%
+                                      </span>
+                                    </div>
+
+                                    {/* Animated Project Usage Percentage Bar */}
+                                    <div
+                                      className="h-[3.5px] w-full overflow-hidden rounded-full"
+                                      style={{
+                                        backgroundColor: 'var(--art-hairline)',
+                                      }}
+                                    >
+                                      <div
+                                        className="dev-timeline-bar h-full rounded-full"
+                                        style={{
+                                          width: `${pct}%`,
+                                          backgroundColor:
+                                            isFeatured || isOpen
+                                              ? 'var(--art-marker)'
+                                              : 'var(--art-ink)',
+                                          opacity:
+                                            isFeatured || isOpen ? 1 : 0.72,
+                                          ['--bar-delay' as string]: `${200 + idx * 45}ms`,
+                                        }}
+                                      />
+                                    </div>
+                                  </button>
+
+                                  {/* Expandable Project List Drawer on Click */}
+                                  {toolProjects.length > 0 && (
+                                    <div
+                                      className="dev-accordion"
+                                      data-open={isOpen ? 'true' : 'false'}
+                                      aria-hidden={!isOpen}
+                                    >
+                                      <div className="dev-accordion-inner">
+                                        <div
+                                          className="mt-3 space-y-1.5 border-t border-dashed pt-2.5"
+                                          style={{
+                                            borderColor:
+                                              'var(--art-hairline-strong)',
+                                          }}
+                                        >
+                                          <p
+                                            className="font-mono text-[9px] uppercase tracking-[0.12em]"
+                                            style={{
+                                              color: 'var(--art-ink-muted)',
+                                            }}
+                                          >
+                                            USED IN ({toolProjects.length})
+                                          </p>
+                                          <ul className="space-y-1">
+                                            {toolProjects.map((proj) => (
+                                              <li key={proj.title}>
+                                                {proj.href ? (
+                                                  <a
+                                                    href={proj.href}
+                                                    target={
+                                                      proj.href.startsWith(
+                                                        'http'
+                                                      )
+                                                        ? '_blank'
+                                                        : undefined
+                                                    }
+                                                    rel={
+                                                      proj.href.startsWith(
+                                                        'http'
+                                                      )
+                                                        ? 'noopener noreferrer'
+                                                        : undefined
+                                                    }
+                                                    className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1 text-[11px] transition-colors hover:bg-black/10"
+                                                  >
+                                                    <span
+                                                      className="dev-hover-title truncate font-medium"
+                                                      style={{
+                                                        color: 'var(--art-ink)',
+                                                      }}
+                                                    >
+                                                      {proj.title}
+                                                    </span>
+                                                    <span
+                                                      className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.08em]"
+                                                      style={{
+                                                        color:
+                                                          'var(--art-marker-text)',
+                                                      }}
+                                                    >
+                                                      {proj.tag} ↗
+                                                    </span>
+                                                  </a>
+                                                ) : (
+                                                  <div className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1 text-[11px]">
+                                                    <span
+                                                      className="truncate"
+                                                      style={{
+                                                        color:
+                                                          'var(--art-ink-soft)',
+                                                      }}
+                                                    >
+                                                      {proj.title}
+                                                    </span>
+                                                    <span
+                                                      className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.08em]"
+                                                      style={{
+                                                        color:
+                                                          'var(--art-ink-muted)',
+                                                      }}
+                                                    >
+                                                      {proj.tag}
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       );
                     })}
-                  </div>
-
-                  {resourceTab === 'stack' ? (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {devTools.map((tool, idx) => (
-                        <div
-                          key={tool.name}
-                          className="group dev-scaffold-card flex items-center gap-3 rounded-[10px] p-3.5"
-                          style={{
-                            backgroundColor: 'var(--art-tile)',
-                            border: '1px solid var(--art-line)',
-                            ['--scaffold-delay' as string]: `${idx * 55}ms`,
-                          }}
-                        >
-                          <span
-                            className="dev-hover-title text-[20px]"
-                            style={{ color: 'var(--art-ink)' }}
-                          >
-                            <tool.icon />
-                          </span>
-                          <span className="dev-hover-title text-[13px] font-medium">
-                            {tool.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div
-                      className="divide-y rounded-[12px]"
-                      style={{
-                        border: '1px solid var(--art-line)',
-                        borderColor: 'var(--art-line)',
-                      }}
-                    >
-                      {principles.map((p, idx) => (
-                        <div
-                          key={idx}
-                          className="group flex items-start gap-4 p-4"
-                          style={{ borderColor: 'var(--art-line)' }}
-                        >
-                          <span
-                            className="font-mono text-[11px]"
-                            style={{ color: 'var(--art-marker-text)' }}
-                          >
-                            0{idx + 1}
-                          </span>
-                          <p className="dev-hover-title text-[14px] leading-[22px]">{p}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  </section>
                 </div>
               </div>
             </div>

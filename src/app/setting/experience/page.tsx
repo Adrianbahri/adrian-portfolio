@@ -279,6 +279,9 @@ export default function AdminExperience() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
+                      if (e.nativeEvent.isComposing || e.keyCode === 229) {
+                        return;
+                      }
                       const value = (e.target as HTMLInputElement).value.trim();
                       if (value) {
                         setFormData(prev => ({

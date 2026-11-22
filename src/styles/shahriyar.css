@@ -2,15 +2,16 @@
 
 .dev-shell {
   --art-ground: #ffffff;
-  --art-tile: #f5f5f5;
-  --art-paper: #f1eee9;
-  --art-paper-raised: #f8f6f2;
+  --art-tile: rgba(255, 255, 255, 0.42);
+  --art-paper: rgba(255, 255, 255, 0.34);
+  --art-paper-raised: rgba(255, 255, 255, 0.52);
+  --art-card-solid: #faf9f7;
   --art-ink: #171717;
   --art-ink-soft: #595249;
   --art-ink-muted: #595959;
-  --art-line: #e5e5e5;
+  --art-line: rgba(23, 23, 23, 0.09);
   --art-hairline: rgba(26, 25, 23, 0.08);
-  --art-hairline-strong: rgba(26, 25, 23, 0.18);
+  --art-hairline-strong: rgba(26, 25, 23, 0.16);
   --art-marker: #e8341c;
   --art-marker-text: #c53727;
   --art-on-marker: #ffffff;
@@ -35,15 +36,16 @@
 
 .dev-shell[data-dev-theme="dark"] {
   --art-ground: #121212;
-  --art-tile: #171717;
-  --art-paper: #121110;
-  --art-paper-raised: #1a1917;
+  --art-tile: rgba(18, 18, 20, 0.56);
+  --art-paper: rgba(14, 14, 16, 0.52);
+  --art-paper-raised: rgba(24, 24, 27, 0.66);
+  --art-card-solid: #161618;
   --art-ink: #f1eee9;
   --art-ink-soft: #aaa297;
   --art-ink-muted: #a3a3a3;
-  --art-line: #292929;
+  --art-line: rgba(255, 255, 255, 0.09);
   --art-hairline: rgba(255, 255, 255, 0.08);
-  --art-hairline-strong: rgba(255, 255, 255, 0.18);
+  --art-hairline-strong: rgba(255, 255, 255, 0.16);
   --art-marker: #ff5a3d;
   --art-marker-text: #ff5a3d;
   --art-on-marker: #141414;
@@ -349,11 +351,289 @@ html[data-agent-building="true"] [data-agent-slot][data-agent-built="true"] {
   }
 }
 
+/* Spotify Cassette Tape Player Animations */
+.dev-eq-bar {
+  transform-origin: bottom;
+  animation: devEqBounce 0.9s ease-in-out infinite alternate;
+}
+.dev-eq-bar-2 {
+  animation-delay: -0.35s;
+  animation-duration: 0.72s;
+}
+.dev-eq-bar-3 {
+  animation-delay: -0.6s;
+  animation-duration: 1.05s;
+}
+@keyframes devEqBounce {
+  0% { transform: scaleY(0.28); }
+  50% { transform: scaleY(0.95); }
+  100% { transform: scaleY(0.45); }
+}
+
+.dev-cassette-reel {
+  transform-origin: center;
+  animation: devCassetteSpin 2.6s linear infinite;
+  animation-play-state: paused;
+}
+.dev-cassette-reel[data-spinning="true"] {
+  animation-play-state: running;
+}
+@keyframes devCassetteSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Full-page subtle blurred album-art ambient wash (modern & minimalist) */
+.dev-page-ambient {
+  -webkit-mask-image: radial-gradient(
+    ellipse 105% 88% at 50% 22%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.72) 52%,
+    rgba(0, 0, 0, 0.18) 84%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 105% 88% at 50% 22%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.72) 52%,
+    rgba(0, 0, 0, 0.18) 84%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+.dev-page-ambient-img {
+  opacity: 0;
+  filter: blur(92px) saturate(1.55) contrast(1.04);
+  transition: opacity 1.5s cubic-bezier(0.22, 1, 0.36, 1), filter 1.2s ease;
+}
+.dev-page-ambient-img[data-ready="true"] {
+  opacity: 0.17;
+}
+.dev-page-ambient-img[data-ready="true"][data-playing="true"] {
+  opacity: 0.28;
+}
+.dev-page-ambient-img[data-playing="false"] {
+  filter: blur(92px) saturate(1.15) grayscale(35%);
+}
+.dev-shell[data-dev-theme="dark"] .dev-page-ambient-img {
+  opacity: 0;
+  filter: blur(96px) saturate(1.4);
+}
+.dev-shell[data-dev-theme="dark"] .dev-page-ambient-img[data-ready="true"] {
+  opacity: 0.13;
+}
+.dev-shell[data-dev-theme="dark"] .dev-page-ambient-img[data-ready="true"][data-playing="true"] {
+  opacity: 0.22;
+}
+.dev-shell[data-dev-theme="dark"] .dev-page-ambient-img[data-playing="false"] {
+  filter: blur(96px) saturate(1.05) grayscale(40%);
+}
+
+/* Subtle ambient album-art tint behind the Spotify cassette (refined & high-contrast) */
+.dev-cassette-ambient-img {
+  opacity: 0.24;
+  transition: opacity 0.6s ease, filter 0.6s ease;
+}
+.dev-cassette-ambient-img[data-playing="true"] {
+  opacity: 0.36;
+}
+.dev-shell[data-dev-theme="dark"] .dev-cassette-ambient-img {
+  opacity: 0.2;
+}
+.dev-shell[data-dev-theme="dark"] .dev-cassette-ambient-img[data-playing="true"] {
+  opacity: 0.34;
+}
+
+.dev-cassette-scrim {
+  background: radial-gradient(
+    120% 100% at 20% 15%,
+    color-mix(in srgb, var(--art-tile) 45%, transparent) 0%,
+    color-mix(in srgb, var(--art-tile) 76%, transparent) 72%,
+    color-mix(in srgb, var(--art-tile) 85%, transparent) 100%
+  );
+}
+.dev-cassette-label-scrim {
+  background-color: rgba(255, 255, 255, 0.44);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.dev-shell[data-dev-theme="dark"] .dev-cassette-label-scrim {
+  background-color: rgba(18, 18, 21, 0.54);
+}
+
+/* Translucent cassette tape window (clear frosted in Light Mode, smoked glass in Dark Mode) */
+.dev-cassette-window {
+  background-color: rgba(255, 255, 255, 0.36);
+  border: 1px solid rgba(23, 23, 23, 0.1);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.dev-shell[data-dev-theme="dark"] .dev-cassette-window {
+  background-color: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.dev-cassette-bridge {
+  background-color: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(23, 23, 23, 0.09);
+}
+.dev-shell[data-dev-theme="dark"] .dev-cassette-bridge {
+  background-color: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.dev-cassette-coil {
+  background: repeating-radial-gradient(
+    circle,
+    rgba(23, 23, 23, 0.12) 0px,
+    rgba(23, 23, 23, 0.12) 2px,
+    rgba(23, 23, 23, 0.2) 2.5px,
+    rgba(23, 23, 23, 0.08) 4px
+  );
+  border: 1px solid rgba(23, 23, 23, 0.14);
+}
+.dev-shell[data-dev-theme="dark"] .dev-cassette-coil {
+  background: repeating-radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.06) 0px,
+    rgba(255, 255, 255, 0.06) 2px,
+    rgba(255, 255, 255, 0.12) 2.5px,
+    rgba(0, 0, 0, 0.25) 4px
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Hand-drawn ink illustration blend: 100% transparent paper in both Light & Dark modes */
+.dev-sketch-blend {
+  mix-blend-mode: multiply;
+  filter: brightness(1.06) contrast(1.14);
+}
+.dev-shell[data-dev-theme="dark"] .dev-sketch-blend {
+  mix-blend-mode: screen;
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(1.28) saturate(1.2);
+}
+
+/* Distinct section entrance choreographies (non-monotonous, GPU-composited) */
+.dev-enter-card {
+  opacity: 0;
+  transform: translateY(18px) scale(0.975);
+  animation: devCardRise 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--enter-delay, 0ms);
+}
+@keyframes devCardRise {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dev-timeline-bar {
+  transform-origin: left center;
+  opacity: 0;
+  transform: scaleX(0);
+  animation: devTimelineDraw 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--bar-delay, 0ms);
+}
+@keyframes devTimelineDraw {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.dev-live-pulse {
+  animation: devLiveBeacon 2.2s ease-in-out infinite;
+}
+@keyframes devLiveBeacon {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 90, 61, 0.55);
+  }
+  50% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 5px rgba(255, 90, 61, 0);
+  }
+}
+
+.dev-enter-section {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: devSectionGlide 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--section-delay, 0ms);
+}
+@keyframes devSectionGlide {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dev-heatmap-col {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: devHeatmapWave 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--col-delay, 0ms);
+}
+@keyframes devHeatmapWave {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Defer off-screen below-the-fold sections (content-visibility: auto + intrinsic placeholder) */
+.dev-cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 320px;
+}
+
+/* Loading screen indeterminate progress bar */
+.dev-loading-bar {
+  animation: devLoadingSweep 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes devLoadingSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Respect prefers-reduced-motion inside the editorial shell */
 @media (prefers-reduced-motion: reduce) {
   .art-rule-dashed::after,
-  .dev-scaffold-card::after {
+  .dev-scaffold-card::after,
+  .dev-eq-bar,
+  .dev-cassette-reel,
+  .dev-enter-card,
+  .dev-timeline-bar,
+  .dev-live-pulse,
+  .dev-enter-section,
+  .dev-heatmap-col,
+  .dev-loading-bar {
     animation: none !important;
+  }
+  .dev-enter-card,
+  .dev-timeline-bar,
+  .dev-enter-section,
+  .dev-heatmap-col {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .art-rule-dashed::after,
+  .dev-scaffold-card::after {
     opacity: 0 !important;
   }
   .dev-award-card:hover,
