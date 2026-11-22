@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Aguafina_Script, DM_Mono, Inter } from "next/font/google";
+import { Aguafina_Script, Albert_Sans, DM_Mono, Inter } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,13 @@ const aguafinaScript = Aguafina_Script({
   weight: ["400"],
   subsets: ["latin"],
   variable: "--font-art-script",
+  display: "swap",
+});
+
+const albertSans = Albert_Sans({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-albert-sans",
   display: "swap",
 });
 
@@ -301,7 +308,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${dmMono.variable} ${aguafinaScript.variable} font-sans`}>
+    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${dmMono.variable} ${aguafinaScript.variable} ${albertSans.variable} font-sans`}>
       <head>
         <meta name="color-scheme" content="light dark" />
         <link rel="icon" href="/favicon.ico" sizes="any" />

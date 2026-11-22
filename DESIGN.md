@@ -61,13 +61,13 @@ dial: ENERGY 3 / RHYTHM 3 / MOTION 2
 | Tier | Font Family | Size | Weight | Line Height | Tracking | Case / Use |
 |---|---|---|---|---|---|---|
 | **Hero Wordmark** | `Aguafina Script` (`--font-art-script`) | `46.5vw` | `400` | `0.78` | `-0.015em` | Edge-to-edge `"Adrian"`, `margin-top: -0.11em`, zero clipping wrapper margins |
-| **Hero Micro-Copy** | `Inter` (`--font-inter`) | `clamp(10px, 1.2vw, 16px)` | `300` | `1.35` | `0.025em` | Uppercase, zero background box, overlaid on lower-right `left: 50%; right: 4%; bottom: 12%` |
-| **Swiss Nav & Footer** | `Inter` / `DM Mono` | `12px` | `400` | `14px` | `-0.34px` | Uppercase (`©ADRIAN`, `PHOTO`, `DESIGN`, `PRINT`, `VIDEO`, `ABOUT`) |
-| **Section Index & HUD** | `DM Mono` (`--font-dm-mono`) | `10px–11px` | `400–500` | `1.2` | `0.12em` | Uppercase technical codes (`01`, `FRM_01 / 18`, `35MM ROLL`), `tabular-nums` |
-| **Card Title / Caption** | `Inter` (`--font-inter`) | `12px` | `400–500` | `14.4px` | `-0.12px` | Uppercase, sits `4px–10px` below sharp `0px` media |
-| **Tag Pills** | `Inter` / `DM Mono` | `10px` | `400` | `12px` | `0.06em` | Uppercase inside `2px`-radius flat rectangular tags (`padding: 5px 14px`) |
-| **Case Study Sidebar Body** | `Inter` (`--font-inter`) | `11px–12px` | `400` | `1.45` | `0` | Sentence case for readable project narratives & credits |
-| **Long-Form Essay Body** | `Inter` (`--font-inter`) | `16px` | `400` | `21px` | `0` | Sentence case in 50/50 Swiss split reading layout |
+| **Hero Micro-Copy** | `Albert Sans` (`--font-albert-sans`) | `clamp(10px, 1.2vw, 16px)` | `300` | `1.35` | `0.025em` | Uppercase, zero background box, overlaid on lower-right `left: 50%; right: 4%; bottom: 12%` |
+| **Swiss Nav & Footer** | `Albert Sans` (`--font-albert-sans`) | `11px–12px` | `400` | `14px` | `-0.25px` | Uppercase (`Adrian (Dri4n)`, `ABOUT`, `PHOTO`, `MEDSOS`, `PRINT`, `WRITING`, `LIGHT/DARK`) |
+| **Section Index & Specs** | `Albert Sans` (`tabular-nums`) | `10.5px–11px` | `400–500` | `1.2` | `0.06em` | Uppercase print specs, counters, dates, `tabular-nums` |
+| **Card Title / Caption** | `Albert Sans` (`--font-albert-sans`) | `12px–16px` | `400–500` | `1.35` | `-0.015em` | Clean Swiss hierarchy, hover underline |
+| **Tag Pills** | `Albert Sans` | `9.5px–10px` | `400` | `12px` | `0.04em` | Uppercase inside `0px`-radius flat rectangular tags |
+| **Case Study Sidebar Body** | `Albert Sans` | `10.5px–12px` | `400` | `1.46` | `-0.01em` | Sentence case for readable project narratives & credits |
+| **Long-Form Essay Body** | `Albert Sans` | `14px–16px` | `400` | `1.68` | `-0.01em` | Sentence case in 50/50 Swiss split reading layout |
 
 ---
 

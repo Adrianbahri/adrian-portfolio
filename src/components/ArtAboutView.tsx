@@ -93,23 +93,23 @@ export default function ArtAboutView({
         bg: '#0B0B0B',
         border: '#272727',
         ink: '#F2EFE9',
-        inkSoft: '#B5B1A8',
-        inkMuted: '#7E7A72',
+        inkSoft: '#BDB9B0',
+        inkMuted: '#8F8B83',
         accent: '#EA6A12',
       }
     : {
         bg: '#F2EFE9',
         border: '#D0CBBF',
         ink: '#141413',
-        inkSoft: '#3D3A35',
-        inkMuted: '#656159',
+        inkSoft: '#3A3732',
+        inkMuted: '#5A564E',
         accent: '#D95B08',
       };
 
   return (
     <div
       data-dev-theme={theme}
-      className="min-h-screen w-full transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
+      className="art-swiss-scope min-h-screen w-full overflow-x-clip transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
       style={{
         backgroundColor: palette.bg,
         color: palette.ink,

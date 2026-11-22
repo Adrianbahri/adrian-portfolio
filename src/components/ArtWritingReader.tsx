@@ -70,7 +70,7 @@ export default function ArtWritingReader({
         border: '#272727',
         ink: '#F2EFE9',
         inkSoft: '#C6C2B9',
-        inkMuted: '#7E7A72',
+        inkMuted: '#8F8B83',
         accent: '#EA6A12',
       }
     : {
@@ -79,7 +79,7 @@ export default function ArtWritingReader({
         border: '#D0CBBF',
         ink: '#141413',
         inkSoft: '#35332F',
-        inkMuted: '#656159',
+        inkMuted: '#5A564E',
         accent: '#D95B08',
       };
 
@@ -94,7 +94,7 @@ export default function ArtWritingReader({
   return (
     <div
       data-dev-theme={theme}
-      className="min-h-screen w-full transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
+      className="art-swiss-scope min-h-screen w-full overflow-x-clip transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
       style={{
         backgroundColor: palette.bg,
         color: palette.ink,

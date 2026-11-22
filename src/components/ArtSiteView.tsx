@@ -775,8 +775,8 @@ export default function ArtSiteView({
         border: '#272727',
         borderStrong: '#3B3B3B',
         ink: '#F2EFE9',
-        inkSoft: '#B5B1A8',
-        inkMuted: '#7E7A72',
+        inkSoft: '#BDB9B0',
+        inkMuted: '#8F8B83',
         accent: '#EA6A12',
         accentInk: '#0B0B0B',
       }
@@ -787,8 +787,8 @@ export default function ArtSiteView({
         border: '#D0CBBF',
         borderStrong: '#AFA99B',
         ink: '#141413',
-        inkSoft: '#3D3A35',
-        inkMuted: '#656159',
+        inkSoft: '#3A3732',
+        inkMuted: '#5A564E',
         accent: '#D95B08',
         accentInk: '#FFFFFF',
       };
@@ -849,7 +849,7 @@ export default function ArtSiteView({
   return (
     <div
       data-dev-theme={theme}
-      className="min-h-screen w-full transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
+      className="art-swiss-scope min-h-screen w-full overflow-x-clip transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
       style={{
         backgroundColor: palette.bg,
         color: palette.ink,
