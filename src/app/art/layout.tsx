@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { ART_SITE_URL, PRIMARY_SITE_URL } from '@/lib/sites';
 
-const title = '©Adrian Bahri — Creative Side & Visual Archive';
+const title = '©Adrian — Creative Side & Visual Archive';
 const description =
   'A curated archive of visual design, documentary photography, editorial print, and motion direction.';
 
@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(PRIMARY_SITE_URL),
   title: {
     default: title,
-    template: '%s | ©Adrian Bahri',
+    template: '%s | ©Adrian',
   },
   description,
   keywords: [
     'Adrian',
-    'Adrian Bahri',
+    'Adrian',
     'Dri4n',
     'Drian',
     'Adrian Unhas',
@@ -36,13 +36,13 @@ export const metadata: Metadata = {
     url: ART_SITE_URL,
     title,
     description,
-    siteName: '©Adrian Bahri · Creative Side',
+    siteName: '©Adrian · Creative Side',
     images: [
       {
         url: '/art/opengraph-image',
         width: 1200,
         height: 630,
-        alt: '©Adrian Bahri — Creative Side & Visual Archive',
+        alt: '©Adrian — Creative Side & Visual Archive',
       },
     ],
   },

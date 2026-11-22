@@ -4,8 +4,8 @@ import { ArrowLeft, ExternalLink, Mail } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 export const metadata: Metadata = {
-  title: "About Adrian Bahri (Dri4n)",
-  description: "Learn more about Adrian Bahri (Dri4n), a creative technologist, full-stack developer, and digital storyteller based in Indonesia.",
+  title: "About Adrian (Dri4n)",
+  description: "Learn more about Adrian (Dri4n), a creative technologist, full-stack developer, and digital storyteller based in Indonesia.",
   alternates: {
     canonical: "/about",
   },
@@ -15,7 +15,7 @@ export default function AboutPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
-    "name": "Adrian Bahri",
+    "name": "Adrian",
     "alternateName": ["Dri4n", "Drian", "adrianbahri"],
     "url": "https://dri4n.com/about",
     "image": "https://dri4n.com/api/assets/uploads/profile-fallback.webp",
@@ -55,7 +55,7 @@ export default function AboutPage() {
       "https://github.com/Adrianbahri",
       "https://linkedin.com/in/adrianbahri"
     ],
-    "description": "Adrian Bahri (Dri4n) is an Indonesian creative technologist, developer, and digital storyteller who designs and builds high-performance intelligent web applications, automated media workflows, and elegant user interfaces."
+    "description": "Adrian (Dri4n) is an Indonesian creative technologist, developer, and digital storyteller who designs and builds high-performance intelligent web applications, automated media workflows, and elegant user interfaces."
   };
 
   return (
@@ -78,7 +78,7 @@ export default function AboutPage() {
         <header className="mb-12 space-y-4">
           <p className="eyebrow text-primary">Biographical Profile</p>
           <h1 className="text-4xl sm:text-5xl font-medium tracking-tight text-on-dark font-heading leading-tight">
-            About Adrian Bahri <span className="text-body-muted font-light">(Dri4n)</span>
+            About Adrian <span className="text-body-muted font-light">(Dri4n)</span>
           </h1>
           <p className="text-lg text-body-muted font-sans font-light leading-relaxed max-w-2xl">
             Creative technologist, software engineer, and media developer based in Makassar, Indonesia.
@@ -91,7 +91,7 @@ export default function AboutPage() {
           {/* Main Biography */}
           <article className="space-y-6 text-base leading-relaxed text-on-dark/80 font-sans font-light">
             <p>
-              <strong>Adrian Bahri</strong> (widely known in the digital ecosystem as <strong>Dri4n</strong>) is an Indonesian creative technologist, developer, and digital storyteller. Currently studying Informatics Engineering at Hasanuddin University, he operates at the unique intersection of software engineering, creative design, and automated systems.
+              <strong>Adrian</strong> (widely known in the digital ecosystem as <strong>Dri4n</strong>) is an Indonesian creative technologist, developer, and digital storyteller. Currently studying Informatics Engineering at Hasanuddin University, he operates at the unique intersection of software engineering, creative design, and automated systems.
             </p>
             <p>
               His work ranges from engineering production-grade web applications utilizing <strong>Next.js</strong>, <strong>React</strong>, and <strong>Supabase</strong>, to configuring automated editorial systems and crafting dynamic motion designs.
@@ -117,7 +117,7 @@ export default function AboutPage() {
               <dl className="space-y-2 text-sm">
                 <div>
                   <dt className="text-body-muted inline font-mono uppercase tracking-wider text-[10px]">Name: </dt>
-                  <dd className="text-on-dark inline">Adrian Bahri (Dri4n)</dd>
+                  <dd className="text-on-dark inline">Adrian (Dri4n)</dd>
                 </div>
                 <div>
                   <dt className="text-body-muted inline font-mono uppercase tracking-wider text-[10px]">Based in: </dt>

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = '©Adrian Bahri — Creative Side & Visual Archive';
+export const alt = '©Adrian — Creative Side & Visual Archive';
 export const size = {
   width: 1200,
   height: 630,
@@ -38,7 +38,7 @@ export default function ArtOpenGraphImage() {
             textTransform: 'uppercase',
           }}
         >
-          <span>©ADRIAN BAHRI</span>
+          <span>©ADRIAN</span>
           <div style={{ display: 'flex', gap: '28px', color: '#8a8a8a' }}>
             <span style={{ color: '#ffffff' }}>ARCHIVE</span>
             <span>DESIGN</span>

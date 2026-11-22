@@ -513,7 +513,7 @@ export default function MaintenancePage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span>© {new Date().getFullYear()} Adrian Bahri (Dri4n)</span>
+            <span>© {new Date().getFullYear()} Adrian (Dri4n)</span>
             <span className="text-border-strong">•</span>
             <Link
               href="/login"

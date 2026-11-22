@@ -21,10 +21,21 @@ export default function BlogPage() {
     fetchArticles();
   }, []);
 
-  const filteredArticles = articles.filter(article =>
-    article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    article.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredArticles = articles
+    .filter((article) => {
+      const tagsText = Array.isArray(article.tags)
+        ? article.tags.join(' ')
+        : String(article.tags || '');
+      const hay = `${article.category || ''} ${tagsText}`.toLowerCase();
+      return !hay.includes('creative');
+    })
+    .filter(
+      (article) =>
+        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (article.category || '')
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+    );
 
   return (
     <main className="min-h-screen bg-canvas pt-32 pb-24 relative overflow-hidden">

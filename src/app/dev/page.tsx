@@ -3,7 +3,7 @@ import FeaturedWork from '@/components/FeaturedWork';
 import BentoTechStack from '@/components/BentoTechStack';
 
 const title = 'Development Portfolio';
-const description = 'Web applications, mobile experiences, and digital systems by Adrian Bahri. Explore development projects and the tools behind them.';
+const description = 'Web applications, mobile experiences, and digital systems by Adrian. Explore development projects and the tools behind them.';
 export const metadata: Metadata = {
   title, description,
   alternates: { canonical: '/dev' },

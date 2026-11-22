@@ -1,462 +1,124 @@
 ---
-version: alpha
-name: Supabaze-design-analysis
-description: An inspired interpretation of Supabaze's design language — an open-source database platform built on a clean white-and-near-black system with a single signature emerald-green CTA, a custom humanist sans display tier, and dense product UI mockups composited above the hero. The brand reads as quietly technical: minimal chrome, a near-monochrome palette, and the green primary acting as the only chromatic event on the page.
-
-colors:
-  primary: "#3ecf8e"
-  primary-deep: "#24b47e"
-  primary-soft: "#4ade80"
-  ink: "#171717"
-  ink-secondary: "#212121"
-  ink-mute: "#707070"
-  ink-mute-2: "#9a9a9a"
-  ink-faint: "#b2b2b2"
-  on-primary: "#171717"
-  on-dark: "#ffffff"
-  canvas: "#ffffff"
-  canvas-soft: "#fafafa"
-  canvas-night: "#1c1c1c"
-  canvas-night-soft: "#202020"
-  hairline: "#dfdfdf"
-  hairline-strong: "#c7c7c7"
-  hairline-cool: "#ededed"
-  hairline-cool-2: "#efefef"
-  hairline-cool-3: "#d4d4d4"
-  accent-purple: "#6b01c2"
-  accent-violet: "#644fc1"
-  accent-purple-soft: "#eddbf9"
-  accent-yellow: "#ffdb13"
-  accent-tomato: "#ff2201"
-  accent-pink: "#c7007e"
-  accent-indigo: "#054cff"
-  accent-crimson: "#e2005a"
-
-typography:
-  display-xxl:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 64px
-    fontWeight: 500
-    lineHeight: 1.1
-    letterSpacing: -1.92px
-  display-xl:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 48px
-    fontWeight: 500
-    lineHeight: 1.1
-    letterSpacing: -1.44px
-  display-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 36px
-    fontWeight: 500
-    lineHeight: 1.15
-    letterSpacing: -0.72px
-  display-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 28px
-    fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: -0.42px
-  heading-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 22px
-    fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: 0
-  heading-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 18px
-    fontWeight: 500
-    lineHeight: 1.4
-    letterSpacing: 0
-  body-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 18px
-    fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: 0
-  body-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 16px
-    fontWeight: 400
-    lineHeight: 1.5
-    letterSpacing: 0
-  button-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 14px
-    fontWeight: 500
-    lineHeight: 1.0
-    letterSpacing: 0
-  caption:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 13px
-    fontWeight: 400
-    lineHeight: 1.45
-    letterSpacing: 0
-  micro:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 12px
-    fontWeight: 400
-    lineHeight: 1.45
-    letterSpacing: 0
-  code:
-    fontFamily: "ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
-    fontSize: 14px
-    fontWeight: 400
-    lineHeight: 1.5
-    letterSpacing: 0
-
-rounded:
-  xs: 4px
-  sm: 6px
-  md: 8px
-  lg: 12px
-  xl: 16px
-  full: 9999px
-
-spacing:
-  xxs: 2px
-  xs: 4px
-  sm: 8px
-  md: 12px
-  lg: 16px
-  xl: 24px
-  xxl: 32px
-  huge: 64px
-
-components:
-  button-primary-green:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-primary-green-pressed:
-    backgroundColor: "{colors.primary-deep}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-secondary-outline:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-on-dark:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-link:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.xs}"
-    padding: 0px
-  text-input:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 12px
-  card-feature-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-pricing:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-pricing-featured:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-feature-dark:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  code-block:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.code}"
-    rounded: "{rounded.sm}"
-    padding: 16px
-  pill-tag-green:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.micro}"
-    rounded: "{rounded.full}"
-    padding: 2px 8px
-  pill-tag-soft:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.micro}"
-    rounded: "{rounded.full}"
-    padding: 2px 8px
-  nav-bar-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.xs}"
-    padding: 16px 24px
-  link-on-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.xs}"
-    padding: 0px
-  footer-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink-mute}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.xs}"
-    padding: 64px 24px
+version: 1.0
+name: Dri4n-Creative-Industrialist-Swiss
+description: Design system for Adrian's (Dri4n) Creative Mode (/art) — fusing a full-bleed oversized Aguafina Script masthead in industrial vermilion (#EA6A12) with an austere Swiss-Industrialist editorial archive inspired by Gaurav Mishra (jackingcactus.com): sharp 0px media edges, tight 12px uppercase micro-typography, asymmetric whitespace-driven grids, raw 1px steel hairlines, and tactile material micro-controls.
+dial: ENERGY 3 / RHYTHM 3 / MOTION 2
 ---
 
-## Overview
+# Dri4n Creative Mode (`/art`) — Design System
 
-Supabaze's design language is engineered for clarity above all else. The marketing surfaces sit on `{colors.canvas}` (pure white), with text rendered in `{colors.ink}` (`#171717` — near-black, never pure black). Across the entire system the only consistent chromatic event is the **emerald green primary** (`{colors.primary}` — `#3ecf8e`) — used as the filled CTA, occasional accent dot, and the signature highlight color in the wordmark. Everything else is a calibrated grey ladder from `#ededed` hairline-cool to `#171717` ink, with thin black-on-white typography doing most of the visual work.
+## 1. Visual Direction & Philosophy
 
-Typography runs **Circular** at weight 500 for display and 400 for body. The display tier uses tight negative letter-spacing (-1.92px at 64px) to pull the rounded humanist letterforms into editorial density. There's no atmospheric gradient, no full-bleed photography, no dark-canvas marketing track — the brand commits to white.
+- **Identity**: A single-page **Swiss-Industrialist Creative Archive** where typography and raw media do all the work.
+- **Hero Masthead (Locked)**: Full-bleed edge-to-edge oversized **`Aguafina Script`** wordmark (`"Adrian"`) in fiery industrial vermilion (`#EA6A12`), bleeding off the top, left, and right edges (`46.5vw`, `line-height: 0.78`, `margin-top: -0.11em`), with clean uppercase geometric sans micro-copy (`Inter` Light, zero background box) floating directly over the lower-right strokes.
+- **Archive Body (Inspired by Gaurav Mishra / `jackingcactus.com`)**:
+  - **Zero-Radius (`0px`) Sharp Media Framing**: Every photograph, poster, editorial spread, and video frame uses sharp `0px` corners with zero drop shadows. Artwork carries the color; UI chrome stays strictly achromatic plus one industrial vermilion accent.
+  - **Austere Swiss Micro-Typography**: `12px` uppercase labels with tight negative tracking (`-0.34px`), `14px` line-height, and `4px–14px` caption offsets directly beneath media.
+  - **Whitespace & Tight Grid Rhythm**: Separation comes from deliberate Swiss grid gaps (`6px–9px` inside dense media grids, `56px–120px` between discipline bands) and `1px` steel hairlines only on industrial chassis headers.
+  - **Anti-Slop Dials**: `ENERGY 3 / RHYTHM 3 / MOTION 2`.
 
-The product itself appears as composited UI screenshots on every page: dashboard tables, SQL editors, query builders, log streams. These screenshots are the brand's argument. They sit inside `{rounded.lg}` 12px containers with subtle 1px hairlines, often arranged 2-up or in a floating "stacked panes" composition above the hero band.
+---
 
-**Key Characteristics:**
-- Single emerald primary (`{colors.primary}` `#3ecf8e`) as the only chromatic event; everything else is monochrome.
-- White canvas marketing track with greyscale hierarchy from `{colors.hairline-cool}` to `{colors.ink}`.
-- Custom humanist sans display tier at weight 500 with negative letter-spacing of -1.92px to -0.42px.
-- Composited product UI screenshots (dashboard, SQL editor, log stream) are the dominant decorative element — never photography, never illustrations.
-- Tight 6px / 8px button radii — square-ish, technical, never pill-shaped.
-- Code blocks rendered in deep `{colors.canvas-night}` (`#1c1c1c`) with monospace inline code; the brand's developer DNA is visible in every snippet.
-- Pricing tiers use a dark inverted `{colors.canvas-night}` featured tier, not a green one — the green is reserved for buttons and dot accents.
+## 2. Color Palette (Constrained: 2 Core Neutrals + 1 Accent)
 
-## Colors
-
-> **Source pages:** home (`/`), `/database`, `/partners/integrations`, `/partners/integrations/powersync`, `/solutions/ai-builders`, `/pricing`.
-
-### Brand & Accent
-- **Emerald** (`{colors.primary}` — `#3ecf8e`): The signature CTA color. Filled-button background, brand wordmark accent, dot indicator.
-- **Emerald Deep** (`{colors.primary-deep}` — `#24b47e`): Pressed-state lift of the primary.
-- **Emerald Soft** (`{colors.primary-soft}` — `#4ade80`): Lighter emerald used in chart accents and product UI.
-- **Accent Purple** (`{colors.accent-purple}` — `#6b01c2`): Rare accent used in integration logos and chart points; never a button.
-- **Accent Violet** (`{colors.accent-violet}` — `#644fc1`): Secondary accent in the same role as accent purple.
-- **Accent Yellow** (`{colors.accent-yellow}` — `#ffdb13`): Chart accent / status indicator only.
-- **Accent Pink / Crimson / Indigo / Tomato**: Reserved for integration logos and rare chart highlights, never as system colors.
-
-### Surface
-- **Canvas** (`{colors.canvas}` — `#ffffff`): Default page background.
-- **Canvas Soft** (`{colors.canvas-soft}` — `#fafafa`): Barely-tinted off-white for alternating section bands.
-- **Canvas Night** (`{colors.canvas-night}` — `#1c1c1c`): Deep near-black used in code blocks, dashboard mockups, featured pricing tier.
-- **Canvas Night Soft** (`{colors.canvas-night-soft}` — `#202020`): Slightly lifted dark for nested chrome.
-- **Hairline** (`{colors.hairline}` — `#dfdfdf`): 1px borders on cards and tables.
-- **Hairline Strong** (`{colors.hairline-strong}` — `#c7c7c7`): Slightly darker border for emphasis.
-- **Hairline Cool** (`{colors.hairline-cool}` — `#ededed`) / **Hairline Cool 2** (`#efefef`) / **Hairline Cool 3** (`#d4d4d4`): The brand's grey ladder for fine chrome work.
-
-### Text
-- **Ink** (`{colors.ink}` — `#171717`): Default body text. Near-black, never pure.
-- **Ink Secondary** (`{colors.ink-secondary}` — `#212121`): Slightly cooler near-black for body emphasis.
-- **Ink Mute** (`{colors.ink-mute}` — `#707070`): Secondary text and helper copy.
-- **Ink Mute 2** (`{colors.ink-mute-2}` — `#9a9a9a`): Tertiary text.
-- **Ink Faint** (`{colors.ink-faint}` — `#b2b2b2`): Disabled / placeholder text.
-- **On Primary** (`{colors.on-primary}` — `#171717`): Text on the emerald primary fill — near-black, not white. The button reads as a "lit" surface with dark type, not a colored chip.
-- **On Dark** (`{colors.on-dark}` — `#ffffff`): Text on canvas-night surfaces.
-
-## Typography
-
-### Font Family
-
-The display and UI tier is **Circular** — a proprietary geometric humanist sans by Lineto. Fallback chain: `'Helvetica Neue', Helvetica, Arial`.
-
-For maximum brand fidelity when Circular isn't licensed, use **Inter** (open-source via Google Fonts) at weight 500 for display with `letter-spacing: -1.92px` at 64px. Inter is the closest open-source analogue to Circular's geometric humanist character.
-
-Code blocks use **system mono** (`ui-monospace`, with Menlo / Monaco / Consolas fallbacks).
-
-### Hierarchy
-
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.display-xxl}` | 64px | 500 | 1.1 | -1.92px | Hero headline |
-| `{typography.display-xl}` | 48px | 500 | 1.1 | -1.44px | Section opener |
-| `{typography.display-lg}` | 36px | 500 | 1.15 | -0.72px | Sub-section / pricing tier |
-| `{typography.display-md}` | 28px | 500 | 1.2 | -0.42px | Card title |
-| `{typography.heading-lg}` | 22px | 500 | 1.2 | 0 | Compact heading |
-| `{typography.heading-md}` | 18px | 500 | 1.4 | 0 | Section sub-heading |
-| `{typography.body-lg}` | 18px | 400 | 1.55 | 0 | Marketing body lead |
-| `{typography.body-md}` | 16px | 400 | 1.5 | 0 | Default UI body |
-| `{typography.button-md}` | 14px | 500 | 1.0 | 0 | Button label |
-| `{typography.caption}` | 13px | 400 | 1.45 | 0 | Helper, footnote |
-| `{typography.micro}` | 12px | 400 | 1.45 | 0 | Pill label, fine print |
-| `{typography.code}` | 14px | 400 | 1.5 | 0 | Code block content |
-
-### Principles
-- **Weight 500 across display.** Mid-weight reads as engineered, not decorative.
-- **Negative tracking on display.** -1.92px at 64px scaling proportionally down — tightens the rounded humanist letterforms into editorial density.
-- **Mono for code.** System mono families (Menlo / Monaco) — no proprietary mono webfont.
-
-### Note on Font Substitutes
-Circular is proprietary. Use **Inter** at weight 500 with `letter-spacing: -1.92px` for display tiers. **Geist Sans** (open-source from Vercel) is another close alternative for both display and body. Avoid Helvetica defaults — they're heavier and lack the geometric warmth.
-
-## Layout
-
-### Spacing System
-- **Base unit**: 8px (with 2 / 4 / 12 sub-tokens for fine work).
-- **Tokens**: `{spacing.xxs}` 2px · `{spacing.xs}` 4px · `{spacing.sm}` 8px · `{spacing.md}` 12px · `{spacing.lg}` 16px · `{spacing.xl}` 24px · `{spacing.xxl}` 32px · `{spacing.huge}` 64px.
-- **Section padding**: 64–96px on marketing surfaces.
-- **Card internal padding**: 32px on feature/pricing cards.
-
-### Grid & Container
-- Marketing pages center in a ~1280px container with no edge-bleed; the brand keeps content inside the box.
-- Pricing collapses 4-up → 2-up → 1-up at 1024 / 768 breakpoints.
-- Product UI mockups stack 2-up or render as overlapping panes inside the same container.
-
-### Whitespace Philosophy
-The brand uses generous 64–96px section padding without atmospheric gradients filling the space — the white canvas is the design. The composited product UI mockups break up sections without requiring decoration.
-
-## Elevation & Depth
-
-| Level | Treatment | Use |
+### Dark Mode (Default — Matte Obsidian Industrial)
+| Token | Value | Role |
 |---|---|---|
-| 0 | Flat, 1px hairline | Default cards |
-| 1 | `box-shadow: 0 1px 3px rgba(0,0,0,0.06)` | Subtle card lift |
-| 2 | `box-shadow: 0 8px 24px rgba(0,0,0,0.08)` | Floating composited UI mockups |
-| 3 | `box-shadow: 0 16px 48px rgba(0,0,0,0.12)` | Modal overlays, deep elevation |
+| `--ind-bg` | `#0B0B0B` | Primary page canvas (matte obsidian) |
+| `--ind-surface` | `#121212` | Industrial chassis & row container surface |
+| `--ind-surface-raised` | `#191919` | Control strips, active tabs, metadata rails |
+| `--ind-border` | `#272727` | `1px` steel hairline dividers |
+| `--ind-border-strong` | `#3B3B3B` | Active/hover control borders & registration ticks |
+| `--ind-ink` | `#F2EFE9` | Primary text, nav, titles (`17.15:1` on `#0B0B0B`) |
+| `--ind-ink-soft` | `#B5B1A8` | Secondary descriptions & subtitles |
+| `--ind-ink-muted` | `#7E7A72` | Frame numbers, dates, credits, metadata labels |
+| `--ind-accent` | `#EA6A12` | Signature industrial vermilion (`"Adrian"`, index badge, viewfinder brackets, active selection) |
+| `--ind-accent-ink` | `#0B0B0B` | Text on `#EA6A12` surfaces (`6.16:1` WCAG AA) |
 
-### Decorative Depth
-The brand's depth is **product UI mockups** rather than gradients. Stacked dashboard / SQL editor / log panes composite together with subtle Level 2 shadows to suggest spatial hierarchy.
-
-## Shapes
-
-### Border Radius Scale
-
-| Token | Value | Use |
+### Light Mode (Swiss Paper / Concrete)
+| Token | Value | Role |
 |---|---|---|
-| `{rounded.xs}` | 4px | Form inputs, hairline tags |
-| `{rounded.sm}` | 6px | Buttons (the brand's signature button radius), code blocks |
-| `{rounded.md}` | 8px | Compact cards, alerts |
-| `{rounded.lg}` | 12px | Pricing cards, feature cards, product mockups |
-| `{rounded.xl}` | 16px | Modal dialogs, large container chrome |
-| `{rounded.full}` | 9999px | Pill tags, avatars |
+| `--ind-bg` | `#F2EFE9` | Primary concrete/paper canvas (or pure `#FFFFFF` on editorial detail views) |
+| `--ind-surface` | `#E9E5DC` | Industrial chassis surface |
+| `--ind-surface-raised` | `#FFFFFF` | Control strips, active tabs, metadata rails |
+| `--ind-border` | `#D0CBBF` | `1px` hairline dividers |
+| `--ind-border-strong` | `#AFA99B` | Hover borders & ticks |
+| `--ind-ink` | `#141413` | Primary ink (`16.06:1` on `#F2EFE9`) |
+| `--ind-ink-soft` | `#3D3A35` | Secondary copy |
+| `--ind-ink-muted` | `#656159` | Metadata & micro-captions |
+| `--ind-accent` | `#D95B08` | Industrial vermilion tuned for light-mode contrast |
+| `--ind-accent-ink` | `#FFFFFF` | Text on `#D95B08` surfaces |
 
-### Photography Geometry
-The brand uses minimal photography. Customer logo strips display wordmarks at uniform height (~24–32px) in greyscale; case-study cards (rare) use 4:3 photos inset in `{rounded.lg}` containers.
+### Palette Rules
+- Never introduce purple, cyan, neon green, or multi-color gradients into UI chrome.
+- Active navigation links use `text-decoration: underline` with `text-underline-offset: 2px` rather than colored pills.
+- All chromatic variety comes strictly from the photographs, posters, prints, and film frames themselves.
 
-## Components
+---
 
-### Buttons
+## 3. Typography
 
-**`button-primary-green`** — the signature CTA.
-- Background `{colors.primary}`, text `{colors.on-primary}` (near-black, NOT white), type `{typography.button-md}`, padding `{spacing.sm} {spacing.lg}` (8px 16px), rounded `{rounded.sm}` 6px.
-- Pressed state `button-primary-green-pressed` shifts to `{colors.primary-deep}`.
+| Tier | Font Family | Size | Weight | Line Height | Tracking | Case / Use |
+|---|---|---|---|---|---|---|
+| **Hero Wordmark** | `Aguafina Script` (`--font-art-script`) | `46.5vw` | `400` | `0.78` | `-0.015em` | Edge-to-edge `"Adrian"`, `margin-top: -0.11em`, zero clipping wrapper margins |
+| **Hero Micro-Copy** | `Inter` (`--font-inter`) | `clamp(10px, 1.2vw, 16px)` | `300` | `1.35` | `0.025em` | Uppercase, zero background box, overlaid on lower-right `left: 50%; right: 4%; bottom: 12%` |
+| **Swiss Nav & Footer** | `Inter` / `DM Mono` | `12px` | `400` | `14px` | `-0.34px` | Uppercase (`©ADRIAN`, `PHOTO`, `DESIGN`, `PRINT`, `VIDEO`, `ABOUT`) |
+| **Section Index & HUD** | `DM Mono` (`--font-dm-mono`) | `10px–11px` | `400–500` | `1.2` | `0.12em` | Uppercase technical codes (`01`, `FRM_01 / 18`, `35MM ROLL`), `tabular-nums` |
+| **Card Title / Caption** | `Inter` (`--font-inter`) | `12px` | `400–500` | `14.4px` | `-0.12px` | Uppercase, sits `4px–10px` below sharp `0px` media |
+| **Tag Pills** | `Inter` / `DM Mono` | `10px` | `400` | `12px` | `0.06em` | Uppercase inside `2px`-radius flat rectangular tags (`padding: 5px 14px`) |
+| **Case Study Sidebar Body** | `Inter` (`--font-inter`) | `11px–12px` | `400` | `1.45` | `0` | Sentence case for readable project narratives & credits |
+| **Long-Form Essay Body** | `Inter` (`--font-inter`) | `16px` | `400` | `21px` | `0` | Sentence case in 50/50 Swiss split reading layout |
 
-**`button-secondary-outline`** — outline alternative on white.
-- Background `{colors.canvas}`, text `{colors.ink}`, 1px solid `{colors.hairline-strong}` border, same shape.
+---
 
-**`button-on-dark`** — used on dark surfaces / code-block CTAs.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}`, same shape.
+## 4. Layout System & Row-by-Row Rhythm
 
-**`button-link`** — text-only inline button.
-- Transparent background, text `{colors.ink}` rendered in `{typography.button-md}`, no padding, with a subtle underline on hover.
+### Sticky Swiss Top Utility Bar
+- Compact fixed bar (`32px–44px` height, `padding: 0 16px`), 2-column Swiss midpoint grid (`1fr 1fr`):
+  - Left column: `← DEV` portal button + `©ADRIAN`.
+  - Right column (starts at `50%` midpoint): inline uppercase section jumps (`PHOTO`, `DESIGN`, `PRINT`, `VIDEO`, `ABOUT`, `gap: 14px`) with `CONTACT` + Light/Dark toggle aligned far-right.
+  - Active section marked exclusively with `underline` (`text-underline-offset: 2px`).
 
-### Cards & Containers
+### Hero Band (Full-Bleed)
+- Spans `100%` viewport width, zero horizontal padding, zero bottom gap before Row 01.
+- `"Adrian"` in `Aguafina Script` at `46.5vw` (`#EA6A12`), overlaid lower-right with clean uppercase `Inter` Light micro-copy (no background box).
 
-**`card-feature-light`** — feature card on white.
-- Background `{colors.canvas}`, padding `{spacing.xxl}`, rounded `{rounded.lg}` 12px, 1px `{colors.hairline}` border.
+### Row 01: Full-Bleed Industrialist Photo Archive (`01 / PHOTOGRAPHY ARCHIVE`)
+- Flush `w-full` chassis directly beneath the masthead (`border-top` & `border-bottom` `1px solid var(--ind-border)`).
+- **Mechanical Control Strip**: Index badge `01`, title, `[ 01 / NN FRAMES ]` tabular counter, `Filmstrip | All (N)` mode switch, and `←` / `→` stepper buttons.
+- **Filmstrip Light-Table Mode**: Main viewfinder stage with 4 corner `#EA6A12` registration brackets (`┌ ┐ └ ┘`), technical metadata rail on the right (`280px`), and full 35mm sprocket horizontal rail of ALL photos at the bottom.
+- **Contact Sheet Mode**: Tight Swiss grid (`gap: 6px–9px`, `0px` radius) showing all photos simultaneously, with every 5th frame spanning 2 columns for editorial rhythm.
 
-**`card-pricing`** — standard pricing tier.
-- Background `{colors.canvas}`, padding `{spacing.xxl}`, rounded `{rounded.lg}`, 1px `{colors.hairline}` border. Title in `{typography.heading-lg}`, price in `{typography.display-md}`, body in `{typography.body-md}`, CTA `button-primary-green` pinned bottom.
+### Row 02+ (Asymmetric Swiss Editorial Bands — Built Row by Row)
+Follow Gaurav Mishra's varied section compositions so no two consecutive rows repeat the same template (`R-05`):
+- **Asymmetric 2-Column Editorial Row** (matching Figma `Rectangles 4–7`): `grid-template-columns: repeat(12, 1fr)` with deliberate offset proportions (`col-span-5` compact landscape block paired with `col-span-7` tall portrait block, or `2-column` `gap: 14px 7px` full-bleed showcase).
+- **3-Column Tight Archive Grid**: `grid-template-columns: repeat(3, 1fr)`, `gap: 9px`, portrait aspect ratio `468 / 522`, sharp `0px` corners, `12px` uppercase caption `6px` underneath.
+- **Offset Editorial Band**: Intro copy indented to `margin-left: 50%` (`max-width: min(600px, 50% - 16px)`), or fixed left-margin discipline label (`170px` wide) paired with right media stream (`gap: 6px`).
+- **Detail / Case-Study Modal or View**: Fixed `170px–210px` left metadata rail (Title, `2px`-radius flat category pills, concise description, credits) + right stacked media stream (`6px` vertical gaps across 1-, 2-, and 3-column `.mrow` rows) + `34×34px` square `×` close button at top-right.
 
-**`card-pricing-featured`** — inverted dark featured tier.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}`, otherwise identical structure.
+### Responsive Breakpoints
+- **Desktop (`>= 1200px`)**: Full Swiss midpoint nav, 3-col / 12-col asymmetric grids, fixed metadata rails.
+- **Tablet (`810px – 1199px`)**: 3-col grids collapse to 2-col; tighter vertical spacing.
+- **Mobile (`<= 809px`)**: Single-column stacking, `44×44px` minimum tap targets, hero description reflows cleanly below `"Adrian"` so text never collides with tight strokes, zero horizontal overflow.
 
-**`card-feature-dark`** — feature card with deep dark fill.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}`, padding `{spacing.xxl}`, rounded `{rounded.lg}`. Used for code-heavy feature explanations.
+---
 
-**`code-block`** — code snippet container.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}` rendered in `{typography.code}`. Padding `{spacing.lg}` 16px, rounded `{rounded.sm}` 6px.
+## 5. Component & Material Rules
 
-### Inputs & Forms
+- **Border Radius**:
+  - `0px`: All photographs, posters, video thumbnails, case-study media, and full-bleed row containers.
+  - `2px`: Rectangular tag pills, mechanical stepper buttons, index badges (`01`), and viewfinder stamps.
+  - `8px`: Reserved strictly for frosted-glass floating audio/media player overlays (if used), max 1–2 glass elements per page (`R-10`).
+- **Shadows & Glows**: None on cards, grids, or buttons. Flat industrial materiality with `1px` hairlines only where structural separation is required.
+- **Icons**: Minimal functional icons only (arrows, close `×`, expand, grid/filmstrip toggle, theme toggle). No decorative emojis or generic AI icons (`R-04`).
+- **Close Control**: `34×34px` sharp/2px square button (`border: 1px solid var(--ind-border-strong)`, `×` SVG) in top-right of lightboxes and project detail views.
+- **Motion (`MOTION 2`)**: Crisp mechanical snap transitions (`150ms–300ms ease-out`), subtle `scale(1.015)` image inspection hover, keyboard `←`/`→`/`Esc` navigation, and full `prefers-reduced-motion` support (`R-19`, `R-39`).
 
-**`text-input`** — standard form input.
-- Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.body-md}`, padding `{spacing.sm} {spacing.md}` (8px 12px), rounded `{rounded.sm}` 6px, 1px `{colors.hairline}` border.
+---
 
-### Navigation
+## 6. Anti-Slop Quality Locks
 
-**`nav-bar-light`** — top nav across the site.
-- Background `{colors.canvas}`, text `{colors.ink}`, padding `{spacing.lg} {spacing.xl}`. Logo on the left, primary nav center, "Sign In" link + filled `button-primary-green` on the right.
-
-### Pills, Tags, and Chips
-
-**`pill-tag-green`** — small green pill used for "new" or featured indicators.
-- Background `{colors.primary}`, text `{colors.on-primary}`, type `{typography.micro}`, padding `{spacing.xxs} {spacing.sm}`, rounded `{rounded.full}`.
-
-**`pill-tag-soft`** — neutral pill on light surfaces.
-- Background `{colors.canvas-soft}`, text `{colors.ink}`, otherwise same shape.
-
-### Signature Components
-
-**Composited Product UI Mockups** — multi-layer dashboard / SQL editor / log pane composites with subtle Level 2 shadows. The product is the brand's argument; mockups always sit on white canvas with no surrounding decoration.
-
-**`link-on-light`** — inline links in body copy.
-- Text `{colors.ink}` rendered in `{typography.body-md}` with a persistent underline.
-
-**`footer-light`** — site-wide footer.
-- Background `{colors.canvas}`, text `{colors.ink-mute}`, type `{typography.caption}`, padding `{spacing.huge} {spacing.xl}` (64px 24px). Holds 4–5 columns of link groups, social icons, and a small legal row.
-
-## Do's and Don'ts
-
-### Do
-- Reserve `{colors.primary}` emerald for filled CTAs and the wordmark accent — it should appear sparingly.
-- Render display tiers at weight 500 with negative letter-spacing — the engineered tightness is part of the brand.
-- Use `{rounded.sm}` 6px for buttons — square-ish radii, never pill-shaped.
-- Composite product UI mockups inside `{rounded.lg}` containers with subtle Level 2 shadows.
-- Use near-black `{colors.ink}` on the emerald button (not white) — the green reads as "lit" with dark type, which is the brand's idiosyncratic choice.
-- Apply system mono for every code block.
-
-### Don't
-- Don't introduce additional accent colors as system colors — purples, yellows, and pinks belong inside chart points and integration logos only.
-- Don't bump display weight above 500 — the brand's calibrated mid-weight breaks at 600+.
-- Don't use pill-shaped buttons; the brand's button radius is square-ish 6px.
-- Don't use white text on the emerald button — the brand specifically uses near-black on green.
-- Don't add atmospheric gradients to hero bands — the white canvas is the design.
-
-## Responsive Behavior
-
-### Breakpoints
-
-| Name | Width | Key Changes |
-|---|---|---|
-| Wide | ≥ 1440px | Full container width; product mockups at full scale |
-| Desktop | 1024–1440px | Default content max-width; pricing 4-up |
-| Tablet | 768–1023px | Pricing 2-up; mockups simplify to single panel |
-| Mobile | < 768px | Pricing 1-up; hamburger nav; display drops 64 → 36px |
-
-### Touch Targets
-- Buttons hit ≥ 36×36px on mobile; vertical padding scales up to maintain WCAG AA minimum.
-- Form fields stay at 36px minimum height.
-
-### Collapsing Strategy
-- Display tiers stair-step 64 → 48 → 36 → 28 → 22px.
-- Product UI mockups simplify to a single primary panel on mobile.
-- Pricing tiers stair-step 4-up → 2-up → 1-up; dark featured tier always distinguished.
-
-### Image Behavior
-Product UI mockups use `srcset` with desktop / mobile crops; mobile crops focus on the most actionable inner panel.
-
-## Iteration Guide
-
-1. Focus on ONE component at a time.
-2. Reference component names and tokens directly.
-3. Run `npx @google/design.md lint DESIGN.md` after edits.
-4. Default body to `{typography.body-md}`; use `{typography.code}` for any developer-facing snippet.
-5. Keep emerald scarce; one filled green button per viewport.
-6. The white-canvas commitment is non-negotiable — adding atmospheric backdrops breaks the brand.
+- **No em dashes (`—`)** in any UI copy; use periods, commas, colons, or slashes (`R-02`).
+- **No fabricated stats, awards, or filler text**; every frame, caption, and project comes from real Supabase data or explicitly labeled upcoming row slots (`R-17`, `R-38`).
+- **Every data view ships Loading, Empty, and Error states** with clear cause and retry action (`R-27`).
+- **Both Dark and Light modes must pass WCAG AA** (`>= 4.5:1` normal text, `>= 3:1` large text and non-text borders) (`R-25`, `R-34`).

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'Adrian Bahri (Dri4n) — Creative Technologist';
+export const alt = 'Adrian (Dri4n) — Creative Technologist';
 export const size = {
   width: 1200,
   height: 630,
@@ -90,7 +90,7 @@ export default function OpenGraphImage() {
               color: '#f1eee9',
             }}
           >
-            Adrian Bahri (Dri4n)
+            Adrian (Dri4n)
           </div>
           <div
             style={{

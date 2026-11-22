@@ -59,23 +59,23 @@ export default async function Home() {
       {/* Server-rendered comprehensive entity & portfolio index on https://dri4n.com for Google, Bing & AI Agents */}
       <section
         className="sr-only"
-        aria-label="Profil Resmi Adrian Bahri (Dri4n) — Teknik Informatika Universitas Hasanuddin (Unhas)"
+        aria-label="Profil Resmi Adrian (Dri4n) — Teknik Informatika Universitas Hasanuddin (Unhas)"
       >
         <h2>
-          Adrian Bahri (Dri4n) — Mahasiswa Teknik Informatika Universitas
+          Adrian (Dri4n) — Mahasiswa Teknik Informatika Universitas
           Hasanuddin (Unhas), Creative Technologist &amp; Full-Stack Web
           Developer Makassar
         </h2>
         <p>
-          Adrian Bahri (dikenal sebagai Adrian, Dri4n, Drian, Adrian Unhas,
+          Adrian (dikenal sebagai Adrian, Dri4n, Drian, Adrian Unhas,
           Adrian Teknik Informatika, atau Adrian Teknik Informatika Unhas)
           adalah mahasiswa Departemen Teknik Informatika, Fakultas Teknik,
           Universitas Hasanuddin (Unhas) di Makassar, Sulawesi Selatan,
-          Indonesia. Website resmi utama Adrian Bahri adalah{' '}
+          Indonesia. Website resmi utama Adrian adalah{' '}
           <a href="https://dri4n.com">https://dri4n.com</a>.
         </p>
         <p>
-          Di Universitas Hasanuddin (Unhas), Adrian Bahri aktif membangun sistem
+          Di Universitas Hasanuddin (Unhas), Adrian aktif membangun sistem
           digital, pengolahan data, dan media kreatif di PK Identitas Unhas
           (Koran Kampus Universitas Hasanuddin) serta memodernisasi platform web
           layanan laboratorium di UKK Sains Unhas.
@@ -83,7 +83,7 @@ export default async function Home() {
 
         {experiences.length > 0 && (
           <div>
-            <h3>Pengalaman Kerja &amp; Organisasi Adrian Bahri (Unhas)</h3>
+            <h3>Pengalaman Kerja &amp; Organisasi Adrian (Unhas)</h3>
             <ul>
               {experiences.map((exp, i) => (
                 <li key={i}>
@@ -100,7 +100,7 @@ export default async function Home() {
 
         {projects.length > 0 && (
           <div>
-            <h3>Daftar Proyek Software &amp; Web Adrian Bahri</h3>
+            <h3>Daftar Proyek Software &amp; Web Adrian</h3>
             <ul>
               {projects.map((p, i) => (
                 <li key={i}>
@@ -116,7 +116,7 @@ export default async function Home() {
 
         {achievements.length > 0 && (
           <div>
-            <h3>Prestasi, Kompetisi &amp; Penghargaan Adrian Bahri</h3>
+            <h3>Prestasi, Kompetisi &amp; Penghargaan Adrian</h3>
             <ul>
               {achievements.map((a, i) => (
                 <li key={i}>
@@ -130,7 +130,7 @@ export default async function Home() {
 
         {articles.length > 0 && (
           <div>
-            <h3>Tulisan &amp; Artikel Adrian Bahri</h3>
+            <h3>Tulisan &amp; Artikel Adrian</h3>
             <ul>
               {articles.map((art, i) => (
                 <li key={i}>

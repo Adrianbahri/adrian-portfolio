@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { DM_Mono, Inter } from "next/font/google";
+import { Aguafina_Script, DM_Mono, Inter } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,13 @@ const dmMono = DM_Mono({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const aguafinaScript = Aguafina_Script({
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-art-script",
   display: "swap",
 });
 
@@ -48,12 +55,12 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   // Primary SEO Title & Description on https://dri4n.com directly targeting
-  // "Adrian", "Adrian Bahri", "Adrian Teknik Informatika", "Adrian Unhas", "Universitas Hasanuddin"
+  // "Adrian", "Adrian", "Adrian Teknik Informatika", "Adrian Unhas", "Universitas Hasanuddin"
   const siteTitle =
-    "Adrian Bahri (Dri4n) — Creative Technologist | Teknik Informatika Unhas";
+    "Adrian (Dri4n) — Creative Technologist | Teknik Informatika Unhas";
   const siteDescription =
-    "Portfolio resmi Adrian Bahri (Dri4n) — Mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas), Creative Technologist & Full-Stack Web Developer di Makassar.";
-  const socialTitle = "Adrian Bahri (Dri4n) — Creative Technologist";
+    "Portfolio resmi Adrian (Dri4n) — Mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas), Creative Technologist & Full-Stack Web Developer di Makassar.";
+  const socialTitle = "Adrian (Dri4n) — Creative Technologist";
   const socialDescription =
     "Full-stack developer & creative technologist (Teknik Informatika Unhas, Makassar).";
 
@@ -66,12 +73,12 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     title: {
       default: siteTitle,
-      template: "%s | Adrian Bahri"
+      template: "%s | Adrian"
     },
     description: siteDescription,
     keywords: [
       "Adrian",
-      "Adrian Bahri",
+      "Adrian",
       "Dri4n",
       "Drian",
       "Adrian Teknik Informatika",
@@ -94,9 +101,9 @@ export async function generateMetadata(): Promise<Metadata> {
       "Supabase",
       "UI/UX Design",
     ],
-    authors: [{ name: "Adrian Bahri", url: primaryUrl }],
-    creator: "Adrian Bahri",
-    publisher: "Adrian Bahri",
+    authors: [{ name: "Adrian", url: primaryUrl }],
+    creator: "Adrian",
+    publisher: "Adrian",
     category: "technology",
     icons: {
       icon: [
@@ -112,13 +119,13 @@ export async function generateMetadata(): Promise<Metadata> {
       url: primaryUrl,
       title: socialTitle,
       description: socialDescription,
-      siteName: "Adrian Bahri (Dri4n)",
+      siteName: "Adrian (Dri4n)",
       images: [
         {
           url: "/opengraph-image",
           width: 1200,
           height: 630,
-          alt: "Adrian Bahri (Dri4n) — Creative Technologist & Full-Stack Developer",
+          alt: "Adrian (Dri4n) — Creative Technologist & Full-Stack Developer",
         }
       ]
     },
@@ -162,7 +169,7 @@ export default function RootLayout({
         "@type": "ProfilePage",
         "@id": "https://dri4n.com/#profilepage",
         "url": "https://dri4n.com",
-        "name": "Adrian Bahri (Dri4n) — Creative Technologist & Full-Stack Developer",
+        "name": "Adrian (Dri4n) — Creative Technologist & Full-Stack Developer",
         "inLanguage": ["id-ID", "en-US"],
         "mainEntity": { "@id": "https://dri4n.com/#person" },
       },
@@ -170,20 +177,20 @@ export default function RootLayout({
         "@type": "WebSite",
         "@id": "https://dri4n.com/#website",
         "url": "https://dri4n.com",
-        "name": "Adrian Bahri (Dri4n) Portfolio",
-        "alternateName": ["Dri4n", "Adrian Bahri", "Adrian Unhas", "Adrian Teknik Informatika"],
+        "name": "Adrian (Dri4n) Portfolio",
+        "alternateName": ["Dri4n", "Adrian", "Adrian Unhas", "Adrian Teknik Informatika"],
         "publisher": { "@id": "https://dri4n.com/#person" },
         "inLanguage": ["id-ID", "en-US"],
       },
       {
         "@type": "Person",
         "@id": "https://dri4n.com/#person",
-        "name": "Adrian Bahri",
+        "name": "Adrian",
         "givenName": "Adrian",
         "familyName": "Bahri",
         "alternateName": [
           "Adrian",
-          "Adrian Bahri",
+          "Adrian",
           "Dri4n",
           "Drian",
           "adrianbahri",
@@ -258,7 +265,7 @@ export default function RootLayout({
           "https://instagram.com/adrianbahri",
         ],
         "description":
-          "Adrian Bahri (Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar, Creative Technologist, Full-Stack Web Developer, dan Visual Designer di PK Identitas Unhas & UKK Sains Unhas.",
+          "Adrian (Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar, Creative Technologist, Full-Stack Web Developer, dan Visual Designer di PK Identitas Unhas & UKK Sains Unhas.",
       },
       {
         "@type": "FAQPage",
@@ -266,18 +273,18 @@ export default function RootLayout({
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "Siapa Adrian Bahri (Dri4n)?",
+            "name": "Siapa Adrian (Dri4n)?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Adrian Bahri (dikenal juga sebagai Adrian atau Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar yang berkarya sebagai Creative Technologist, Full-Stack Web Developer, dan Visual & Brand Designer. Portfolio resminya dapat diakses di https://dri4n.com dan https://dri4n.com/art.",
+              "text": "Adrian (dikenal juga sebagai Adrian atau Dri4n) adalah mahasiswa Teknik Informatika Universitas Hasanuddin (Unhas) di Makassar yang berkarya sebagai Creative Technologist, Full-Stack Web Developer, dan Visual & Brand Designer. Portfolio resminya dapat diakses di https://dri4n.com dan https://dri4n.com/art.",
             },
           },
           {
             "@type": "Question",
-            "name": "Adrian Bahri kuliah di mana dan jurusan apa?",
+            "name": "Adrian kuliah di mana dan jurusan apa?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Adrian Bahri menempuh pendidikan di Departemen Teknik Informatika, Fakultas Teknik, Universitas Hasanuddin (Unhas), Makassar, Sulawesi Selatan, serta aktif di PK Identitas Unhas dan UKK Sains Unhas.",
+              "text": "Adrian menempuh pendidikan di Departemen Teknik Informatika, Fakultas Teknik, Universitas Hasanuddin (Unhas), Makassar, Sulawesi Selatan, serta aktif di PK Identitas Unhas dan UKK Sains Unhas.",
             },
           },
           {
@@ -285,7 +292,7 @@ export default function RootLayout({
             "name": "Apa keahlian dan karya Adrian Teknik Informatika Unhas?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Adrian Bahri membangun aplikasi web full-stack menggunakan Next.js, TypeScript, React, Flutter, Bun, SQLite, dan Supabase di https://dri4n.com, serta karya visual identity, editorial print, fotografi, dan motion graphics di https://dri4n.com/art.",
+              "text": "Adrian membangun aplikasi web full-stack menggunakan Next.js, TypeScript, React, Flutter, Bun, SQLite, dan Supabase di https://dri4n.com, serta karya visual identity, editorial print, fotografi, dan motion graphics di https://dri4n.com/art.",
             },
           },
         ],
@@ -294,7 +301,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${dmMono.variable} font-sans`}>
+    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${dmMono.variable} ${aguafinaScript.variable} font-sans`}>
       <head>
         <meta name="color-scheme" content="light dark" />
         <link rel="icon" href="/favicon.ico" sizes="any" />

@@ -21,16 +21,16 @@ export async function GET() {
   }
 
   const lines: string[] = [
-    '# Adrian Bahri (Dri4n) — Complete AI & Search Knowledge Profile',
+    '# Adrian (Dri4n) — Complete AI & Search Knowledge Profile',
     '',
     '## Biography (Bahasa Indonesia & English)',
-    '- **Nama Lengkap**: Adrian Bahri (Dri4n)',
+    '- **Nama Lengkap**: Adrian (Dri4n)',
     '- **Pendidikan**: Mahasiswa Teknik Informatika, Fakultas Teknik, Universitas Hasanuddin (Unhas), Makassar, Sulawesi Selatan, Indonesia.',
     '- **Profesi & Keahlian**: Creative Technologist, Full-Stack Web Developer (Next.js, TypeScript, React, Flutter, Bun, SQLite, Supabase, Tailwind CSS), serta Visual & Brand Designer (Editorial Print, Photography, Motion Graphics).',
     '- **Organisasi & Pengalaman Kampus Unhas**:',
     '  - **PK Identitas Unhas** (Penerbitan Kampus Identitas Universitas Hasanuddin) — membangun sistem digital, alur kerja data, desain editorial, dan produksi media.',
     '  - **UKK Sains Unhas** — pengembangan dan modernisasi platform web layanan sains & laboratorium.',
-    '- **English Summary**: Adrian Bahri (Dri4n) is an Informatics Engineering student at Hasanuddin University (Unhas) in Makassar, Indonesia. He bridges full-stack software engineering and visual design across https://dri4n.com (Dev) and https://dri4n.com/art (Creative).',
+    '- **English Summary**: Adrian (Dri4n) is an Informatics Engineering student at Hasanuddin University (Unhas) in Makassar, Indonesia. He bridges full-stack software engineering and visual design across https://dri4n.com (Dev) and https://dri4n.com/art (Creative).',
     '',
     '## Work Experience & Track Record',
   ];

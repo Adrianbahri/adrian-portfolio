@@ -677,7 +677,7 @@ export default function DevPortfolioView({
           new CustomEvent('open-pdf-reader', {
             detail: {
               url: settings.resume_url,
-              title: 'Resume - Adrian Bahri',
+              title: 'Resume - Adrian',
             },
           })
         );
@@ -851,7 +851,14 @@ export default function DevPortfolioView({
         }
 
         if (articlesRes.data?.length) {
-          const mappedArticles = articlesRes.data.map((a: any) => ({
+          const devOnlyArticles = articlesRes.data.filter((a: any) => {
+            const tagsText = Array.isArray(a.tags)
+              ? a.tags.join(' ')
+              : String(a.tags || '');
+            const hay = `${a.category || ''} ${tagsText}`.toLowerCase();
+            return !hay.includes('creative');
+          });
+          const mappedArticles = devOnlyArticles.map((a: any) => ({
             id: String(a.id),
             title: a.title,
             slug: a.slug,
@@ -1534,7 +1541,7 @@ export default function DevPortfolioView({
                   <button
                     type="button"
                     onClick={() => setAvatarClicks((c) => c + 1)}
-                    aria-label="Adrian Bahri portrait"
+                    aria-label="Adrian portrait"
                     className="group relative h-[48px] w-[48px] shrink-0 overflow-hidden rounded-[13px] transition-transform duration-200 hover:scale-[1.06] active:scale-[0.98] sm:h-[60px] sm:w-[60px] sm:rounded-[15px]"
                     style={{
                       backgroundColor: 'var(--art-tile)',
@@ -1546,7 +1553,7 @@ export default function DevPortfolioView({
                         settings.hero_image ||
                         '/api/assets/uploads/profile-fallback.webp'
                       }
-                      alt="Adrian Bahri"
+                      alt="Adrian"
                       fill
                       priority
                       sizes="60px"
@@ -1586,7 +1593,7 @@ export default function DevPortfolioView({
                           new CustomEvent('open-pdf-reader', {
                             detail: {
                               url: settings.resume_url,
-                              title: 'Resume - Adrian Bahri',
+                              title: 'Resume - Adrian',
                             },
                           })
                         )
@@ -1612,7 +1619,7 @@ export default function DevPortfolioView({
 
               {/* Editorial Dev Bio (2-Section Editable from /setting: Before Cut & After Cut) */}
               {(() => {
-                const defaultBefore = `Hey there, I'm Adrian Bahri (Dri4n)\na creative technologist & full-stack developer based in [strike:labs, late-night commits,] Makassar\n\nBy day I build digital systems & data workflows at [blue:PK Identitas Unhas], and modernize web platforms as an intern at [orange:UKK Sains Unhas].\n\nI love crafting fast, expressive [pink:full-stack web apps] with Next.js, TypeScript, and Bun + SQLite.`;
+                const defaultBefore = `Hey there, I'm Adrian (Dri4n)\na creative technologist & full-stack developer based in [strike:labs, late-night commits,] Makassar\n\nBy day I build digital systems & data workflows at [blue:PK Identitas Unhas], and modernize web platforms as an intern at [orange:UKK Sains Unhas].\n\nI love crafting fast, expressive [pink:full-stack web apps] with Next.js, TypeScript, and Bun + SQLite.`;
 
                 const rawBefore =
                   settings.bio_before_cut !== undefined &&
@@ -1620,7 +1627,7 @@ export default function DevPortfolioView({
                     ? settings.bio_before_cut
                     : settings.hero_greeting || settings.hero_bio_1
                     ? [
-                        `${settings.hero_greeting || "Hey there, I'm Adrian Bahri (Dri4n)"}\n${
+                        `${settings.hero_greeting || "Hey there, I'm Adrian (Dri4n)"}\n${
                           settings.hero_subtitle ||
                           'a creative technologist & full-stack developer based in'
                         } ${
@@ -1811,7 +1818,7 @@ export default function DevPortfolioView({
                                 new CustomEvent('open-pdf-reader', {
                                   detail: {
                                     url: settings.resume_url,
-                                    title: 'Resume - Adrian Bahri',
+                                    title: 'Resume - Adrian',
                                   },
                                 })
                               )
@@ -2535,7 +2542,7 @@ export default function DevPortfolioView({
                           new CustomEvent('open-pdf-reader', {
                             detail: {
                               url: settings.resume_url,
-                              title: 'Resume - Adrian Bahri',
+                              title: 'Resume - Adrian',
                             },
                           })
                         )

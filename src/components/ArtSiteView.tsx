@@ -1,13 +1,35 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Play, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { MOCK_PHOTO_STORIES, parseGalleryMeta } from '@/lib/galleryMeta';
+import {
+  isVideoMediaUrl,
+  parseMediaShowcase,
+  parseOrgBranding,
+  type MediaPlatformKey,
+  type OrgBrandingKey,
+} from '@/lib/mediaShowcase';
+import {
+  parseIdentitasShowcase,
+  toYouTubeEmbedUrl,
+  type IdentitasModeKey,
+} from '@/lib/identitasShowcase';
+import {
+  PRINT_CATEGORY_LABELS,
+  parsePrintShowcase,
+  type PrintFilterKey,
+} from '@/lib/printShowcase';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { workData as staticWorkData } from '@/data/experience';
-import { techStack } from '@/data/techstack';
 import {
   applyThemePreference,
   runThemeTransition,
@@ -17,277 +39,517 @@ import {
   navigateWithCirclePortal,
   signalPortalRouteReady,
 } from '@/lib/portalTransition';
-import { ArtCursor } from '@/components/ArtCursor';
 import '@/styles/shahriyar.css';
 
-type ArtSection = 'design' | 'print' | 'video' | 'photo' | 'growth' | 'about';
-
-interface SocialGrowthItem {
-  id: string;
-  account: string;
-  handle: string;
-  platform: string;
-  role: string;
-  period: string;
-  focus: string;
-  highlights: string[];
-}
-
-const DEFAULT_SOCIAL_GROWTH: SocialGrowthItem[] = [
-  {
-    id: 'sg-identitas',
-    account: 'PK Identitas Unhas',
-    handle: '@identitasunhas',
-    platform: 'INSTAGRAM · CAMPUS MEDIA',
-    role: 'DATA, EDITORIAL & VISUAL SYSTEMS',
-    period: '2025 — NOW',
-    focus:
-      'Data journalism carousels, editorial infographics (SNBP, Pilrek Unhas), print magazine layout, and automated publishing workflows for Universitas Hasanuddin’s official student press.',
-    highlights: [
-      'Data-driven infographic series & high-share campus coverage',
-      'Consistent editorial visual language across print & social feeds',
-      'Structured content pipeline & digital workflow modernization',
-    ],
-  },
-  {
-    id: 'sg-sulawesipos',
-    account: 'SulawesiPos.com',
-    handle: 'Jawa Pos Group Network',
-    platform: 'INSTAGRAM · TIKTOK · DIGITAL',
-    role: 'MEDIA PRODUCTION & CONTENT',
-    period: 'JAN 2026 — NOW',
-    focus:
-      'Daily digital content production, fast-turnaround news visual packaging, and short-form video editing under PT Tiran Multimedia Nusantara (Jawa Pos Group).',
-    highlights: [
-      'High-frequency daily visual publishing & breaking-news templates',
-      'Short-form vertical reels & documentary storytelling',
-      'Cross-platform audience retention & visual consistency',
-    ],
-  },
-  {
-    id: 'sg-kedai',
-    account: 'Kedai Ayah UQ',
-    handle: 'F&B Brand Campaign',
-    platform: 'INSTAGRAM · PROMOTIONAL',
-    role: 'GRAPHIC DESIGNER & SOCIAL VISUALS',
-    period: 'JUN — SEP 2025',
-    focus:
-      'Campaign direction, promotional social feeds, seasonal menu visuals, and cohesive café marketing collateral tailored for local Makassar audiences.',
-    highlights: [
-      'End-to-end promotional feed & story visual templates',
-      'Product-focused campaign graphics & seasonal promos',
-      'Unified brand palette & typography for F&B identity',
-    ],
-  },
-];
-
-interface ArtWorkItem {
+export interface IndustrialPhotoItem {
   id: string;
   title: string;
-  disciplines: string[];
-  category: 'design' | 'print' | 'motion' | 'photo';
-  cover: string;
-  images: string[];
-  description: string;
-  year?: string;
-  href?: string;
-  pdfUrl?: string;
-  credits?: string;
-  videoFormat?: '16:9' | '9:16';
-}
-
-interface ArchiveTile {
-  id: string;
-  title: string;
+  tags: string[];
+  caption: string;
   image: string;
-  linkedWorkId?: string;
-  category: string;
+  extraImages?: string[];
+  date: string;
 }
 
-interface ExpRow {
+export interface ArtWritingItem {
   id: string;
-  company: string;
-  role: string;
-  period: string;
-  description: string;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  coverImage?: string;
+  role: 'written' | 'edited';
+  date: string;
 }
 
-const FALLBACK_WORKS: ArtWorkItem[] = [
+const FALLBACK_ARTICLES: ArtWritingItem[] = [
   {
-    id: 'fallback-posters',
-    title: 'Visual Identity & Posters',
-    disciplines: ['BRANDING', 'TYPOGRAPHY'],
-    category: 'design',
-    cover:
-      'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1400&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1400&q=80',
-    ],
-    description:
-      'Exploration of bold typography, poster compositions, and minimal brand identity systems crafted for digital and physical media.',
-    year: '2026',
+    id: 'note-1',
+    slug: 'note-1',
+    title: 'Design Is Subjective, but Clarity Is Not',
+    excerpt:
+      'Notes on why restraint, clean hierarchy, and visual discipline outlast short-lived trends in digital design.',
+    coverImage:
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=85',
+    role: 'written',
+    date: 'November, 2026',
   },
   {
-    id: 'fallback-editorial',
-    title: 'Identity Unhas Editorial',
-    disciplines: ['EDITORIAL', 'PRINT DESIGN'],
-    category: 'print',
-    cover:
-      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=1200&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
-    ],
-    description:
-      'Publication layout, art direction, and visual branding crafted for campus journalism media.',
-    year: '2025',
+    id: 'note-2',
+    slug: 'note-2',
+    title: 'Why Regional Newsrooms Need Faster Visual Systems',
+    excerpt:
+      'Lessons from building repeatable editorial templates for high-velocity daily news across TikTok and YouTube.',
+    coverImage:
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85',
+    role: 'written',
+    date: 'October, 2026',
   },
   {
-    id: 'fallback-motion',
-    title: 'Cinematic Reels & Motion',
-    disciplines: ['MOTION', 'COLOR GRADING'],
-    category: 'motion',
-    cover:
-      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    ],
-    description:
-      'Visual pacing, color grading, and motion graphics for digital storytelling.',
-    year: '2025',
+    id: 'note-3',
+    slug: 'note-3',
+    title: 'From Print Grid to Vertical Video: Keeping Identity Intact',
+    excerpt:
+      'Translating typography, pacing, and color language from physical print pages to 9:16 mobile screens.',
+    coverImage:
+      'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=900&q=85',
+    role: 'edited',
+    date: 'September, 2026',
   },
   {
-    id: 'fallback-photo',
-    title: 'Makassar Street & Frames',
-    disciplines: ['PHOTOGRAPHY', 'DOCUMENTARY'],
-    category: 'photo',
-    cover:
+    id: 'note-4',
+    slug: 'note-4',
+    title: 'Notes on Documentary Framing and Unhurried Photography',
+    excerpt:
+      'Observing natural light, architectural shadows, and authentic human rhythm across streets in Makassar.',
+    coverImage:
+      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=900&q=85',
+    role: 'written',
+    date: 'August, 2026',
+  },
+  {
+    id: 'note-5',
+    slug: 'note-5',
+    title: 'Building Editorial Discipline Inside a Student Press',
+    excerpt:
+      'How structured workflows and data journalism transformed campus storytelling at PK Identitas Unhas.',
+    coverImage:
+      'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=900&q=85',
+    role: 'edited',
+    date: 'June, 2026',
+  },
+  {
+    id: 'note-6',
+    slug: 'note-6',
+    title: 'Why Restraint Beats Decoration in Industrial Interfaces',
+    excerpt:
+      'Stripping away visual noise so typography, photography, and functional craft carry the entire experience.',
+    coverImage:
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=900&q=85',
+    role: 'written',
+    date: 'April, 2026',
+  },
+];
+
+const FALLBACK_PHOTOS: IndustrialPhotoItem[] = [
+  {
+    id: 'fallback-photo-1',
+    title: MOCK_PHOTO_STORIES[0].title,
+    tags: MOCK_PHOTO_STORIES[0].tags,
+    caption: MOCK_PHOTO_STORIES[0].narrative,
+    image:
       'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1400&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1400&q=80',
+    date: '2026',
+  },
+  {
+    id: 'fallback-photo-2',
+    title: MOCK_PHOTO_STORIES[1].title,
+    tags: MOCK_PHOTO_STORIES[1].tags,
+    caption: MOCK_PHOTO_STORIES[1].narrative,
+    image:
       'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80',
-    ],
-    description:
-      'Candid moments, architectural light, and documentary frames captured on the move.',
-    year: '2025',
+    date: '2026',
+  },
+  {
+    id: 'fallback-photo-3',
+    title: MOCK_PHOTO_STORIES[2].title,
+    tags: MOCK_PHOTO_STORIES[2].tags,
+    caption: MOCK_PHOTO_STORIES[2].narrative,
+    image:
+      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1400&q=80',
+    date: '2025',
   },
 ];
 
-const FALLBACK_ARCHIVE: ArchiveTile[] = [
-  {
-    id: 'arc-1',
-    title: 'Visual Study 01',
-    image:
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=900&q=80',
-    category: 'Design',
-  },
-  {
-    id: 'arc-2',
-    title: 'Editorial Spread',
-    image:
-      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=80',
-    category: 'Print',
-  },
-  {
-    id: 'arc-3',
-    title: 'Color Grade Frame',
-    image:
-      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=900&q=80',
-    category: 'Motion',
-  },
-  {
-    id: 'arc-4',
-    title: 'Golden Hour Shot',
-    image:
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80',
-    category: 'Photo',
-  },
-  {
-    id: 'arc-5',
-    title: 'Grid Exploration',
-    image:
-      'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=900&q=80',
-    category: 'Design',
-  },
-  {
-    id: 'arc-6',
-    title: 'Studio Frame',
-    image:
-      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80',
-    category: 'Photo',
-  },
-];
-
-function isImageUrl(url?: string | null) {
-  if (!url) return false;
-  return /\.(png|jpe?g|webp|avif|gif)(\?.*)?$/i.test(url);
-}
-
-function getYoutubeId(url?: string | null) {
-  if (!url) return null;
-  const m = url.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^&?/]+)/
-  );
-  return m ? m[1] : null;
-}
-
-function isDirectVideoUrl(url?: string | null) {
-  if (!url) return false;
-  return /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
-}
-
-let artMemCache: {
-  works?: ArtWorkItem[];
-  archiveTiles?: ArchiveTile[];
-  photoTiles?: ArchiveTile[];
-  experiences?: ExpRow[];
-} | null = null;
+let cachedPhotos: IndustrialPhotoItem[] | null = null;
 
 export default function ArtSiteView({
   initialSettings,
+  initialPhotos = [],
+  initialArticles = [],
 }: {
   initialSettings?: Record<string, string>;
+  initialPhotos?: IndustrialPhotoItem[];
+  initialArticles?: ArtWritingItem[];
 }) {
   const router = useRouter();
   const { settings } = useSiteSettings(initialSettings);
 
-  // Synced Light & Dark Theme (Default Dark across both Dev & Art)
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [activeSection, setActiveSection] = useState<ArtSection>('design');
-  const [selectedWork, setSelectedWork] = useState<ArtWorkItem | null>(null);
-  const [lightboxImage, setLightboxImage] = useState<ArchiveTile | null>(null);
-  const [works, setWorks] = useState<ArtWorkItem[]>(
-    () => artMemCache?.works || FALLBACK_WORKS
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [photos, setPhotos] = useState<IndustrialPhotoItem[]>(() =>
+    initialPhotos.length > 0
+      ? initialPhotos
+      : cachedPhotos && cachedPhotos.length > 0
+      ? cachedPhotos
+      : FALLBACK_PHOTOS
   );
-  const [archiveTiles, setArchiveTiles] = useState<ArchiveTile[]>(
-    () => artMemCache?.archiveTiles || FALLBACK_ARCHIVE
+  const [loadingPhotos, setLoadingPhotos] = useState(
+    initialPhotos.length === 0 && !cachedPhotos
   );
-  const [photoTiles, setPhotoTiles] = useState<ArchiveTile[]>(
-    () =>
-      artMemCache?.photoTiles ||
-      FALLBACK_ARCHIVE.filter((a) => a.category === 'Photo')
-  );
-  const [experiences, setExperiences] = useState<ExpRow[]>(
-    () =>
-      artMemCache?.experiences ||
-      staticWorkData.map((w, i) => ({
-        id: `static-exp-${i}`,
-        company: w.company,
-        role: w.role,
-        period: w.year,
-        description: w.desc,
-      }))
-  );
-  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
+  const [photoError, setPhotoError] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeNavSection, setActiveNavSection] = useState<
+    'photo' | 'medsos' | 'print' | 'writing'
+  >('photo');
+  const [articles, setArticles] = useState<ArtWritingItem[]>(() =>
+    initialArticles.length > 0 ? initialArticles : FALLBACK_ARTICLES
+  );
+  const [writingFilter, setWritingFilter] = useState<
+    'all' | 'written' | 'edited'
+  >('all');
 
-  const creativeTools = useMemo(
-    () => techStack.filter((t) => t.mode === 'creative'),
+  useEffect(() => {
+    if (initialArticles.length > 0) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('articles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (mounted && data && data.length > 0) {
+          const creativeOnly = data.filter((a: any) => {
+            if (!a.title) return false;
+            const tagsText = Array.isArray(a.tags)
+              ? a.tags.join(' ')
+              : String(a.tags || '');
+            const hay = `${a.category || ''} ${tagsText}`.toLowerCase();
+            return hay.includes('creative');
+          });
+          if (creativeOnly.length > 0) {
+            setArticles(
+              creativeOnly.map((a: any, idx: number) => {
+                const rawBody = String(
+                  a.description || a.excerpt || a.content || ''
+                )
+                  .replace(/<[^>]+>/g, ' ')
+                  .replace(/[#*_>`~[\]()]/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+                const excerpt =
+                  rawBody.length > 145
+                    ? `${rawBody.slice(0, 142).trim()}...`
+                    : rawBody;
+                const tagsText = Array.isArray(a.tags)
+                  ? a.tags.join(' ')
+                  : String(a.tags || '');
+                const roleHaystack =
+                  `${a.category || ''} ${tagsText} ${a.author || ''}`.toLowerCase();
+                const isEdited =
+                  roleHaystack.includes('edited') ||
+                  roleHaystack.includes('editor') ||
+                  roleHaystack.includes('sunting');
+                return {
+                  id: String(a.id || `art-note-${idx}`),
+                  slug: a.slug ? String(a.slug) : String(a.id || ''),
+                  title: String(a.title),
+                  excerpt,
+                  coverImage: String(
+                    a.img || a.cover_image || a.image_url || ''
+                  ).trim(),
+                  role: isEdited ? 'edited' : 'written',
+                  date: a.created_at
+                    ? new Date(a.created_at).toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric',
+                      })
+                    : 'November, 2026',
+                };
+              })
+            );
+          }
+        }
+      } catch {
+        // Keep fallbacks
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [initialArticles.length]);
+  const [activePlatform, setActivePlatform] =
+    useState<MediaPlatformKey>('tiktok');
+  const [mediaPaused, setMediaPaused] = useState(false);
+  const [activeOrg, setActiveOrg] = useState<OrgBrandingKey>('arjuna');
+  const [orgPaused, setOrgPaused] = useState(false);
+  const [identitasMode, setIdentitasMode] =
+    useState<IdentitasModeKey>('videos');
+  const [videoSlots, setVideoSlots] = useState<[number, number]>([0, 1]);
+  const [nextVideoSlot, setNextVideoSlot] = useState<0 | 1>(0);
+  const [designSlots, setDesignSlots] = useState<[number, number]>([0, 1]);
+  const [nextDesignSlot, setNextDesignSlot] = useState<0 | 1>(0);
+  const [draggedMarker, setDraggedMarker] = useState<0 | 1 | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [videoPaused, setVideoPaused] = useState(false);
+  const [activeDocIdx, setActiveDocIdx] = useState(0);
+  const [designLightboxIdx, setDesignLightboxIdx] = useState<number | null>(
+    null
+  );
+  const [printFilter, setPrintFilter] = useState<PrintFilterKey>('all');
+  const [activePrintIdx, setActivePrintIdx] = useState(0);
+  const [printLightboxIdx, setPrintLightboxIdx] = useState<number | null>(null);
+  const [targetSlideIdx, setTargetSlideIdx] = useState<number>(0);
+
+  // Auto-transition between TikTok and YouTube every 5 seconds (pauses on hover or detail modal)
+  useEffect(() => {
+    if (mediaPaused || lightboxIdx !== null) return;
+    const timer = window.setInterval(() => {
+      setActivePlatform((prev) => (prev === 'tiktok' ? 'youtube' : 'tiktok'));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [mediaPaused, lightboxIdx, activePlatform]);
+
+  // Auto-transition between Arjuna UH and KKNT Assamaturu every 5 seconds
+  useEffect(() => {
+    if (orgPaused || lightboxIdx !== null || designLightboxIdx !== null) return;
+    const timer = window.setInterval(() => {
+      setActiveOrg((prev) => (prev === 'arjuna' ? 'kknt' : 'arjuna'));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [orgPaused, lightboxIdx, designLightboxIdx, activeOrg]);
+
+  const identitasShowcase = parseIdentitasShowcase(settings.identitas_showcase);
+  const identitasVideos = identitasShowcase.videos;
+  const identitasDesigns = identitasShowcase.designs;
+  const identitasDocs = identitasShowcase.documenters;
+
+  const getNextQueuedIndex = useCallback(
+    (currentSlots: [number, number], slotToAdvance: 0 | 1, total: number) => {
+      if (total <= 1) return 0;
+      const other = currentSlots[slotToAdvance === 0 ? 1 : 0] % total;
+      let candidate = (currentSlots[slotToAdvance] + 1) % total;
+      if (total > 2 && candidate === other) {
+        candidate = (candidate + 1) % total;
+      }
+      return candidate;
+    },
     []
   );
 
-  // Sync saved theme on mount
+  const advanceVideoSlot = useCallback(
+    (slot: 0 | 1) => {
+      if (identitasVideos.length <= 2) return;
+      setVideoSlots((prev) => {
+        const nextIdx = getNextQueuedIndex(prev, slot, identitasVideos.length);
+        return slot === 0 ? [nextIdx, prev[1]] : [prev[0], nextIdx];
+      });
+    },
+    [getNextQueuedIndex, identitasVideos.length]
+  );
+
+  const dropMarkerOnIndex = (
+    mode: IdentitasModeKey,
+    marker: 0 | 1,
+    targetIdx: number
+  ) => {
+    if (mode === 'documenter') {
+      setActiveDocIdx(targetIdx);
+      return;
+    }
+    const updateSlots = (prev: [number, number]): [number, number] => {
+      const otherSlot: 0 | 1 = marker === 0 ? 1 : 0;
+      if (prev[marker] === targetIdx) return prev;
+      // If dropped on the item currently held by the other marker, swap them cleanly
+      if (prev[otherSlot] === targetIdx) {
+        return [prev[1], prev[0]];
+      }
+      return marker === 0 ? [targetIdx, prev[1]] : [prev[0], targetIdx];
+    };
+    if (mode === 'videos') {
+      setVideoSlots(updateSlots);
+    } else if (mode === 'design') {
+      setDesignSlots(updateSlots);
+    }
+  };
+
+  const selectVideoIndependent = (idx: number) => {
+    setVideoSlots((prev) => {
+      if (prev[0] === idx || prev[1] === idx) return prev;
+      return nextVideoSlot === 0 ? [idx, prev[1]] : [prev[0], idx];
+    });
+    setNextVideoSlot((prev) => (prev === 0 ? 1 : 0));
+  };
+
+  const selectDesignIndependent = (idx: number) => {
+    setDesignSlots((prev) => {
+      if (prev[0] === idx || prev[1] === idx) return prev;
+      return nextDesignSlot === 0 ? [idx, prev[1]] : [prev[0], idx];
+    });
+    setNextDesignSlot((prev) => (prev === 0 ? 1 : 0));
+  };
+
+  const primaryVideoUrl =
+    identitasVideos[
+      identitasVideos.length > 0 ? videoSlots[0] % identitasVideos.length : 0
+    ]?.mediaUrl || '';
+  const primaryVideoIsStaticPoster =
+    Boolean(primaryVideoUrl) &&
+    !isVideoMediaUrl(primaryVideoUrl) &&
+    !toYouTubeEmbedUrl(primaryVideoUrl);
+
+  // Videos mode: real <video> & YouTube advance independently on ended; static posters alternate every 5s
+  useEffect(() => {
+    if (
+      identitasMode !== 'videos' ||
+      !primaryVideoIsStaticPoster ||
+      videoPaused ||
+      lightboxIdx !== null ||
+      designLightboxIdx !== null ||
+      identitasVideos.length <= 2
+    ) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      advanceVideoSlot(nextVideoSlot);
+      setNextVideoSlot((prev) => (prev === 0 ? 1 : 0));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [
+    identitasMode,
+    primaryVideoIsStaticPoster,
+    videoPaused,
+    lightboxIdx,
+    designLightboxIdx,
+    identitasVideos.length,
+    advanceVideoSlot,
+    nextVideoSlot,
+  ]);
+
+  // Design mode: auto-advance 1 row independently every 5 seconds (pauses on hover or detail modal)
+  useEffect(() => {
+    if (
+      identitasMode !== 'design' ||
+      videoPaused ||
+      lightboxIdx !== null ||
+      designLightboxIdx !== null ||
+      identitasDesigns.length <= 2
+    ) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setDesignSlots((prev) => {
+        const nextIdx = getNextQueuedIndex(
+          prev,
+          nextDesignSlot,
+          identitasDesigns.length
+        );
+        return nextDesignSlot === 0 ? [nextIdx, prev[1]] : [prev[0], nextIdx];
+      });
+      setNextDesignSlot((prev) => (prev === 0 ? 1 : 0));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [
+    identitasMode,
+    videoPaused,
+    lightboxIdx,
+    designLightboxIdx,
+    identitasDesigns.length,
+    getNextQueuedIndex,
+    nextDesignSlot,
+  ]);
+
+  // Listen to YouTube iframe postMessage "ended" (playerState === 0) for Videos & Documenter
+  useEffect(() => {
+    if (identitasMode !== 'videos' && identitasMode !== 'documenter') return;
+    const onMessage = (event: MessageEvent) => {
+      if (
+        typeof event.origin !== 'string' ||
+        !event.origin.includes('youtube.com')
+      ) {
+        return;
+      }
+      try {
+        const data =
+          typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        const playerState =
+          data?.event === 'onStateChange'
+            ? data?.info
+            : data?.event === 'infoDelivery'
+            ? data?.info?.playerState
+            : null;
+        if (playerState === 0) {
+          if (identitasMode === 'documenter' && identitasDocs.length > 1) {
+            setActiveDocIdx((prev) => (prev + 1) % identitasDocs.length);
+          } else if (identitasMode === 'videos' && identitasVideos.length > 2) {
+            advanceVideoSlot(nextVideoSlot);
+            setNextVideoSlot((prev) => (prev === 0 ? 1 : 0));
+          }
+        }
+      } catch {
+        // Ignore non-JSON postMessages
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [
+    identitasMode,
+    identitasDocs.length,
+    identitasVideos.length,
+    advanceVideoSlot,
+    nextVideoSlot,
+  ]);
+
+  // Lightweight GPU-only scroll reveal observer for all /art sections & cards
+  useEffect(() => {
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-art-reveal]')
+    );
+    if (nodes.length === 0) return;
+
+    if (
+      typeof IntersectionObserver === 'undefined' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      nodes.forEach((el) => el.setAttribute('data-revealed', 'true'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute('data-revealed', 'true');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    nodes.forEach((el) => {
+      if (el.getAttribute('data-revealed') !== 'true') {
+        observer.observe(el);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [photos.length, articles.length, writingFilter, printFilter, identitasMode]);
+
+  // Track scroll for navbar background + active section highlight (PHOTO / MEDSOS / PRINT / WRITING)
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 24);
+      const writingEl = document.getElementById('writing');
+      const printEl = document.getElementById('print-works');
+      const medsosEl = document.getElementById('media-production');
+      const midY = window.innerHeight * 0.35;
+      if (writingEl && writingEl.getBoundingClientRect().top <= midY) {
+        setActiveNavSection('writing');
+      } else if (printEl && printEl.getBoundingClientRect().top <= midY) {
+        setActiveNavSection('print');
+      } else if (medsosEl && medsosEl.getBoundingClientRect().top <= midY) {
+        setActiveNavSection('medsos');
+      } else {
+        setActiveNavSection('photo');
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Sync theme with localStorage & cross-tab storage
   useEffect(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'dark' || saved === 'light') {
@@ -296,73 +558,193 @@ export default function ArtSiteView({
       setTheme('dark');
     }
     router.prefetch('/');
-    const readyCap = window.setTimeout(() => signalPortalRouteReady('/art'), 450);
-    return () => window.clearTimeout(readyCap);
+    const readyCap = window.setTimeout(() => signalPortalRouteReady('/art'), 320);
+    const unsub = subscribeThemeStorage((next) => setTheme(next));
+    return () => {
+      window.clearTimeout(readyCap);
+      unsub();
+    };
   }, [router]);
 
-  // Smooth scroll to hash section if user lands directly on /art#video, /art#photo, etc.
-  useEffect(() => {
-    const scrollToHash = () => {
-      const h = window.location.hash.replace('#', '').toLowerCase();
-      if (
-        h === 'design' ||
-        h === 'print' ||
-        h === 'video' ||
-        h === 'photo' ||
-        h === 'growth' ||
-        h === 'about'
-      ) {
-        setSelectedWork(null);
-        setActiveSection(h);
-        window.requestAnimationFrame(() => {
-          document.getElementById(h)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
-    };
-    scrollToHash();
-    window.addEventListener('hashchange', scrollToHash);
-    return () => window.removeEventListener('hashchange', scrollToHash);
-  }, []);
+  // Fetch ALL photos from Supabase gallery table
+  const fetchAllPhotos = useCallback(async () => {
+    setPhotoError(false);
+    try {
+      const { data, error } = await supabase
+        .from('gallery')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
 
-  // Lightweight scroll-spy to highlight current section in sticky Swiss top bar
-  useEffect(() => {
-    if (selectedWork) return;
-    const ids: ArtSection[] = ['design', 'print', 'video', 'photo', 'growth', 'about'];
-    const els = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => Boolean(el));
-    if (els.length === 0) return;
+      if (error) throw error;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]?.target?.id) {
-          setActiveSection(visible[0].target.id as ArtSection);
+      if (data && data.length > 0) {
+        const mapped: IndustrialPhotoItem[] = data
+          .filter((g: any) => Boolean(g.image_url))
+          .map((g: any, idx: number) => {
+            const meta = parseGalleryMeta(g.title, g.caption, idx);
+            return {
+              id: `photo-${g.id || idx}`,
+              title: meta.title,
+              tags: meta.tags,
+              caption: meta.narrative,
+              image: String(g.image_url),
+              extraImages: meta.images,
+              date: g.created_at
+                ? new Date(g.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : '2026',
+            };
+          });
+        if (mapped.length > 0) {
+          cachedPhotos = mapped;
+          setPhotos(mapped);
         }
-      },
-      { rootMargin: '-18% 0px -65% 0px', threshold: 0.01 }
-    );
+      }
+    } catch {
+      if (initialPhotos.length === 0 && !cachedPhotos) {
+        setPhotoError(true);
+      }
+    } finally {
+      setLoadingPhotos(false);
+      signalPortalRouteReady('/art');
+    }
+  }, [initialPhotos.length]);
 
-    els.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [selectedWork]);
-
-  // Escape closes project case study or lightbox
   useEffect(() => {
+    if (initialPhotos.length > 0) {
+      cachedPhotos = initialPhotos;
+      setLoadingPhotos(false);
+      signalPortalRouteReady('/art');
+      return;
+    }
+    if (cachedPhotos && cachedPhotos.length > 0) {
+      setLoadingPhotos(false);
+      signalPortalRouteReady('/art');
+      return;
+    }
+    fetchAllPhotos();
+  }, [initialPhotos, fetchAllPhotos]);
+
+  const totalPhotos = photos.length;
+
+  const printShowcase = parsePrintShowcase(settings.print_works_showcase);
+  const filteredPrintItems =
+    printFilter === 'all'
+      ? printShowcase.items
+      : printShowcase.items.filter((it) => it.category === printFilter);
+  const safePrintIdx =
+    filteredPrintItems.length > 0
+      ? activePrintIdx % filteredPrintItems.length
+      : 0;
+  const activePrintItem = filteredPrintItems[safePrintIdx] || null;
+
+  const activeDetailSource: 'photo' | 'design' | 'print' =
+    printLightboxIdx !== null
+      ? 'print'
+      : designLightboxIdx !== null
+      ? 'design'
+      : 'photo';
+
+  const activeDetailList =
+    activeDetailSource === 'print'
+      ? filteredPrintItems.map((p) => ({
+          id: p.id,
+          title: p.title,
+          tags: [
+            PRINT_CATEGORY_LABELS[p.category].toUpperCase(),
+            p.spec,
+            p.year,
+          ].filter(Boolean),
+          caption: p.narrative,
+          image: p.image,
+          extraImages: p.extraImages || [],
+        }))
+      : activeDetailSource === 'design'
+      ? identitasDesigns.map((d) => ({
+          id: d.id,
+          title: d.title,
+          tags: d.tags,
+          caption: d.narrative,
+          image: d.image,
+          extraImages: d.extraImages || [],
+        }))
+      : photos;
+
+  const activeDetailIdx =
+    activeDetailSource === 'print'
+      ? printLightboxIdx
+      : activeDetailSource === 'design'
+      ? designLightboxIdx
+      : lightboxIdx;
+
+  const closeDetailSheet = () => {
+    setLightboxIdx(null);
+    setDesignLightboxIdx(null);
+    setPrintLightboxIdx(null);
+    setTargetSlideIdx(0);
+  };
+
+  const stepDetailSheet = useCallback(
+    (dir: -1 | 1) => {
+      const len = activeDetailList.length;
+      if (len <= 1) return;
+      if (activeDetailSource === 'print') {
+        setPrintLightboxIdx((prev) =>
+          prev === null ? 0 : (prev + dir + len) % len
+        );
+      } else if (activeDetailSource === 'design') {
+        setDesignLightboxIdx((prev) =>
+          prev === null ? 0 : (prev + dir + len) % len
+        );
+      } else {
+        setLightboxIdx((prev) =>
+          prev === null ? 0 : (prev + dir + len) % len
+        );
+      }
+      setTargetSlideIdx(0);
+    },
+    [activeDetailList.length, activeDetailSource]
+  );
+
+  // Scroll detail sheet directly to the clicked slide (e.g. slide 3 or 5th peek slide)
+  useEffect(() => {
+    if (activeDetailIdx === null) return;
+    if (targetSlideIdx <= 0) return;
+    const raf = window.requestAnimationFrame(() => {
+      const el = document.getElementById(`detail-slide-${targetSlideIdx}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [activeDetailIdx, targetSlideIdx]);
+
+  // Keyboard navigation + body scroll lock for detail sheet
+  useEffect(() => {
+    if (activeDetailIdx === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (selectedWork) setSelectedWork(null);
-        else if (lightboxImage) setLightboxImage(null);
+        closeDetailSheet();
+      } else if (e.key === 'ArrowRight') {
+        stepDetailSheet(1);
+      } else if (e.key === 'ArrowLeft') {
+        stepDetailSheet(-1);
       }
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedWork, lightboxImage]);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeDetailIdx, stepDetailSheet]);
 
   const switchTheme = (
-    next: 'light' | 'dark',
+    next: 'dark' | 'light',
     e?: React.MouseEvent<HTMLButtonElement>
   ) => {
     if (next === theme) return;
@@ -372,1299 +754,1602 @@ export default function ArtSiteView({
     }, e);
   };
 
-  useEffect(() => {
-    return subscribeThemeStorage((next) => setTheme(next));
-  }, []);
-
-  const scrollToSection = (section: ArtSection) => {
-    setSelectedWork(null);
-    setActiveSection(section);
-    window.history.replaceState(null, '', `/art#${section}`);
-    window.requestAnimationFrame(() => {
-      document
-        .getElementById(section)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  };
-
-  const scrollToTop = () => {
-    setSelectedWork(null);
-    window.history.replaceState(null, '', '/art');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const markImageBroken = (src: string) => {
-    setBrokenImages((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
-  };
-
-  // Load Adrian's live data from Supabase (cached in memory across navigations)
-  useEffect(() => {
-    if (artMemCache) {
-      signalPortalRouteReady('/art');
-      return;
-    }
-
-    async function loadArtData() {
-      try {
-        const [
-          designsRes,
-          magazinesRes,
-          videosRes,
-          galleryRes,
-          projectsRes,
-          expRes,
-        ] = await Promise.all([
-          supabase
-            .from('design_themes')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('magazines')
-            .select('*')
-            .order('order_index', { ascending: true }),
-          supabase
-            .from('video_works')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('gallery')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(18),
-          supabase
-            .from('projects')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('experiences')
-            .select('*')
-            .order('created_at', { ascending: false }),
-        ]);
-
-        const collectedWorks: ArtWorkItem[] = [];
-        const collectedArchive: ArchiveTile[] = [];
-
-        if (designsRes.data?.length) {
-          for (const d of designsRes.data) {
-            const imgs: string[] = Array.isArray(d.images)
-              ? d.images.filter(Boolean)
-              : [];
-            if (imgs.length === 0) continue;
-            const id = `design-${d.id}`;
-            const isPrint =
-              typeof d.description === 'string' &&
-              d.description.includes('[CAT: Print]');
-            collectedWorks.push({
-              id,
-              title: d.title || 'Visual Design',
-              disciplines: isPrint
-                ? ['EDITORIAL', 'PRINT']
-                : ['BRANDING', 'VISUAL DESIGN'],
-              category: isPrint ? 'print' : 'design',
-              cover: imgs[0],
-              images: imgs,
-              description: (d.description || '')
-                .replace('[CAT: Print]', '')
-                .trim(),
-              year: d.created_at
-                ? String(new Date(d.created_at).getFullYear())
-                : '2025',
-            });
-            collectedArchive.push({
-              id: `arc-${id}`,
-              title: d.title || 'Visual Design',
-              image: imgs[0],
-              linkedWorkId: id,
-              category: isPrint ? 'Print' : 'Design',
-            });
-          }
-        }
-
-        if (magazinesRes.data?.length) {
-          for (const m of magazinesRes.data) {
-            const cover = isImageUrl(m.pdf_url)
-              ? m.pdf_url
-              : FALLBACK_WORKS[1].cover;
-            const id = `print-${m.id}`;
-            collectedWorks.push({
-              id,
-              title: m.title || 'Editorial Publication',
-              disciplines: ['EDITORIAL', (m.category || 'PRINT').toUpperCase()],
-              category: 'print',
-              cover,
-              images: [cover],
-              description:
-                m.description ||
-                'Editorial publication layout and art direction.',
-              pdfUrl: !isImageUrl(m.pdf_url) ? m.pdf_url : undefined,
-              year: m.year || '2025',
-            });
-            if (isImageUrl(m.pdf_url)) {
-              collectedArchive.push({
-                id: `arc-${id}`,
-                title: m.title || 'Editorial',
-                image: cover,
-                linkedWorkId: id,
-                category: 'Print',
-              });
-            }
-          }
-        }
-
-        if (videosRes.data?.length) {
-          for (const v of videosRes.data) {
-            const ytId = getYoutubeId(v.video_url);
-            const thumb =
-              v.thumbnail_url ||
-              (ytId
-                ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
-                : FALLBACK_WORKS[2].cover);
-            const id = `motion-${v.id}`;
-            const rawHint = `${v.aspect_ratio || ''} ${v.orientation || ''} ${v.category || ''} ${v.title || ''} ${v.video_url || ''}`.toLowerCase();
-            const isPortrait =
-              rawHint.includes('9:16') ||
-              rawHint.includes('portrait') ||
-              rawHint.includes('vertical') ||
-              rawHint.includes('/shorts/') ||
-              rawHint.includes('instagram.com/reel') ||
-              rawHint.includes('tiktok.com') ||
-              /\breels?\b/.test(rawHint);
-            const videoFormat: '16:9' | '9:16' = isPortrait ? '9:16' : '16:9';
-
-            collectedWorks.push({
-              id,
-              title: v.title || 'Motion Reel',
-              disciplines: ['VIDEO', videoFormat, (v.category || 'FILM').toUpperCase()],
-              category: 'motion',
-              cover: thumb,
-              images: [thumb],
-              description:
-                v.description ||
-                'Direction, editing, and visual pacing for digital media.',
-              href: v.video_url,
-              videoFormat,
-              year: v.created_at
-                ? String(new Date(v.created_at).getFullYear())
-                : '2025',
-            });
-            collectedArchive.push({
-              id: `arc-${id}`,
-              title: v.title || 'Motion Reel',
-              image: thumb,
-              linkedWorkId: id,
-              category: 'Video',
-            });
-          }
-        }
-
-        if (projectsRes.data?.length) {
-          for (const p of projectsRes.data) {
-            if (p.mode !== 'creative' && p.mode !== 'all') continue;
-            if (!p.image_url) continue;
-            const id = `proj-${p.id}`;
-            collectedWorks.push({
-              id,
-              title: p.title || 'Creative Project',
-              disciplines: Array.isArray(p.stack) && p.stack.length > 0
-                ? p.stack.slice(0, 2).map((s: string) => s.toUpperCase())
-                : ['CREATIVE DIRECTION'],
-              category: 'design',
-              cover: p.image_url,
-              images: [p.image_url],
-              description: p.description || '',
-              href: p.demo_url || undefined,
-              year: p.year || '2025',
-            });
-          }
-        }
-
-        const nextCache: NonNullable<typeof artMemCache> = {};
-
-        if (galleryRes.data?.length) {
-          const validPhotos = galleryRes.data.filter((g: any) => g.image_url);
-          const mappedPhotos: ArchiveTile[] = validPhotos.map(
-            (g: any, idx: number) => ({
-              id: `gal-${g.id || idx}`,
-              title: g.caption || g.title || `Frame ${String(idx + 1).padStart(2, '0')}`,
-              image: g.image_url,
-              category: g.category || 'Photo',
-            })
-          );
-          if (mappedPhotos.length > 0) {
-            setPhotoTiles(mappedPhotos);
-            nextCache.photoTiles = mappedPhotos;
-            collectedArchive.push(...mappedPhotos);
-          }
-        }
-
-        if (expRes.data?.length) {
-          const mappedExp = expRes.data.map((e: any, idx: number) => ({
-            id: String(e.id || idx),
-            company: e.company || 'Studio',
-            role: e.title || 'Creative Role',
-            period: e.timeline || '2025',
-            description: (e.description || e.desc || '')
-              .replace(/<!--\s*LOGO_URL:.*?-->/g, '')
-              .trim(),
-          }));
-          setExperiences(mappedExp);
-          nextCache.experiences = mappedExp;
-        }
-
-        if (collectedWorks.length > 0) {
-          setWorks(collectedWorks);
-          nextCache.works = collectedWorks;
-        }
-        if (collectedArchive.length > 0) {
-          setArchiveTiles(collectedArchive);
-          nextCache.archiveTiles = collectedArchive;
-        }
-        if (Object.keys(nextCache).length > 0) {
-          artMemCache = nextCache;
-        }
-      } catch {
-        // Keep fallbacks
-      } finally {
-        signalPortalRouteReady('/art');
-      }
-    }
-
-    loadArtData();
-  }, []);
-
-  const emailAddress = settings.email_address || 'contact@dri4n.com';
-  const instagramUrl =
-    settings.instagram_url || 'https://instagram.com/adrianbahri';
-  const linkedinUrl =
-    settings.linkedin_url || 'https://linkedin.com/in/adrianbahri';
-  const githubUrl = settings.github_url || 'https://github.com/Adrianbahri';
-
+  const emailAddress = settings.email_address || 'adrianbahri87@gmail.com';
   const handleCopyEmail = async () => {
     try {
       await navigator.clipboard.writeText(emailAddress);
       setCopiedEmail(true);
-      setTimeout(() => setCopiedEmail(false), 1800);
+      window.setTimeout(() => setCopiedEmail(false), 1800);
     } catch {
       window.location.href = `mailto:${emailAddress}`;
     }
   };
 
-  // Exact Gaurav Mishra (jackingcactus.com) palette — Light & inverted Dark
-  const c =
-    theme === 'dark'
-      ? {
-          bg: '#0A0A0A',
-          ink: '#FFFFFF',
-          ink2: '#D4D4D4',
-          muted: '#8A8A8A',
-          hair: '#3A3A3A',
-          pill: '#1A1A1A',
-          placeholder: '#171717',
-          closeBg: '#1C1C1C',
-        }
-      : {
-          bg: '#FFFFFF',
-          ink: '#000000',
-          ink2: '#313131',
-          muted: '#757575',
-          hair: '#D9D9D9',
-          pill: '#F4F4F4',
-          placeholder: '#EAEAEA',
-          closeBg: '#EAEAEA',
-        };
-
-  const designWorks = useMemo(
-    () => works.filter((w) => w.category === 'design'),
-    [works]
-  );
-  const printWorks = useMemo(
-    () => works.filter((w) => w.category === 'print'),
-    [works]
-  );
-  const videoWorks = useMemo(
-    () => works.filter((w) => w.category === 'motion'),
-    [works]
-  );
-  const landscapeVideos = useMemo(
-    () => videoWorks.filter((v) => v.videoFormat !== '9:16'),
-    [videoWorks]
-  );
-  const portraitVideos = useMemo(
-    () => videoWorks.filter((v) => v.videoFormat === '9:16'),
-    [videoWorks]
-  );
-  const socialGrowthItems = useMemo<SocialGrowthItem[]>(() => {
-    if (settings.social_growth) {
-      try {
-        const parsed = JSON.parse(settings.social_growth);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch {
-        // Fallback to default curated growth cases
+  // Industrialist color tokens (constrained 2-neutral + 1 safety-orange accent per DESIGN.md)
+  const isDark = theme === 'dark';
+  const palette = isDark
+    ? {
+        bg: '#0B0B0B',
+        surface: '#121212',
+        surfaceRaised: '#191919',
+        border: '#272727',
+        borderStrong: '#3B3B3B',
+        ink: '#F2EFE9',
+        inkSoft: '#B5B1A8',
+        inkMuted: '#7E7A72',
+        accent: '#EA6A12',
+        accentInk: '#0B0B0B',
       }
-    }
-    return DEFAULT_SOCIAL_GROWTH;
-  }, [settings.social_growth]);
+    : {
+        bg: '#F2EFE9',
+        surface: '#E9E5DC',
+        surfaceRaised: '#FFFFFF',
+        border: '#D0CBBF',
+        borderStrong: '#AFA99B',
+        ink: '#141413',
+        inkSoft: '#3D3A35',
+        inkMuted: '#656159',
+        accent: '#D95B08',
+        accentInk: '#FFFFFF',
+      };
 
-  const dividerColor =
-    theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
+  const activeDetailItem =
+    activeDetailIdx !== null
+      ? activeDetailList[activeDetailIdx] || null
+      : null;
+
+  const videoSlotAIdx =
+    identitasVideos.length > 0 ? videoSlots[0] % identitasVideos.length : 0;
+  const videoSlotBIdx =
+    identitasVideos.length > 1 ? videoSlots[1] % identitasVideos.length : 0;
+  const videoSlotA = identitasVideos[videoSlotAIdx] || null;
+  const videoSlotB =
+    identitasVideos.length > 1 ? identitasVideos[videoSlotBIdx] || null : null;
+
+  const safeDocIdx =
+    identitasDocs.length > 0 ? activeDocIdx % identitasDocs.length : 0;
+  const activeDoc = identitasDocs[safeDocIdx] || null;
+  const activeDocEmbedUrl = toYouTubeEmbedUrl(activeDoc?.youtubeUrl);
+
+  const designSlotAIdx =
+    identitasDesigns.length > 0 ? designSlots[0] % identitasDesigns.length : 0;
+  const designSlotBIdx =
+    identitasDesigns.length > 1 ? designSlots[1] % identitasDesigns.length : 0;
+  const activeDesignRows: Array<{
+    theme: (typeof identitasDesigns)[number];
+    themeIdx: number;
+  }> = [];
+  if (identitasDesigns[designSlotAIdx]) {
+    activeDesignRows.push({
+      theme: identitasDesigns[designSlotAIdx],
+      themeIdx: designSlotAIdx,
+    });
+  }
+  if (identitasDesigns.length > 1 && identitasDesigns[designSlotBIdx]) {
+    activeDesignRows.push({
+      theme: identitasDesigns[designSlotBIdx],
+      themeIdx: designSlotBIdx,
+    });
+  }
+
+  const mediaShowcase = parseMediaShowcase(settings.media_production_showcase);
+  const orgBranding = parseOrgBranding(settings.org_branding_showcase);
+  const activeOrgData = orgBranding.accounts[activeOrg];
+  const orgMediaIsVideo = isVideoMediaUrl(activeOrgData.mediaUrl);
+  const platformData = mediaShowcase.platforms[activePlatform];
+  const activeMediaUrl =
+    platformData.mediaUrl || platformData.screenshots?.[0]?.url || '';
+  const activeChannelUrl = platformData.channelUrl || '#';
+  const activeMediaIsVideo = isVideoMediaUrl(activeMediaUrl);
+
+  const handleSelectPlatform = (next: MediaPlatformKey) => {
+    setActivePlatform(next);
+  };
 
   return (
     <div
       data-dev-theme={theme}
-      className="dev-shell art-custom-cursor-active relative min-h-screen w-full text-[12px] leading-[1.2] antialiased selection:bg-[#ff5a3d] selection:text-white"
+      className="min-h-screen w-full transition-colors duration-300 selection:bg-[#EA6A12] selection:text-[#0B0B0B]"
       style={{
-        backgroundColor: c.bg,
-        color: c.ink,
+        backgroundColor: palette.bg,
+        color: palette.ink,
       }}
     >
-      <ArtCursor />
-
-      {/* =================================================================
-          FIXED ULTRA-MINIMAL SWISS TOP BAR (1fr 1fr Grid + Thin 1px Divider)
-      ================================================================== */}
+      {/* Ultra-Thin Swiss Midpoint Utility Bar (28px, transparent on hero, solid on scroll) */}
       <header
-        className="fixed left-0 right-0 top-0 z-30 w-full uppercase"
+        className="fixed inset-x-0 top-0 z-50 w-full transition-colors duration-200"
         style={{
-          backgroundColor: c.bg,
-          borderBottom: `1px solid ${dividerColor}`,
-          letterSpacing: '-0.34px',
-          lineHeight: '14px',
+          backgroundColor:
+            isScrolled || activeDetailIdx !== null ? palette.bg : 'transparent',
         }}
       >
-        <div className="flex flex-col items-center gap-2.5 px-3 py-2.5 md:grid md:h-[32px] md:grid-cols-2 md:items-center md:gap-0 md:px-[10px] md:py-0">
-          {/* Left 50%: Brand + Circular Portal back to Dev Side */}
-          <div className="flex w-full items-center justify-between md:w-auto md:justify-start md:gap-4">
+        <div className="grid h-[28px] w-full grid-cols-2 items-center px-2.5 sm:px-3 font-sans text-[11px] font-normal uppercase tracking-[-0.25px]">
+          <div className="flex items-center gap-3.5">
             <button
               type="button"
-              onClick={scrollToTop}
-              className="text-left hover:underline underline-offset-[2px]"
+              onClick={(e) => {
+                navigateWithCirclePortal('/', router, e);
+              }}
+              data-cursor-label="dev"
+              className="inline-flex cursor-pointer items-center gap-1 transition-opacity hover:opacity-70"
+              style={{ color: palette.inkMuted }}
             >
-              ©ADRIAN BAHRI
+              <ArrowLeft size={10} aria-hidden="true" />
+              <span>DEV</span>
             </button>
-            <button
-              type="button"
-              onClick={(e) => navigateWithCirclePortal('/', router, e)}
-              className="transition-opacity hover:underline underline-offset-[2px]"
-              style={{ color: c.muted }}
+            <span
+              className="hidden sm:inline font-normal normal-case"
+              style={{ color: palette.ink }}
             >
-              ← DEV SIDE
-            </button>
+              Adrian (Dri4n)
+            </span>
+            <Link
+              href="/art/about"
+              className="hidden sm:inline transition-opacity hover:underline hover:underline-offset-[2px]"
+              style={{ color: palette.inkMuted }}
+            >
+              ABOUT
+            </Link>
           </div>
 
-          {/* Right 50% (aligned cleanly at 50% on desktop): Single-Page Anchor Nav + Theme Toggle */}
-          <nav
-            aria-label="Creative sections"
-            className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 md:flex-nowrap md:justify-start md:gap-[14px]"
-          >
-            {(
-              [
-                ['design', 'DESIGN'],
-                ['print', 'PRINT'],
-                ['video', 'VIDEO'],
-                ['photo', 'PHOTO'],
-                ['growth', 'GROWTH'],
-                ['about', 'ABOUT'],
-              ] as [ArtSection, string][]
-            ).map(([secKey, label]) => {
-              const isActive = !selectedWork && activeSection === secKey;
-              return (
-                <button
-                  key={secKey}
-                  type="button"
-                  onClick={() => scrollToSection(secKey)}
-                  className={`underline-offset-[3px] hover:underline ${
-                    isActive ? 'underline' : ''
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-between gap-3">
+            <nav
+              aria-label="Creative archive sections"
+              className="hidden sm:flex items-center gap-4"
+            >
+              <a
+                href="#photo"
+                onClick={() => {
+                  closeDetailSheet();
+                  setActiveNavSection('photo');
+                }}
+                className={`transition-opacity hover:underline hover:underline-offset-[2px] ${
+                  activeNavSection === 'photo'
+                    ? 'underline underline-offset-[2px]'
+                    : ''
+                }`}
+                style={{
+                  color:
+                    activeNavSection === 'photo'
+                      ? palette.ink
+                      : palette.inkMuted,
+                }}
+              >
+                PHOTO
+              </a>
+              <a
+                href="#media-production"
+                onClick={() => {
+                  closeDetailSheet();
+                  setActiveNavSection('medsos');
+                }}
+                className={`transition-opacity hover:underline hover:underline-offset-[2px] ${
+                  activeNavSection === 'medsos'
+                    ? 'underline underline-offset-[2px]'
+                    : ''
+                }`}
+                style={{
+                  color:
+                    activeNavSection === 'medsos'
+                      ? palette.ink
+                      : palette.inkMuted,
+                }}
+              >
+                MEDSOS
+              </a>
+              <a
+                href="#print-works"
+                onClick={() => {
+                  closeDetailSheet();
+                  setActiveNavSection('print');
+                }}
+                className={`transition-opacity hover:underline hover:underline-offset-[2px] ${
+                  activeNavSection === 'print'
+                    ? 'underline underline-offset-[2px]'
+                    : ''
+                }`}
+                style={{
+                  color:
+                    activeNavSection === 'print'
+                      ? palette.ink
+                      : palette.inkMuted,
+                }}
+              >
+                PRINT
+              </a>
+              <a
+                href="#writing"
+                onClick={() => {
+                  closeDetailSheet();
+                  setActiveNavSection('writing');
+                }}
+                className={`transition-opacity hover:underline hover:underline-offset-[2px] ${
+                  activeNavSection === 'writing'
+                    ? 'underline underline-offset-[2px]'
+                    : ''
+                }`}
+                style={{
+                  color:
+                    activeNavSection === 'writing'
+                      ? palette.ink
+                      : palette.inkMuted,
+                }}
+              >
+                WRITING
+              </a>
+            </nav>
 
-            {/* Far-right Light / Dark Theme Toggle */}
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="ml-auto flex items-center gap-3">
               <button
                 type="button"
-                onClick={(e) => switchTheme('light', e)}
-                className={`underline-offset-[3px] hover:underline ${
-                  theme === 'light' ? 'underline' : 'opacity-45'
-                }`}
+                onClick={(e) =>
+                  switchTheme(theme === 'dark' ? 'light' : 'dark', e)
+                }
+                aria-label={`Switch to ${
+                  theme === 'dark' ? 'light' : 'dark'
+                } mode`}
+                className="cursor-pointer transition-opacity hover:underline hover:underline-offset-[2px]"
+                style={{ color: palette.inkMuted }}
               >
-                LIGHT
-              </button>
-              <span style={{ color: c.hair }}>/</span>
-              <button
-                type="button"
-                onClick={(e) => switchTheme('dark', e)}
-                className={`underline-offset-[3px] hover:underline ${
-                  theme === 'dark' ? 'underline' : 'opacity-45'
-                }`}
-              >
-                DARK
+                {theme === 'dark' ? 'LIGHT' : 'DARK'}
               </button>
             </div>
-          </nav>
+          </div>
         </div>
       </header>
 
-      {/* =================================================================
-          CASE STUDY DETAIL VIEW (Exact Gaurav Mishra DOOMERS TAPE Split Layout)
-      ================================================================== */}
-      {selectedWork ? (
-        <main className="relative min-h-screen pb-24 pt-[84px] md:pt-[112px]">
-          {/* Fixed Top-Right 34x34 Close X Box */}
-          <button
-            type="button"
-            aria-label="Close project"
-            onClick={() => setSelectedWork(null)}
-            className="fixed right-[10px] top-[68px] z-20 flex h-[34px] w-[34px] items-center justify-center transition-opacity hover:opacity-75 md:top-[52px]"
+      {/* FULL-SCREEN EDGE-TO-EDGE MASTHEAD: Giant "Adrian" (Aguafina Script) */}
+      <section
+        aria-label="Creative Archive Masthead"
+        className="relative w-full overflow-hidden"
+        style={{ backgroundColor: palette.bg }}
+      >
+        <div className="relative flex w-full items-center justify-center overflow-hidden select-none">
+          <h1
+            className="w-full text-center font-normal whitespace-nowrap"
             style={{
-              backgroundColor: c.closeBg,
-              color: c.muted,
+              fontFamily: 'var(--font-art-script), cursive',
+              fontSize: '46.5vw',
+              lineHeight: 0.78,
+              letterSpacing: '-0.015em',
+              color: palette.accent,
+              marginTop: '-0.11em',
+              marginBottom: '0.03em',
             }}
           >
-            <X size={18} strokeWidth={1.5} />
-          </button>
+            Adrian
+          </h1>
 
-          {/* Left Fixed 178px Minimal Explanation Sidebar */}
-          <aside className="px-[10px] pb-8 md:fixed md:bottom-[36px] md:left-[10px] md:top-[112px] md:flex md:w-[178px] md:flex-col md:px-0 md:pb-0">
-            <h1
-              className="text-[12px] font-normal uppercase leading-[15px]"
-              style={{ letterSpacing: '-0.12px', color: c.ink }}
-            >
-              {selectedWork.title}
-            </h1>
-
-            {/* Clean Sentence-Case Explanation Paragraph */}
+          {/* Overlaid Micro-Description (Clean Sans Uppercase, Zero Background) */}
+          <div className="pointer-events-auto absolute bottom-[12%] left-[46%] right-[3%] hidden sm:block md:left-[50%] md:right-[4%]">
             <p
-              className="mt-4 text-[10.5px] leading-[15px]"
-              style={{ color: c.muted, letterSpacing: '-0.1px' }}
+              className="font-sans text-[clamp(10px,1.2vw,16px)] font-light leading-[1.35] uppercase tracking-[0.025em]"
+              style={{ color: palette.ink }}
             >
-              {selectedWork.description ||
-                `Visual work and creative exploration in ${selectedWork.disciplines
-                  .join(', ')
-                  .toLowerCase()} by Adrian Bahri (Dri4n).`}
+              {settings.art_intro ||
+                'A COMPLETE SINGLE-PAGE ARCHIVE OF VISUAL DESIGN, PRINT & INFOGRAPHICS, VIDEO DIRECTION, PHOTOGRAPHY, AND SOCIAL MEDIA GROWTH BY ADRIAN (DRI4N). SCROLL THROUGH EVERY DISCIPLINE BELOW.'}
             </p>
-
-            {/* Bottom-Pinned Credits / Details Block (exact Gaurav Mishra bottom-left anchor) */}
-            <div
-              className="mt-8 space-y-2.5 text-[10px] leading-[14px] md:mt-auto"
-              style={{ color: c.muted, letterSpacing: '-0.1px' }}
-            >
-              <p style={{ color: c.ink2 }}>Project details :</p>
-              <p>
-                {selectedWork.disciplines.join(', ')}
-                {selectedWork.year ? ` · ${selectedWork.year}` : ''}
-              </p>
-
-              {selectedWork.pdfUrl && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    window.dispatchEvent(
-                      new CustomEvent('open-pdf-reader', {
-                        detail: {
-                          url: selectedWork.pdfUrl,
-                          title: selectedWork.title,
-                        },
-                      })
-                    )
-                  }
-                  className="block uppercase underline underline-offset-[2px] hover:opacity-75"
-                  style={{ color: c.ink }}
-                >
-                  OPEN PUBLICATION PDF ↗
-                </button>
-              )}
-              {selectedWork.href && (
-                <a
-                  href={selectedWork.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block uppercase underline underline-offset-[2px] hover:opacity-75"
-                  style={{ color: c.ink }}
-                >
-                  OPEN ORIGINAL MEDIA ↗
-                </a>
-              )}
-            </div>
-          </aside>
-
-          {/* Right Uncropped Gallery Showcase (centered with generous whitespace like DOOMERS TAPE) */}
-          <div className="space-y-8 px-[10px] md:ml-[220px] md:mr-[56px] md:px-0">
-            {selectedWork.category === 'motion' && selectedWork.href ? (
-              <div className="flex w-full justify-center">
-                {(() => {
-                  const ytId = getYoutubeId(selectedWork.href);
-                  const directVid = isDirectVideoUrl(selectedWork.href);
-                  const isPortrait = selectedWork.videoFormat === '9:16';
-                  if (directVid) {
-                    return (
-                      <video
-                        src={selectedWork.href}
-                        controls
-                        autoPlay
-                        playsInline
-                        className={`max-h-[82vh] w-auto max-w-full ${
-                          isPortrait ? 'aspect-[9/16]' : 'aspect-[16/9]'
-                        }`}
-                      />
-                    );
-                  }
-                  if (ytId) {
-                    return (
-                      <div
-                        className={`w-full overflow-hidden ${
-                          isPortrait
-                            ? 'max-w-[380px] aspect-[9/16]'
-                            : 'max-w-[960px] aspect-[16/9]'
-                        }`}
-                        style={{ backgroundColor: c.placeholder }}
-                      >
-                        <iframe
-                          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`}
-                          title={selectedWork.title}
-                          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                          allowFullScreen
-                          className="h-full w-full border-0"
-                        />
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
-            ) : (
-              selectedWork.images.map((imgUrl, idx) => (
-                <div
-                  key={`${selectedWork.id}-img-${idx}`}
-                  className="flex w-full items-center justify-center"
-                >
-                  {!brokenImages[imgUrl] ? (
-                    <img
-                      src={imgUrl}
-                      alt={`${selectedWork.title} — ${idx + 1}`}
-                      onError={() => markImageBroken(imgUrl)}
-                      className="max-h-[84vh] w-auto max-w-full object-contain"
-                    />
-                  ) : (
-                    <div
-                      className="flex h-[320px] w-full items-center justify-center uppercase"
-                      style={{
-                        backgroundColor: c.placeholder,
-                        color: c.muted,
-                      }}
-                    >
-                      {selectedWork.title}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
           </div>
-        </main>
-      ) : (
-        <main className="space-y-[64px] pt-[92px] md:space-y-[96px] md:pt-[132px]">
-          {/* ===============================================================
-              HERO — 50%-Offset Swiss Typographic Intro + Complete Single-Page Index
-          ================================================================ */}
-          <section className="px-[10px] md:ml-[50%] md:max-w-[603px] md:px-0 md:pr-4">
-            <p className="text-[12px] uppercase leading-[16.5px]">
-              A COMPLETE SINGLE-PAGE ARCHIVE OF VISUAL DESIGN, PRINT &amp;
-              INFOGRAPHICS, VIDEO DIRECTION, PHOTOGRAPHY, AND SOCIAL MEDIA
-              GROWTH BY ADRIAN BAHRI (DRI4N) — SCROLL THROUGH EVERY DISCIPLINE
-              BELOW OR JUMP DIRECTLY FROM THE TOP BAR.
-            </p>
-            <div
-              className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em]"
-              style={{ color: c.muted }}
+        </div>
+
+        {/* Mobile placement for short description */}
+        <div className="px-4 pb-4 sm:hidden">
+          <p
+            className="font-sans text-[11px] font-light leading-[1.45] uppercase tracking-[0.025em]"
+            style={{ color: palette.ink }}
+          >
+            {settings.art_intro ||
+              'A COMPLETE SINGLE-PAGE ARCHIVE OF VISUAL DESIGN, PRINT & INFOGRAPHICS, VIDEO DIRECTION, PHOTOGRAPHY, AND SOCIAL MEDIA GROWTH BY ADRIAN (DRI4N).'}
+          </p>
+        </div>
+      </section>
+
+      {/* Main Swiss-Industrialist Canvas */}
+      <main id="main-content" className="w-full pb-20">
+        {/* ROW 01: 2-COLUMN WIDE SWISS PHOTOGRAPHY GALLERY (ALL PHOTOS) */}
+        <section
+          id="photo"
+          aria-labelledby="row-01-photo-heading"
+          className="w-full px-[7px] pt-2"
+        >
+          {/* Minimal Section Header */}
+          <div className="mb-2.5 flex items-center pt-2">
+            <h2
+              id="row-01-photo-heading"
+              className="font-sans text-[12px] font-normal tracking-[-0.01em]"
+              style={{ color: palette.ink }}
             >
-              <span>{String(designWorks.length).padStart(2, '0')} DESIGN</span>
-              <span>·</span>
-              <span>{String(printWorks.length).padStart(2, '0')} PRINT</span>
-              <span>·</span>
-              <span>{String(videoWorks.length).padStart(2, '0')} VIDEO</span>
-              <span>·</span>
-              <span>{String(photoTiles.length).padStart(2, '0')} PHOTO</span>
-              <span>·</span>
-              <span>
-                {String(socialGrowthItems.length).padStart(2, '0')} SOCIAL GROWTH
-              </span>
-            </div>
-          </section>
+              Photostory
+            </h2>
+          </div>
 
-          {/* ===============================================================
-              01 / DESIGN — Visual Identity, Editorial & Data Graphics (4:5 Grid)
-          ================================================================ */}
-          <section id="design" className="scroll-mt-[64px] px-[9px]">
+          {loadingPhotos ? (
             <div
-              className="mb-[18px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-              style={{
-                borderTop: `1px solid ${dividerColor}`,
-                color: c.muted,
-              }}
+              role="status"
+              aria-live="polite"
+              className="flex h-[260px] items-center justify-center"
             >
-              <span>01 / DESIGN &amp; VISUAL PROJECTS</span>
-              <span>{String(designWorks.length).padStart(2, '0')} PROJECTS</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-[9px] gap-y-[22px] md:grid-cols-3 md:gap-y-[28px]">
-              {designWorks.map((work) => (
-                <article
-                  key={work.id}
-                  onClick={() => {
-                    setSelectedWork(work);
-                    window.scrollTo({
-                      top: 0,
-                      behavior: 'instant' as ScrollBehavior,
-                    });
-                  }}
-                  className="group cursor-pointer"
-                >
-                  <div
-                    className="relative aspect-[4/5] w-full overflow-hidden"
-                    style={{ backgroundColor: c.placeholder }}
-                  >
-                    {!brokenImages[work.cover] ? (
-                      <Image
-                        src={work.cover}
-                        alt={work.title}
-                        fill
-                        unoptimized
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        onError={() => markImageBroken(work.cover)}
-                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center uppercase"
-                        style={{ color: c.muted }}
-                      >
-                        {work.title}
-                      </div>
-                    )}
-                    {work.images.length > 1 && (
-                      <span className="pointer-events-none absolute right-2 top-2 bg-black/65 px-1.5 py-0.5 font-mono text-[9.5px] text-white backdrop-blur-sm">
-                        {work.images.length} SLIDES
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="mt-[9px] flex items-center justify-between gap-2 text-[11.5px] uppercase leading-[14.4px] underline-offset-[2px] group-hover:underline sm:text-[12px]"
-                    style={{ color: c.ink2, letterSpacing: '-0.12px' }}
-                  >
-                    <span className="truncate">
-                      {work.title} | {work.disciplines.join(', ')}
-                    </span>
-                    <span
-                      className="shrink-0 font-mono text-[10px]"
-                      style={{ color: c.muted }}
-                    >
-                      OPEN ↗
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          {/* ===============================================================
-              02 / PRINT & INFOGRAFIS CETAK — Editorial Print, Magazines & Packaging
-          ================================================================ */}
-          <section id="print" className="scroll-mt-[64px] px-[9px]">
-            <div
-              className="mb-[18px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-              style={{
-                borderTop: `1px solid ${dividerColor}`,
-                color: c.muted,
-              }}
-            >
-              <span>02 / PRINT, EDITORIAL &amp; INFOGRAFIS CETAK</span>
-              <span>{String(printWorks.length).padStart(2, '0')} EDITIONS</span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2 md:grid-cols-3 md:gap-[14px]">
-              {printWorks.map((work) => (
-                <article
-                  key={work.id}
-                  onClick={() => {
-                    if (work.pdfUrl) {
-                      window.dispatchEvent(
-                        new CustomEvent('open-pdf-reader', {
-                          detail: { url: work.pdfUrl, title: work.title },
-                        })
-                      );
-                    } else {
-                      setSelectedWork(work);
-                      window.scrollTo({
-                        top: 0,
-                        behavior: 'instant' as ScrollBehavior,
-                      });
-                    }
-                  }}
-                  className="group cursor-pointer"
-                >
-                  <div
-                    className="relative aspect-[4/5] w-full overflow-hidden"
-                    style={{
-                      backgroundColor: c.placeholder,
-                      border: `1px solid ${dividerColor}`,
-                    }}
-                  >
-                    {!brokenImages[work.cover] ? (
-                      <Image
-                        src={work.cover}
-                        alt={work.title}
-                        fill
-                        unoptimized
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        onError={() => markImageBroken(work.cover)}
-                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center uppercase"
-                        style={{ color: c.muted }}
-                      >
-                        {work.title}
-                      </div>
-                    )}
-                    <span className="pointer-events-none absolute left-2.5 top-2.5 bg-black/70 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.08em] text-white backdrop-blur-sm">
-                      {work.pdfUrl ? 'PRINT PDF' : 'PRINT / INFOGRAFIS'}
-                    </span>
-                  </div>
-                  <div
-                    className="mt-[9px] flex items-center justify-between gap-2 text-[11.5px] uppercase leading-[14.4px] underline-offset-[2px] group-hover:underline sm:text-[12px]"
-                    style={{ color: c.ink2, letterSpacing: '-0.12px' }}
-                  >
-                    <span className="truncate">
-                      {work.title} | {work.disciplines.join(', ')}
-                    </span>
-                    <span
-                      className="shrink-0 font-mono text-[10px]"
-                      style={{ color: c.ink }}
-                    >
-                      {work.pdfUrl ? 'READ PDF ↗' : 'VIEW ↗'}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          {/* ===============================================================
-              03 / VIDEO & MOTION — Landscape 16:9 & Portrait 9:16
-          ================================================================ */}
-          <section id="video" className="scroll-mt-[64px] px-[9px]">
-            <div
-              className="mb-[20px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-              style={{
-                borderTop: `1px solid ${dividerColor}`,
-                color: c.muted,
-              }}
-            >
-              <span>03 / VIDEO &amp; MOTION PROJECTS</span>
-              <span>{String(videoWorks.length).padStart(2, '0')} VIDEOS</span>
-            </div>
-
-            {landscapeVideos.length > 0 && (
-              <div className="space-y-3">
-                <p
-                  className="font-mono text-[10px] uppercase tracking-[0.12em]"
-                  style={{ color: c.muted }}
-                >
-                  LANDSCAPE — 16:9 ({String(landscapeVideos.length).padStart(2, '0')})
-                </p>
-                <div className="grid grid-cols-1 gap-[12px] md:grid-cols-2 md:gap-[16px]">
-                  {landscapeVideos.map((vid) => (
-                    <article
-                      key={vid.id}
-                      onClick={() => {
-                        setSelectedWork(vid);
-                        window.scrollTo({
-                          top: 0,
-                          behavior: 'instant' as ScrollBehavior,
-                        });
-                      }}
-                      className="group cursor-pointer"
-                    >
-                      <div
-                        className="relative aspect-[16/9] w-full overflow-hidden"
-                        style={{ backgroundColor: c.placeholder }}
-                      >
-                        {!brokenImages[vid.cover] ? (
-                          <Image
-                            src={vid.cover}
-                            alt={vid.title}
-                            fill
-                            unoptimized
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            onError={() => markImageBroken(vid.cover)}
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                          />
-                        ) : null}
-
-                        <div
-                          className="absolute inset-x-[12px] bottom-[12px] flex h-[42px] items-center justify-between rounded-[8px] px-3 backdrop-blur-md"
-                          style={{
-                            backgroundColor: 'rgba(235, 235, 235, 0.5)',
-                            color: '#1f1f1f',
-                          }}
-                        >
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
-                              <Play size={10} className="ml-0.5 fill-white" />
-                            </span>
-                            <span className="truncate text-[11px] font-medium uppercase tracking-[-0.01em]">
-                              {vid.title}
-                            </span>
-                          </div>
-                          <span className="shrink-0 font-mono text-[10px] uppercase opacity-75">
-                            16:9 ↗
-                          </span>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {portraitVideos.length > 0 && (
-              <div
-                className={
-                  landscapeVideos.length > 0
-                    ? 'mt-[32px] space-y-3 pt-[24px]'
-                    : 'space-y-3'
-                }
-                style={
-                  landscapeVideos.length > 0
-                    ? { borderTop: `1px solid ${dividerColor}` }
-                    : undefined
-                }
+              <p
+                className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                style={{ color: palette.inkMuted }}
               >
-                <p
-                  className="font-mono text-[10px] uppercase tracking-[0.12em]"
-                  style={{ color: c.muted }}
-                >
-                  PORTRAIT / REELS — 9:16 (
-                  {String(portraitVideos.length).padStart(2, '0')})
-                </p>
-                <div className="grid grid-cols-2 gap-[10px] sm:grid-cols-3 md:grid-cols-4 md:gap-[14px]">
-                  {portraitVideos.map((vid) => (
-                    <article
-                      key={vid.id}
-                      onClick={() => {
-                        setSelectedWork(vid);
-                        window.scrollTo({
-                          top: 0,
-                          behavior: 'instant' as ScrollBehavior,
-                        });
-                      }}
-                      className="group cursor-pointer"
-                    >
-                      <div
-                        className="relative aspect-[9/16] w-full overflow-hidden"
-                        style={{ backgroundColor: c.placeholder }}
-                      >
-                        {!brokenImages[vid.cover] ? (
-                          <Image
-                            src={vid.cover}
-                            alt={vid.title}
-                            fill
-                            unoptimized
-                            sizes="(max-width: 768px) 50vw, 25vw"
-                            onError={() => markImageBroken(vid.cover)}
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                          />
-                        ) : null}
-
-                        <div
-                          className="absolute inset-x-[10px] bottom-[10px] flex h-[38px] items-center justify-between rounded-[8px] px-2.5 backdrop-blur-md"
-                          style={{
-                            backgroundColor: 'rgba(235, 235, 235, 0.5)',
-                            color: '#1f1f1f',
-                          }}
-                        >
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
-                              <Play size={9} className="ml-0.5 fill-white" />
-                            </span>
-                            <span className="truncate text-[10.5px] font-medium uppercase">
-                              {vid.title}
-                            </span>
-                          </div>
-                          <span className="shrink-0 font-mono text-[9.5px] uppercase opacity-75">
-                            9:16 ↗
-                          </span>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* ===============================================================
-              04 / PHOTOGRAPHY GALLERY — Full-Quality Curated Frames (4:3 Grid)
-          ================================================================ */}
-          <section id="photo" className="scroll-mt-[64px] px-[9px]">
-            <div
-              className="mb-[18px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-              style={{
-                borderTop: `1px solid ${dividerColor}`,
-                color: c.muted,
-              }}
-            >
-              <span>04 / PHOTOGRAPHY GALLERY</span>
-              <span>{String(photoTiles.length).padStart(2, '0')} FRAMES</span>
+                Loading photography archive...
+              </p>
             </div>
-
-            <div className="grid grid-cols-1 gap-[7px] sm:grid-cols-2 md:grid-cols-3 md:gap-[9px]">
-              {photoTiles.map((photo) => (
+          ) : photoError ? (
+            <div
+              role="alert"
+              className="flex h-[220px] flex-col items-center justify-center gap-3 text-center"
+            >
+              <p
+                className="font-mono text-[11.5px]"
+                style={{ color: palette.inkSoft }}
+              >
+                Could not load photos right now.
+              </p>
+              <button
+                type="button"
+                onClick={fetchAllPhotos}
+                className="cursor-pointer rounded-[2px] px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.12em]"
+                style={{
+                  backgroundColor: palette.accent,
+                  color: palette.accentInk,
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            /* Pure 2-Column Wide Landscape Swiss 0px Grid (No captions until clicked) */
+            <div className="grid grid-cols-1 gap-[7px] sm:grid-cols-2">
+              {photos.map((photo, idx) => (
                 <button
                   key={photo.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedWork({
-                      id: photo.id,
-                      title: photo.title,
-                      disciplines: ['PHOTOGRAPHY', photo.category.toUpperCase()],
-                      category: 'photo',
-                      cover: photo.image,
-                      images: [photo.image],
-                      description: `Original full-quality photographic frame captured and curated by Adrian Bahri (Dri4n) under ${photo.category}.`,
-                      year: '2025',
-                    });
-                    window.scrollTo({
-                      top: 0,
-                      behavior: 'instant' as ScrollBehavior,
-                    });
+                  onClick={() => setLightboxIdx(idx)}
+                  aria-label={`View ${photo.title}`}
+                  data-cursor-label="view"
+                  data-art-reveal
+                  className="art-reveal group relative block aspect-[16/10] w-full cursor-pointer overflow-hidden rounded-none text-left"
+                  style={{
+                    backgroundColor: palette.surface,
+                    ['--reveal-delay' as string]: `${(idx % 2) * 80}ms`,
                   }}
-                  className="group relative block aspect-[4/3] w-full overflow-hidden text-left"
-                  style={{ backgroundColor: c.placeholder }}
                 >
-                  {!brokenImages[photo.image] ? (
-                    <Image
-                      src={photo.image}
-                      alt={photo.title}
-                      fill
-                      unoptimized
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                      onError={() => markImageBroken(photo.image)}
-                      className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div
-                      className="flex h-full w-full items-center justify-center uppercase"
-                      style={{ color: c.muted }}
-                    >
-                      PHOTO
-                    </div>
-                  )}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent px-2.5 py-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    <span className="block truncate text-[11px] uppercase text-white">
-                      {photo.title}
-                    </span>
-                  </div>
+                  <Image
+                    src={photo.image}
+                    alt={photo.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 50vw"
+                    loading={idx < 4 ? 'eager' : 'lazy'}
+                    className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                  />
                 </button>
               ))}
             </div>
-          </section>
+          )}
+        </section>
 
-          {/* ===============================================================
-              05 / SOCIAL MEDIA GROWTH — Managed Accounts & Digital Reach
-          ================================================================ */}
-          <section id="growth" className="scroll-mt-[64px] px-[9px]">
-            <div
-              className="mb-[20px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-              style={{
-                borderTop: `1px solid ${dividerColor}`,
-                color: c.muted,
-              }}
-            >
-              <span>05 / SOCIAL MEDIA GROWTH &amp; MEDIA MANAGEMENT</span>
-              <span>
-                {String(socialGrowthItems.length).padStart(2, '0')} ACCOUNTS
-              </span>
-            </div>
+        {/* ROW 02: MEDIA PROD (SULAWESIPOS — MINIMAL OPEN-CANVAS SWISS SPLIT) */}
+        <section
+          id="media-production"
+          aria-labelledby="row-02-media-heading"
+          data-art-reveal
+          onMouseEnter={() => setMediaPaused(true)}
+          onMouseLeave={() => setMediaPaused(false)}
+          className="art-reveal mt-20 w-full px-5 sm:px-8 lg:px-10"
+        >
+          <div className="grid w-full grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-8">
+            {/* Left Open Typographic Column (Fixed Title & Description, Dynamic Platform Stats) */}
+            <div className="flex max-w-[410px] flex-col lg:col-span-5">
+              <h2
+                id="row-02-media-heading"
+                className="font-sans text-[15px] font-normal tracking-[-0.01em]"
+                style={{ color: palette.inkSoft }}
+              >
+                {mediaShowcase.sectionLabel}
+              </h2>
 
-            <div className="grid grid-cols-1 gap-[10px] md:grid-cols-3">
-              {socialGrowthItems.map((item, idx) => (
-                <article
-                  key={item.id}
-                  className="flex flex-col justify-between p-4 md:p-5"
-                  style={{
-                    backgroundColor: c.pill,
-                    border: `1px solid ${dividerColor}`,
-                  }}
-                >
-                  <div>
-                    <div
-                      className="flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.12em]"
-                      style={{ color: c.muted }}
-                    >
-                      <span>{String(idx + 1).padStart(2, '0')} · {item.platform}</span>
-                      <span>{item.period}</span>
-                    </div>
+              <h3
+                className="mt-9 font-sans text-[16px] font-normal tracking-[-0.01em]"
+                style={{ color: palette.ink }}
+              >
+                {mediaShowcase.platforms.tiktok.title}
+              </h3>
 
-                    <h3 className="mt-3 text-[15px] font-medium uppercase tracking-[-0.02em]">
-                      {item.account}
-                    </h3>
+              <p
+                className="mt-3 font-sans text-[15px] leading-[1.55] tracking-[-0.01em]"
+                style={{ color: palette.inkSoft }}
+              >
+                {mediaShowcase.platforms.tiktok.description}
+              </p>
+
+              {/* Real Verified Engagement Stats Grid (Updates per Platform: Tiktok / Youtube) */}
+              <div
+                key={`stats-${activePlatform}`}
+                className="mt-9 grid grid-cols-3 gap-x-6 gap-y-5 animate-in fade-in duration-300"
+              >
+                {platformData.metrics.map((metric) => (
+                  <div key={metric.label} className="space-y-0.5">
                     <p
-                      className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.06em]"
-                      style={{ color: '#ff5a3d' }}
+                      className="font-sans text-[15.5px] font-semibold leading-tight tabular-nums tracking-[-0.01em]"
+                      style={{ color: palette.ink }}
                     >
-                      {item.handle} — {item.role}
+                      {metric.value}
                     </p>
-
                     <p
-                      className="mt-3.5 text-[11.5px] leading-[1.55]"
-                      style={{ color: c.ink2 }}
+                      className="font-sans text-[13px] font-normal leading-tight"
+                      style={{ color: palette.inkSoft }}
                     >
-                      {item.focus}
+                      {metric.label}
                     </p>
-                  </div>
-
-                  <ul
-                    className="mt-5 space-y-1.5 pt-3 text-[10.5px] leading-[1.45]"
-                    style={{
-                      borderTop: `1px solid ${dividerColor}`,
-                      color: c.muted,
-                    }}
-                  >
-                    {item.highlights.map((hl, hIdx) => (
-                      <li key={hIdx} className="flex items-start gap-2">
-                        <span
-                          className="mt-[5px] inline-block h-[4px] w-[4px] shrink-0"
-                          style={{ backgroundColor: '#ff5a3d' }}
-                        />
-                        <span>{hl}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          {/* ===============================================================
-              06 / ABOUT — Exact Gaurav Mishra 2-Column Swiss Grid
-          ================================================================ */}
-          <section
-            id="about"
-            className="scroll-mt-[64px] px-4 pt-6 uppercase leading-[15.9px] md:px-0"
-          >
-            <div
-              className="mx-[9px] mb-[40px] flex items-center justify-between pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em]"
-              style={{
-                borderTop: `1px solid ${dividerColor}`,
-                color: c.muted,
-              }}
-            >
-              <span>06 / ABOUT &amp; CONNECT</span>
-              <span>MAKASSAR · INDONESIA</span>
-            </div>
-
-            {/* 1. WHO AM I */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-0">
-              <div className="md:pr-[111px] md:text-right">WHO AM I</div>
-              <div className="max-w-[475px] space-y-4">
-                <p>
-                  I&apos;M ADRIAN BAHRI (DRI4N), A CREATIVE TECHNOLOGIST &amp;
-                  VISUAL DESIGNER BASED IN MAKASSAR, INDONESIA. MY WORK IS
-                  ROOTED IN BRANDING, EDITORIAL LAYOUTS, MOTION DIRECTION, AND
-                  DIGITAL SYSTEMS WITH A FOCUS ON TRANSLATING IDEAS INTO CLEAR
-                  FORM.
-                </p>
-                <p>
-                  ALONGSIDE ENGINEERING FULL-STACK PLATFORMS, I MAINTAIN AN
-                  INDEPENDENT VISUAL PRACTICE DRIVEN BY CURIOSITY — EXPLORING
-                  PRINT, FILM, PHOTOGRAPHY, SOCIAL GROWTH, AND GRAPHIC IDENTITY.
-                </p>
-              </div>
-            </div>
-
-            {/* 2. WORK EXPERIENCE (Synced with Database) */}
-            <div
-              className="mt-[48px] grid grid-cols-1 gap-3 pt-[40px] md:mt-[64px] md:grid-cols-2 md:gap-0 md:pt-[52px]"
-              style={{ borderTop: `1px solid ${dividerColor}` }}
-            >
-              <div className="md:pr-[111px] md:text-right">WORK EXPERIENCE</div>
-              <div className="max-w-[475px] space-y-7">
-                {experiences.map((exp) => (
-                  <div key={exp.id} className="space-y-2.5">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="font-semibold">
-                        {exp.company} | {exp.role}
-                      </span>
-                      <span style={{ color: c.muted }}>{exp.period}</span>
-                    </div>
-                    {exp.description && (
-                      <p style={{ color: c.ink2 }}>{exp.description}</p>
-                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 3. SKILLS */}
-            <div
-              className="mt-[48px] grid grid-cols-1 gap-3 pt-[40px] md:mt-[64px] md:grid-cols-2 md:gap-0 md:pt-[52px]"
-              style={{ borderTop: `1px solid ${dividerColor}` }}
-            >
-              <div className="md:pr-[111px] md:text-right">SKILLS</div>
-              <div className="max-w-[475px] space-y-6">
-                <div className="space-y-1">
-                  <p>CREATIVE DIRECTION</p>
-                  <p>BRAND &amp; VISUAL IDENTITY</p>
-                  <p>EDITORIAL, PRINT &amp; INFOGRAPHIC DESIGN</p>
-                  <p>MOTION &amp; VIDEO EDITING</p>
-                  <p>PHOTOGRAPHY &amp; COLOR GRADING</p>
-                  <p>SOCIAL MEDIA GROWTH &amp; CONTENT SYSTEMS</p>
-                </div>
-                {creativeTools.length > 0 && (
-                  <div className="space-y-1" style={{ color: c.muted }}>
-                    {creativeTools.map((t) => (
-                      <p key={t.name}>{t.name}</p>
-                    ))}
+            {/* Right Column: Centered Minimal Text Tabs (Tiktok / Youtube) + Compact Tall Portrait Box Fitting in 1 Screen */}
+            <div className="flex w-full max-w-[340px] flex-col lg:col-span-4 lg:col-start-9 lg:ml-auto">
+              <div
+                role="tablist"
+                aria-label="Select platform"
+                className="mb-3 flex items-center justify-center gap-5 font-sans text-[14px] tracking-[-0.01em]"
+              >
+                {(['tiktok', 'youtube'] as MediaPlatformKey[]).map((key) => {
+                  const isSelected = activePlatform === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      onClick={() => handleSelectPlatform(key)}
+                      className="cursor-pointer transition-opacity hover:opacity-80"
+                      style={{
+                        color: isSelected ? palette.ink : palette.inkMuted,
+                        fontWeight: isSelected ? 600 : 400,
+                      }}
+                    >
+                      {mediaShowcase.platforms[key].label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Single Clickable Sharp 0px Channel Media Frame (Image or Video -> Custom URL) */}
+              <a
+                key={`media-${activePlatform}`}
+                href={activeChannelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${platformData.title} on ${platformData.label}`}
+                className="group relative block aspect-[3/4] max-h-[68vh] w-full overflow-hidden rounded-none animate-in fade-in duration-300"
+                style={{ backgroundColor: palette.surface }}
+              >
+                {activeMediaUrl ? (
+                  activeMediaIsVideo ? (
+                    <video
+                      key={activeMediaUrl}
+                      src={activeMediaUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <img
+                      src={activeMediaUrl}
+                      alt={`${platformData.title} ${platformData.label}`}
+                      className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                    />
+                  )
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-mono text-[11px] uppercase text-[#7E7A72]">
+                    No media
                   </div>
                 )}
-              </div>
+              </a>
             </div>
+          </div>
+        </section>
 
-            {/* 4. CONNECT */}
+        {/* ROW 03: ORGANIZATION INSTAGRAM BRANDING (ARJUNA UH / KKNT ASSAMATURU — 3-COLUMN DIAGONAL SWISS SPLIT) */}
+        <section
+          id="brand-identity"
+          aria-labelledby="row-03-branding-heading"
+          data-art-reveal
+          onMouseEnter={() => setOrgPaused(true)}
+          onMouseLeave={() => setOrgPaused(false)}
+          className="art-reveal mt-28 w-full px-5 sm:px-8 lg:px-10"
+        >
+          <div className="grid w-full grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-8">
+            {/* Top-Left Column: Account Handle & Overview (Updates per Active Org) */}
             <div
-              className="mt-[48px] grid grid-cols-1 gap-3 pt-[40px] md:mt-[64px] md:grid-cols-2 md:gap-0 md:pt-[52px]"
-              style={{ borderTop: `1px solid ${dividerColor}` }}
+              key={`org-text-${activeOrg}`}
+              className="flex max-w-[320px] flex-col animate-in fade-in duration-300 lg:col-span-4 lg:self-start lg:pt-8"
             >
-              <div className="md:pr-[111px] md:text-right">CONNECT</div>
-              <div className="max-w-[475px] space-y-1.5">
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleCopyEmail}
-                    className="underline-offset-[2px] hover:underline"
-                  >
-                    {copiedEmail ? 'COPIED TO CLIPBOARD' : emailAddress}
-                  </button>{' '}
-                  <span style={{ color: c.hair }}>| MAIL</span>
+              <h2
+                id="row-03-branding-heading"
+                className="font-sans text-[16px] font-normal tracking-[-0.01em]"
+                style={{ color: palette.ink }}
+              >
+                {activeOrgData.handle}
+              </h2>
+
+              <p
+                className="mt-3 font-sans text-[15px] leading-[1.55] tracking-[-0.01em]"
+                style={{ color: palette.inkSoft }}
+              >
+                {activeOrgData.leftDescription}
+              </p>
+            </div>
+
+            {/* Center Column: Minimal Switcher Tabs + Tall Sharp 0px Portrait Media Frame */}
+            <div className="flex w-full flex-col items-center lg:col-span-4">
+              <div
+                role="tablist"
+                aria-label="Select organization account"
+                className="mb-3 flex items-center justify-center gap-5 font-sans text-[14px] tracking-[-0.01em]"
+              >
+                {(['arjuna', 'kknt'] as OrgBrandingKey[]).map((key) => {
+                  const isSelected = activeOrg === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      onClick={() => setActiveOrg(key)}
+                      className="cursor-pointer transition-opacity hover:opacity-80"
+                      style={{
+                        color: isSelected ? palette.ink : palette.inkMuted,
+                        fontWeight: isSelected ? 600 : 400,
+                      }}
+                    >
+                      {orgBranding.accounts[key].tabLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <a
+                key={`org-media-${activeOrg}`}
+                href={activeOrgData.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${activeOrgData.handle} on Instagram`}
+                className="group relative block aspect-[3/4] max-h-[68vh] w-full max-w-[340px] overflow-hidden rounded-none animate-in fade-in duration-300"
+                style={{ backgroundColor: palette.surface }}
+              >
+                {activeOrgData.mediaUrl ? (
+                  orgMediaIsVideo ? (
+                    <video
+                      key={activeOrgData.mediaUrl}
+                      src={activeOrgData.mediaUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <img
+                      src={activeOrgData.mediaUrl}
+                      alt={`${activeOrgData.handle} Instagram branding`}
+                      className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                    />
+                  )
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-mono text-[11px] uppercase text-[#7E7A72]">
+                    No media
+                  </div>
+                )}
+              </a>
+            </div>
+
+            {/* Bottom-Right Column: Branding Philosophy Statement (Constant across both orgs) */}
+            <div className="flex max-w-[340px] flex-col lg:col-span-4 lg:ml-auto lg:self-end lg:pb-12">
+              <p
+                className="font-sans text-[15px] leading-[1.55] tracking-[-0.01em]"
+                style={{ color: palette.inkSoft }}
+              >
+                {orgBranding.rightStatement}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ROW 04: IDENTITAS UNHAS (VIDEOS DUAL-SCREEN / DESIGN 4:5 GRID / DOCUMENTER 16:9 YOUTUBE) */}
+        <section
+          id="identitas-unhas"
+          aria-labelledby="row-04-identitas-heading"
+          data-art-reveal
+          onMouseEnter={() => setVideoPaused(true)}
+          onMouseLeave={() => setVideoPaused(false)}
+          className="art-reveal mt-28 w-full px-5 sm:px-8 lg:px-10"
+        >
+          <div className="grid w-full grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-10">
+            {/* Left Stage (7 cols): Centered Mode Tabs + Active Mode Canvas */}
+            <div className="flex w-full flex-col lg:col-span-7">
+              {/* Centered Mode Tabs: Videos | Design | Documenter */}
+              <div
+                role="tablist"
+                aria-label="Identitas Unhas work categories"
+                className="mb-3.5 flex items-center justify-center gap-5 font-sans text-[14px] tracking-[-0.01em]"
+              >
+                {(
+                  [
+                    { key: 'videos', label: 'Videos' },
+                    { key: 'design', label: 'Design' },
+                    { key: 'documenter', label: 'Documenter' },
+                  ] as Array<{ key: IdentitasModeKey; label: string }>
+                ).map(({ key, label }) => {
+                  const isSelected = identitasMode === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      onClick={() => setIdentitasMode(key)}
+                      className="cursor-pointer transition-opacity hover:opacity-80"
+                      style={{
+                        color: isSelected ? palette.ink : palette.inkMuted,
+                        fontWeight: isSelected ? 600 : 400,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* MODE 1: VIDEOS — Dual Side-by-Side True 9:16 Vertical Screens (No Cropping) */}
+              {identitasMode === 'videos' && (
+                <div
+                  key={`id-vids-${videoSlotAIdx}-${videoSlotBIdx}`}
+                  className="flex w-full items-center justify-center gap-[10px] animate-in fade-in duration-300"
+                >
+                  {[videoSlotA, videoSlotB].filter(Boolean).map((vid, slotI) => {
+                    if (!vid) return null;
+                    const ytEmbed = toYouTubeEmbedUrl(vid.mediaUrl, {
+                      autoplay: true,
+                      mute: true,
+                      loop: false,
+                    });
+                    const isDirectVideo = isVideoMediaUrl(vid.mediaUrl);
+                    return (
+                      <div
+                        key={`${vid.id}-${slotI}`}
+                        className="relative aspect-[9/16] w-1/2 overflow-hidden rounded-none sm:h-[66vh] sm:max-h-[620px] sm:w-auto"
+                        style={{ backgroundColor: palette.surface }}
+                      >
+                        {ytEmbed ? (
+                          <iframe
+                            src={ytEmbed}
+                            title={vid.title}
+                            onLoad={(e) => {
+                              try {
+                                e.currentTarget.contentWindow?.postMessage(
+                                  JSON.stringify({ event: 'listening' }),
+                                  '*'
+                                );
+                              } catch {
+                                // ignore cross-origin handshake errors
+                              }
+                            }}
+                            allow="autoplay; encrypted-media; picture-in-picture"
+                            allowFullScreen
+                            className="h-full w-full border-0"
+                          />
+                        ) : isDirectVideo ? (
+                          <video
+                            src={vid.mediaUrl}
+                            autoPlay
+                            muted
+                            playsInline
+                            onEnded={() => {
+                              advanceVideoSlot(slotI === 0 ? 0 : 1);
+                            }}
+                            className="block h-full w-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={vid.mediaUrl}
+                            alt={vid.title}
+                            className="block h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div>
-                  <a
-                    href={instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline-offset-[2px] hover:underline"
-                  >
-                    @ADRIANBAHRI
-                  </a>{' '}
-                  <span style={{ color: c.hair }}>| INSTAGRAM</span>
+              )}
+
+              {/* MODE 2: DESIGN — Row 1 = Theme A Slides, Row 2 = Theme B Slides (4 full 4:5 + 1/4 faded peek for slide 5+) */}
+              {identitasMode === 'design' && (
+                <div
+                  key={`id-des-pair-${designSlotAIdx}-${designSlotBIdx}`}
+                  className="flex w-full flex-col gap-[7px] animate-in fade-in duration-300"
+                >
+                  {activeDesignRows.map(({ theme: des, themeIdx }) => {
+                    const allSlides = [
+                      des.image,
+                      ...(des.extraImages || []),
+                    ].filter(Boolean);
+                    const mainSlides = allSlides.slice(0, 4);
+                    const peekSlide =
+                      allSlides.length > 4 ? allSlides[4] : null;
+                    const extraCount = Math.max(0, allSlides.length - 4);
+
+                    return (
+                      <div
+                        key={des.id}
+                        className={`grid w-full gap-[7px] ${
+                          peekSlide
+                            ? 'grid-cols-[1fr_1fr_1fr_1fr_0.28fr]'
+                            : 'grid-cols-4'
+                        }`}
+                      >
+                        {mainSlides.map((slideUrl, sIdx) => (
+                          <button
+                            key={`${des.id}-slide-${sIdx}`}
+                            type="button"
+                            onClick={() => {
+                              setTargetSlideIdx(sIdx);
+                              setDesignLightboxIdx(themeIdx);
+                            }}
+                            aria-label={`View ${des.title} slide ${sIdx + 1}`}
+                            className="group relative block aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-none text-left"
+                            style={{ backgroundColor: palette.surface }}
+                          >
+                            <img
+                              src={slideUrl}
+                              alt={`${des.title} slide ${sIdx + 1}`}
+                              loading="eager"
+                              className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+                            />
+                          </button>
+                        ))}
+
+                        {/* 1/4-Width Faded Peek Slot when Theme has >4 Slides */}
+                        {peekSlide && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetSlideIdx(4);
+                              setDesignLightboxIdx(themeIdx);
+                            }}
+                            aria-label={`View ${extraCount} more slides in ${des.title}`}
+                            className="group relative block h-full w-full cursor-pointer overflow-hidden rounded-none text-left"
+                            style={{ backgroundColor: palette.surface }}
+                          >
+                            <img
+                              src={peekSlide}
+                              alt={`${des.title} more slides`}
+                              className="block h-full w-full object-cover object-left opacity-45 transition-opacity duration-300 group-hover:opacity-75"
+                            />
+                            <div
+                              aria-hidden="true"
+                              className="pointer-events-none absolute inset-0"
+                              style={{
+                                background: `linear-gradient(to right, transparent 0%, ${palette.bg} 95%)`,
+                              }}
+                            />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div>
-                  <a
-                    href={linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline-offset-[2px] hover:underline"
-                  >
-                    ADRIAN BAHRI
-                  </a>{' '}
-                  <span style={{ color: c.hair }}>| LINKEDIN</span>
+              )}
+
+              {/* MODE 3: DOCUMENTER — Wide 16:9 YouTube Player Canvas */}
+              {identitasMode === 'documenter' && (
+                <div
+                  key={`id-doc-${safeDocIdx}`}
+                  className="relative aspect-video w-full overflow-hidden rounded-none animate-in fade-in duration-300"
+                  style={{ backgroundColor: palette.surface }}
+                >
+                  {activeDoc && activeDocEmbedUrl ? (
+                    <iframe
+                      src={activeDocEmbedUrl}
+                      title={activeDoc.title}
+                      onLoad={(e) => {
+                        try {
+                          e.currentTarget.contentWindow?.postMessage(
+                            JSON.stringify({ event: 'listening' }),
+                            '*'
+                          );
+                        } catch {
+                          // ignore cross-origin handshake errors
+                        }
+                      }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="h-full w-full border-0"
+                    />
+                  ) : activeDoc && isVideoMediaUrl(activeDoc.youtubeUrl) ? (
+                    <video
+                      src={activeDoc.youtubeUrl}
+                      controls
+                      playsInline
+                      onEnded={() => {
+                        if (identitasDocs.length > 1) {
+                          setActiveDocIdx(
+                            (prev) => (prev + 1) % identitasDocs.length
+                          );
+                        }
+                      }}
+                      className="block h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center font-mono text-[11px] uppercase text-[#7E7A72]">
+                      No documentary link set
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <a
-                    href={githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline-offset-[2px] hover:underline"
-                  >
-                    ADRIANBAHRI
-                  </a>{' '}
-                  <span style={{ color: c.hair }}>| GITHUB</span>
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={(e) => navigateWithCirclePortal('/', router, e)}
-                    className="underline-offset-[2px] hover:underline"
-                  >
-                    DRI4N.COM
-                  </button>{' '}
-                  <span style={{ color: c.hair }}>| DEV PORTFOLIO</span>
-                </div>
+              )}
+            </div>
+
+            {/* Right Column (4 cols): Identitas Unhas Overview + Interactive Queue Selector */}
+            <div className="flex max-w-[360px] flex-col lg:col-span-4 lg:col-start-9 lg:pt-8">
+              <h2
+                id="row-04-identitas-heading"
+                className="font-sans text-[16px] font-normal tracking-[-0.01em]"
+                style={{ color: palette.ink }}
+              >
+                {identitasShowcase.title}
+              </h2>
+
+              <p
+                className="mt-3 font-sans text-[15px] leading-[1.55] tracking-[-0.01em]"
+                style={{ color: palette.inkSoft }}
+              >
+                {identitasShowcase.description}
+              </p>
+
+              {/* Draggable 01 / 02 Marker Queue List (Drag 01 or 02 onto any title to play on Screen/Row 1 or 2) */}
+              <div className="mt-12 flex flex-col gap-2 font-sans text-[14px] leading-[1.45] tracking-[-0.01em]">
+                {identitasMode === 'videos' &&
+                  identitasVideos.map((vid, idx) => {
+                    const markerSlot: 0 | 1 | null =
+                      idx === videoSlotAIdx
+                        ? 0
+                        : identitasVideos.length > 1 && idx === videoSlotBIdx
+                        ? 1
+                        : null;
+                    const isPlaying = markerSlot !== null;
+                    const isDragTarget =
+                      draggedMarker !== null && dragOverIdx === idx;
+                    return (
+                      <div
+                        key={vid.id}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (dragOverIdx !== idx) setDragOverIdx(idx);
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverIdx === idx) setDragOverIdx(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (draggedMarker !== null) {
+                            dropMarkerOnIndex('videos', draggedMarker, idx);
+                          }
+                          setDraggedMarker(null);
+                          setDragOverIdx(null);
+                        }}
+                        className="flex items-center gap-2.5 py-0.5 transition-all"
+                        style={{
+                          borderLeft: isDragTarget
+                            ? `2px solid ${palette.accent}`
+                            : '2px solid transparent',
+                          paddingLeft: isDragTarget ? '8px' : '0px',
+                        }}
+                      >
+                        {markerSlot !== null && (
+                          <span
+                            draggable
+                            onDragStart={(e) => {
+                              setDraggedMarker(markerSlot);
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData(
+                                'text/plain',
+                                String(markerSlot)
+                              );
+                            }}
+                            onDragEnd={() => {
+                              setDraggedMarker(null);
+                              setDragOverIdx(null);
+                            }}
+                            title={`Geser 0${markerSlot + 1} ke judul lain untuk mengganti layar ${markerSlot + 1}`}
+                            className="inline-flex shrink-0 cursor-grab select-none items-center rounded-none px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular-nums active:cursor-grabbing"
+                            style={{
+                              backgroundColor: palette.accent,
+                              color: palette.accentInk,
+                            }}
+                          >
+                            0{markerSlot + 1}
+                          </span>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => selectVideoIndependent(idx)}
+                          className="min-w-0 flex-1 cursor-pointer truncate text-left transition-opacity hover:opacity-100"
+                          style={{
+                            color:
+                              isPlaying || isDragTarget
+                                ? palette.ink
+                                : palette.inkMuted,
+                            opacity: isPlaying || isDragTarget ? 1 : 0.42,
+                          }}
+                        >
+                          {vid.title}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                {identitasMode === 'design' &&
+                  identitasDesigns.map((des, idx) => {
+                    const markerSlot: 0 | 1 | null =
+                      idx === designSlotAIdx
+                        ? 0
+                        : identitasDesigns.length > 1 && idx === designSlotBIdx
+                        ? 1
+                        : null;
+                    const isShown = markerSlot !== null;
+                    const isDragTarget =
+                      draggedMarker !== null && dragOverIdx === idx;
+                    return (
+                      <div
+                        key={des.id}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (dragOverIdx !== idx) setDragOverIdx(idx);
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverIdx === idx) setDragOverIdx(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (draggedMarker !== null) {
+                            dropMarkerOnIndex('design', draggedMarker, idx);
+                          }
+                          setDraggedMarker(null);
+                          setDragOverIdx(null);
+                        }}
+                        className="flex items-center gap-2.5 py-0.5 transition-all"
+                        style={{
+                          borderLeft: isDragTarget
+                            ? `2px solid ${palette.accent}`
+                            : '2px solid transparent',
+                          paddingLeft: isDragTarget ? '8px' : '0px',
+                        }}
+                      >
+                        {markerSlot !== null && (
+                          <span
+                            draggable
+                            onDragStart={(e) => {
+                              setDraggedMarker(markerSlot);
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData(
+                                'text/plain',
+                                String(markerSlot)
+                              );
+                            }}
+                            onDragEnd={() => {
+                              setDraggedMarker(null);
+                              setDragOverIdx(null);
+                            }}
+                            title={`Geser 0${markerSlot + 1} ke judul lain untuk mengganti baris ${markerSlot + 1}`}
+                            className="inline-flex shrink-0 cursor-grab select-none items-center rounded-none px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular-nums active:cursor-grabbing"
+                            style={{
+                              backgroundColor: palette.accent,
+                              color: palette.accentInk,
+                            }}
+                          >
+                            0{markerSlot + 1}
+                          </span>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isShown) {
+                              setTargetSlideIdx(0);
+                              setDesignLightboxIdx(idx);
+                            } else {
+                              selectDesignIndependent(idx);
+                            }
+                          }}
+                          className="min-w-0 flex-1 cursor-pointer truncate text-left transition-opacity hover:opacity-100"
+                          style={{
+                            color:
+                              isShown || isDragTarget
+                                ? palette.ink
+                                : palette.inkMuted,
+                            opacity: isShown || isDragTarget ? 1 : 0.42,
+                          }}
+                        >
+                          {des.title}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                {identitasMode === 'documenter' &&
+                  identitasDocs.map((doc, idx) => {
+                    const isPlaying = idx === safeDocIdx;
+                    const isDragTarget =
+                      draggedMarker !== null && dragOverIdx === idx;
+                    return (
+                      <div
+                        key={doc.id}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (dragOverIdx !== idx) setDragOverIdx(idx);
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverIdx === idx) setDragOverIdx(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (draggedMarker !== null) {
+                            dropMarkerOnIndex('documenter', 0, idx);
+                          }
+                          setDraggedMarker(null);
+                          setDragOverIdx(null);
+                        }}
+                        className="flex items-center gap-2.5 py-0.5 transition-all"
+                        style={{
+                          borderLeft: isDragTarget
+                            ? `2px solid ${palette.accent}`
+                            : '2px solid transparent',
+                          paddingLeft: isDragTarget ? '8px' : '0px',
+                        }}
+                      >
+                        {isPlaying && (
+                          <span
+                            draggable
+                            onDragStart={(e) => {
+                              setDraggedMarker(0);
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData('text/plain', '0');
+                            }}
+                            onDragEnd={() => {
+                              setDraggedMarker(null);
+                              setDragOverIdx(null);
+                            }}
+                            title="Geser 01 ke judul lain untuk mengganti dokumenter"
+                            className="inline-flex shrink-0 cursor-grab select-none items-center rounded-none px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular-nums active:cursor-grabbing"
+                            style={{
+                              backgroundColor: palette.accent,
+                              color: palette.accentInk,
+                            }}
+                          >
+                            01
+                          </span>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveDocIdx(idx)}
+                          className="min-w-0 flex-1 cursor-pointer truncate text-left transition-opacity hover:opacity-100"
+                          style={{
+                            color:
+                              isPlaying || isDragTarget
+                                ? palette.ink
+                                : palette.inkMuted,
+                            opacity: isPlaying || isDragTarget ? 1 : 0.42,
+                          }}
+                        >
+                          {doc.title}
+                        </button>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* ===============================================================
-              MINIMAL RIGHT-ALIGNED SWISS FOOTER + THIN 1PX TOP DIVIDER
-          ================================================================ */}
-          <footer
-            className="mx-[9px] flex flex-col items-start gap-4 pb-[80px] pt-[36px] uppercase leading-[15.9px] md:flex-row md:items-center md:justify-end md:gap-[32px] md:pb-[120px] md:pl-[8px] md:pr-[6.7%] md:pt-[44px]"
-            style={{
-              letterSpacing: '-0.34px',
-              borderTop: `1px solid ${dividerColor}`,
-            }}
-          >
-            <button
-              type="button"
-              onClick={scrollToTop}
-              className="hover:underline underline-offset-[2px]"
+        {/* ROW 05: PRINT & OBJECTS (SWISS PRINT INDEX + STICKY LIVE PREVIEW STAGE) */}
+        <section
+          id="print-works"
+          aria-labelledby="row-05-print-heading"
+          data-art-reveal
+          className="art-reveal mt-28 w-full px-5 sm:px-8 lg:px-10"
+        >
+          {/* Minimal Section Header + Filter Tabs (All / Magazine / Infographic / Product) */}
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <h2
+              id="row-05-print-heading"
+              className="font-sans text-[15px] font-normal tracking-[-0.01em]"
+              style={{ color: palette.inkSoft }}
             >
-              ©ADRIAN BAHRI
-            </button>
-            <span style={{ color: c.muted }}>MULTIDISCIPLINARY CREATIVE</span>
-            <p
-              className="max-w-[350px]"
-              style={{ letterSpacing: '0px', color: c.ink2 }}
+              {printShowcase.sectionLabel}
+            </h2>
+
+            <div
+              role="tablist"
+              aria-label="Filter print works by category"
+              className="flex flex-wrap items-center gap-5 font-sans text-[13.5px] tracking-[-0.01em]"
             >
-              STILL MAKING THINGS, STILL LOOKING FOR THINGS TO MAKE. IF
-              SOMETHING HERE CAUGHT YOUR ATTENTION, SAY HELLO.{' '}
+              {(
+                ['all', 'magazine', 'infographic', 'product'] as PrintFilterKey[]
+              ).map((key) => {
+                const isSelected = printFilter === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      setPrintFilter(key);
+                      setActivePrintIdx(0);
+                    }}
+                    className="cursor-pointer transition-opacity hover:opacity-80"
+                    style={{
+                      color: isSelected ? palette.ink : palette.inkMuted,
+                      fontWeight: isSelected ? 600 : 400,
+                    }}
+                  >
+                    {PRINT_CATEGORY_LABELS[key]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Asymmetric Split: Left Swiss Editorial Index Table | Right Sticky Live Preview */}
+          <div className="grid w-full grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-10">
+            {/* Left Column (6 cols): Interactive Print Spec Index */}
+            <div
+              className="flex flex-col border-t lg:col-span-6"
+              style={{ borderColor: palette.border }}
+            >
+              {filteredPrintItems.map((item, idx) => {
+                const isActive = idx === safePrintIdx;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onMouseEnter={() => setActivePrintIdx(idx)}
+                    onFocus={() => setActivePrintIdx(idx)}
+                    onClick={() => {
+                      setActivePrintIdx(idx);
+                      setTargetSlideIdx(0);
+                      setPrintLightboxIdx(idx);
+                    }}
+                    className="group grid w-full cursor-pointer grid-cols-[1fr_auto] items-baseline gap-x-4 gap-y-1 border-b py-3.5 text-left transition-colors sm:grid-cols-[1fr_auto_auto]"
+                    style={{ borderColor: palette.border }}
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        aria-hidden="true"
+                        className="h-[6px] w-[6px] shrink-0 rounded-none transition-opacity"
+                        style={{
+                          backgroundColor: palette.accent,
+                          opacity: isActive ? 1 : 0,
+                        }}
+                      />
+                      <span
+                        className="truncate font-sans text-[15px] tracking-[-0.01em] transition-colors"
+                        style={{
+                          color: isActive ? palette.ink : palette.inkSoft,
+                          fontWeight: isActive ? 500 : 400,
+                        }}
+                      >
+                        {item.title}
+                      </span>
+                    </span>
+
+                    <span
+                      className="hidden font-mono text-[10.5px] uppercase tracking-[0.06em] sm:inline"
+                      style={{
+                        color: isActive ? palette.inkSoft : palette.inkMuted,
+                      }}
+                    >
+                      {item.spec}
+                    </span>
+
+                    <span
+                      className="font-mono text-[11px] tabular-nums"
+                      style={{
+                        color: isActive ? palette.ink : palette.inkMuted,
+                      }}
+                    >
+                      {item.year}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {filteredPrintItems.length === 0 && (
+                <p
+                  className="py-10 font-mono text-[11px] uppercase tracking-[0.08em]"
+                  style={{ color: palette.inkMuted }}
+                >
+                  No print works in this category yet.
+                </p>
+              )}
+            </div>
+
+            {/* Right Column (5 cols): Sticky Sharp 0px Live Preview Stage */}
+            <div className="flex w-full flex-col lg:sticky lg:top-[52px] lg:col-span-5 lg:col-start-8">
+              {activePrintItem && (
+                <>
+                  <button
+                    key={activePrintItem.id}
+                    type="button"
+                    onClick={() => {
+                      setTargetSlideIdx(0);
+                      setPrintLightboxIdx(safePrintIdx);
+                    }}
+                    aria-label={`Open full detail of ${activePrintItem.title}`}
+                    className="group relative block aspect-[4/3] max-h-[60vh] w-full cursor-pointer overflow-hidden rounded-none animate-in fade-in duration-200"
+                    style={{ backgroundColor: palette.surface }}
+                  >
+                    <img
+                      src={activePrintItem.image}
+                      alt={activePrintItem.title}
+                      className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                    />
+                  </button>
+
+                  <div className="mt-2.5 flex items-baseline justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.06em]">
+                    <span style={{ color: palette.inkSoft }}>
+                      {PRINT_CATEGORY_LABELS[activePrintItem.category]} ·{' '}
+                      {activePrintItem.spec}
+                    </span>
+                    <span
+                      className="shrink-0 tabular-nums"
+                      style={{ color: palette.inkMuted }}
+                    >
+                      {1 + (activePrintItem.extraImages?.length || 0)} FRAMES
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ROW 06: WRITING — RULED-NOTEBOOK JOURNAL GRID (CREATIVE ONLY, CENTERED FILTER) */}
+        <section
+          id="writing"
+          aria-label="Creative writing archive"
+          className="mt-28 w-full px-5 sm:px-8 lg:px-10"
+        >
+          {/* Centered Filter Tabs (All / Written / Edited) */}
+          <div className="mb-8 flex items-center justify-center gap-6 font-sans text-[14px] tracking-[-0.01em]">
+            {(
+              [
+                { key: 'all', label: 'All' },
+                { key: 'written', label: 'Written' },
+                { key: 'edited', label: 'Edited' },
+              ] as const
+            ).map(({ key, label }) => {
+              const isSelected = writingFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setWritingFilter(key)}
+                  className="cursor-pointer transition-opacity hover:opacity-80"
+                  style={{
+                    color: isSelected ? palette.ink : palette.inkMuted,
+                    fontWeight: isSelected ? 600 : 400,
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Full-Width 4-Column Ruled-Notebook Paper Cards Grid */}
+          <div className="grid w-full grid-cols-2 gap-x-[8px] gap-y-[22px] sm:grid-cols-3 lg:grid-cols-4">
+            {(writingFilter === 'all'
+              ? articles
+              : articles.filter((a) => a.role === writingFilter)
+            ).map((article, aIdx) => {
+              const lineColor = isDark
+                ? 'rgba(242, 239, 233, 0.09)'
+                : 'rgba(20, 20, 19, 0.1)';
+              const paperBg = isDark ? '#101010' : '#F8F6F1';
+              const href = `/art/writing/${encodeURIComponent(
+                article.slug || article.id
+              )}`;
+
+              return (
+                <Link
+                  key={article.id}
+                  href={href}
+                  data-art-reveal
+                  className="art-reveal group flex flex-col text-left"
+                  style={{
+                    ['--reveal-delay' as string]: `${(aIdx % 4) * 65}ms`,
+                  }}
+                >
+                  <article
+                    className="relative flex aspect-[3/4] w-full flex-col overflow-hidden rounded-none"
+                    style={{
+                      backgroundColor: paperBg,
+                      backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent 21px, ${lineColor} 21px, ${lineColor} 22px)`,
+                      backgroundPosition: '0 10px',
+                    }}
+                  >
+                    {article.coverImage && (
+                      <div
+                        className="relative h-[42%] w-full shrink-0 overflow-hidden rounded-none"
+                        style={{ backgroundColor: palette.surface }}
+                      >
+                        <img
+                          src={article.coverImage}
+                          alt={article.title}
+                          loading="lazy"
+                          className="block h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+                        />
+                      </div>
+                    )}
+
+                    <div
+                      className={`flex flex-1 flex-col justify-between px-4 pb-4 ${
+                        article.coverImage ? 'pt-3.5' : 'pt-10'
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <h3
+                          className="line-clamp-3 font-sans text-[14px] font-normal leading-[19.5px] tracking-[-0.015em] group-hover:underline group-hover:underline-offset-[2px]"
+                          style={{ color: palette.ink }}
+                        >
+                          {article.title}
+                        </h3>
+
+                        {article.excerpt && (
+                          <p
+                            className="line-clamp-3 font-sans text-[11px] leading-[16.5px] tracking-[-0.01em] opacity-60"
+                            style={{ color: palette.inkMuted }}
+                          >
+                            {article.excerpt}
+                          </p>
+                        )}
+                      </div>
+
+                      <span
+                        className="self-end font-sans text-[10px] leading-none tracking-[-0.01em]"
+                        style={{ color: palette.inkSoft }}
+                      >
+                        {article.role === 'edited'
+                          ? 'Edited by Adrian'
+                          : '-Adrian'}
+                      </span>
+                    </div>
+                  </article>
+
+                  <span
+                    className="mt-1.5 font-sans text-[10.5px] tracking-[-0.01em]"
+                    style={{ color: palette.inkMuted }}
+                  >
+                    {article.date}
+                  </span>
+                </Link>
+              );
+            })}
+
+              {writingFilter !== 'all' &&
+                articles.filter((a) => a.role === writingFilter).length ===
+                  0 && (
+                  <p
+                    className="col-span-full py-12 font-mono text-[11px] uppercase tracking-[0.08em]"
+                    style={{ color: palette.inkMuted }}
+                  >
+                    Belum ada tulisan di kategori{' '}
+                    {writingFilter === 'edited' ? 'Edited' : 'Written'}. Tandai
+                    di /setting/articles.
+                  </p>
+                )}
+          </div>
+        </section>
+
+        {/* Minimal Swiss Closing CTA (Opens About Page) */}
+        <section
+          aria-label="About and contact prompt"
+          data-art-reveal
+          className="art-reveal mt-28 w-full px-5 sm:px-8 lg:px-10"
+        >
+          <div className="flex flex-col items-start justify-between gap-6 py-10 sm:flex-row sm:items-end">
+            <div className="max-w-[460px] space-y-2">
+              <p
+                className="font-mono text-[10.5px] uppercase tracking-[0.12em]"
+                style={{ color: palette.inkMuted }}
+              >
+                BEHIND THE ARCHIVE
+              </p>
+              <p
+                className="font-sans text-[20px] font-normal leading-[1.3] tracking-[-0.02em] sm:text-[24px]"
+                style={{ color: palette.ink }}
+              >
+                Curious about the process, experience, or working together?
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-5 font-sans text-[13px] uppercase tracking-[0.02em]">
+              <Link
+                href="/art/about"
+                className="underline underline-offset-[4px] transition-opacity hover:opacity-75"
+                style={{ color: palette.accent }}
+              >
+                ABOUT ADRIAN (DRI4N) →
+              </Link>
               <button
                 type="button"
                 onClick={handleCopyEmail}
-                className="underline underline-offset-[2px]"
+                className="cursor-pointer transition-opacity hover:underline hover:underline-offset-[4px]"
+                style={{
+                  color: copiedEmail ? palette.accent : palette.inkMuted,
+                }}
               >
-                {copiedEmail ? 'COPIED!' : emailAddress}
+                {copiedEmail ? 'EMAIL COPIED' : 'COPY EMAIL'}
               </button>
-            </p>
-          </footer>
-        </main>
-      )}
-
-      {/* Minimal Sharp Lightbox for Single Archive Photos */}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div
-            className="relative w-full max-w-[820px] p-2"
-            style={{ backgroundColor: c.bg }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative aspect-[4/3] w-full overflow-hidden">
-              <Image
-                src={lightboxImage.image}
-                alt={lightboxImage.title}
-                fill
-                unoptimized
-                className="object-contain"
-              />
             </div>
-            <div className="mt-2 flex items-center justify-between px-1 uppercase">
-              <span>
-                {lightboxImage.title} | {lightboxImage.category}
-              </span>
-              <button
-                type="button"
-                onClick={() => setLightboxImage(null)}
-                className="underline underline-offset-[2px]"
+          </div>
+        </section>
+
+        {/* Minimal Swiss Footer */}
+        <footer
+          className="mt-20 flex flex-wrap items-center justify-between gap-3 border-t px-2.5 pt-5 font-sans text-[12px] uppercase tracking-[-0.34px] sm:px-3"
+          style={{
+            borderColor: palette.border,
+            color: palette.inkMuted,
+          }}
+        >
+          <span>© {new Date().getFullYear()} ADRIAN (DRI4N)</span>
+          <span>MAKASSAR, ID · CREATIVE ARCHIVE</span>
+        </footer>
+      </main>
+
+      {/* Asymmetric Split Editorial Detail View (Shared by Photostory & Identitas Design 4:5 Grid) */}
+      {activeDetailItem && activeDetailIdx !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Detail view of ${activeDetailItem.title}`}
+          className="fixed inset-x-0 bottom-0 top-[28px] z-40 overflow-y-auto"
+          style={{
+            backgroundColor: palette.bg,
+            color: palette.ink,
+          }}
+        >
+          {/* Floating Top-Right Square Close Button */}
+          <button
+            type="button"
+            onClick={closeDetailSheet}
+            aria-label="Close detail viewer"
+            className="fixed right-2 top-[34px] z-50 flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-none transition-colors"
+            style={{
+              backgroundColor: palette.surface,
+              border: `1px solid ${palette.border}`,
+              color: palette.inkMuted,
+            }}
+          >
+            <X size={14} aria-hidden="true" />
+          </button>
+
+          {/* Asymmetric Split: Compact Left Rail + Full-Bleed Scrollable Multi-Image Right Stack */}
+          <div className="grid w-full grid-cols-1 gap-4 pb-8 pt-1 lg:grid-cols-[205px_1fr] lg:gap-4 xl:grid-cols-[220px_1fr]">
+            {/* Compact Sticky Left Editorial Sidebar */}
+            <aside className="flex flex-col justify-between gap-6 px-2.5 pt-8 lg:sticky lg:top-[10px] lg:self-start lg:min-h-[calc(100vh-44px)] lg:pl-2.5 lg:pr-1">
+              <div className="flex flex-col gap-2.5">
+                <h2
+                  className="font-sans text-[11.5px] font-normal leading-[1.3] tracking-[-0.01em]"
+                  style={{ color: palette.ink }}
+                >
+                  {activeDetailItem.title}
+                </h2>
+
+                {/* Compact Sharp Tag Chips */}
+                <div className="flex flex-wrap items-center gap-1">
+                  {(activeDetailItem.tags && activeDetailItem.tags.length > 0
+                    ? activeDetailItem.tags
+                    : ['ARCHIVE']
+                  ).map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-none px-2 py-1 font-sans text-[9.5px] leading-none uppercase tracking-[0.04em]"
+                      style={{
+                        backgroundColor: palette.surface,
+                        color: palette.inkSoft,
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Compact Editorial Narrative */}
+                <p
+                  className="mt-1 whitespace-pre-line font-sans text-[10.5px] leading-[1.46] tracking-[-0.01em]"
+                  style={{ color: palette.inkSoft }}
+                >
+                  {activeDetailItem.caption}
+                </p>
+              </div>
+
+              {/* Minimal Bottom Item Stepper */}
+              <div
+                className="flex items-center justify-between border-t pt-2.5 font-mono text-[9.5px] uppercase tracking-[0.06em]"
+                style={{
+                  borderColor: palette.border,
+                  color: palette.inkMuted,
+                }}
               >
-                CLOSE
-              </button>
+                <span className="tabular-nums">
+                  {String(activeDetailIdx + 1).padStart(2, '0')} /{' '}
+                  {String(activeDetailList.length).padStart(2, '0')}
+                </span>
+
+                {activeDetailList.length > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => stepDetailSheet(-1)}
+                      aria-label="Previous item"
+                      className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center rounded-none transition-colors"
+                      style={{
+                        backgroundColor: palette.surface,
+                        border: `1px solid ${palette.border}`,
+                        color: palette.ink,
+                      }}
+                    >
+                      <ChevronLeft size={12} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => stepDetailSheet(1)}
+                      aria-label="Next item"
+                      className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center rounded-none transition-colors"
+                      style={{
+                        backgroundColor: palette.surface,
+                        border: `1px solid ${palette.border}`,
+                        color: palette.ink,
+                      }}
+                    >
+                      <ChevronRight size={12} aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            {/* Full-Bleed Scrollable Right Visual Stack (1..N images in exact carousel order) */}
+            <div className="flex w-full flex-col gap-[7px]">
+              {[
+                activeDetailItem.image,
+                ...(activeDetailItem.extraImages || []),
+              ]
+                .filter(Boolean)
+                .map((imgSrc, imgIdx) => (
+                  <div
+                    key={`${activeDetailItem.id}-img-${imgIdx}`}
+                    id={`detail-slide-${imgIdx}`}
+                    className="w-full overflow-hidden rounded-none"
+                    style={{ backgroundColor: palette.surface }}
+                  >
+                    <img
+                      src={imgSrc}
+                      alt={`${activeDetailItem.title} frame ${imgIdx + 1}`}
+                      loading={imgIdx <= targetSlideIdx + 1 ? 'eager' : 'lazy'}
+                      className="block h-auto w-full object-cover"
+                    />
+                  </div>
+                ))}
             </div>
           </div>
         </div>

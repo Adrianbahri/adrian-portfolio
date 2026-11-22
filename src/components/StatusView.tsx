@@ -98,7 +98,7 @@ export default function StatusView({ code, onReset }: StatusViewProps) {
                 href="/art"
                 className="underline-offset-[3px] hover:underline"
               >
-                ©ADRIAN BAHRI
+                ©ADRIAN
               </Link>
               <button
                 type="button"

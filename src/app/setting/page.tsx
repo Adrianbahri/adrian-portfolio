@@ -25,7 +25,7 @@ import { cn, purgeSystemCache } from '@/lib/utils';
 import { invalidateSiteSettingsCache } from '@/hooks/useSiteSettings';
 import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
 
-const DEFAULT_BIO_BEFORE = `Hey there, I'm Adrian Bahri (Dri4n)
+const DEFAULT_BIO_BEFORE = `Hey there, I'm Adrian (Dri4n)
 a creative technologist & full-stack developer based in [strike:labs, late-night commits,] Makassar
 
 By day I build digital systems & data workflows at [blue:PK Identitas Unhas], and modernize web platforms as an intern at [orange:UKK Sains Unhas].
@@ -219,7 +219,7 @@ export default function SettingOverviewPage() {
         if (settingsMap.bio_before_cut !== undefined) {
           setBioBefore(settingsMap.bio_before_cut);
         } else if (settingsMap.hero_greeting || settingsMap.hero_bio_1) {
-          const g = settingsMap.hero_greeting || "Hey there, I'm Adrian Bahri (Dri4n)";
+          const g = settingsMap.hero_greeting || "Hey there, I'm Adrian (Dri4n)";
           const sub =
             settingsMap.hero_subtitle ||
             'a creative technologist & full-stack developer based in';

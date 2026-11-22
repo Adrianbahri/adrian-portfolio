@@ -345,6 +345,104 @@ export default function AdminArticles() {
                 <textarea rows={4} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e] resize-none" />
               </div>
               <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+                  Target Mode Portofolio
+                </label>
+                {(() => {
+                  const tagList = formData.tags
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+                  const isCreative = tagList.some(
+                    (t) => t.toLowerCase() === 'creative'
+                  );
+                  const setMode = (nextCreative: boolean) => {
+                    const cleaned = tagList.filter(
+                      (t) => t.toLowerCase() !== 'creative'
+                    );
+                    if (nextCreative) cleaned.push('CREATIVE');
+                    setFormData({ ...formData, tags: cleaned.join(', ') });
+                  };
+                  return (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setMode(false)}
+                        className={`cursor-pointer rounded-md border px-3 py-2 text-xs font-semibold transition-all ${
+                          !isCreative
+                            ? 'border-[#3ecf8e] bg-[#3ecf8e]/15 text-[#3ecf8e]'
+                            : 'border-[#2e2e2e] bg-[#1c1c1c] text-[#8a8a8a] hover:text-[#ededed]'
+                        }`}
+                      >
+                        Dev Mode (/ &amp; /blog)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMode(true)}
+                        className={`cursor-pointer rounded-md border px-3 py-2 text-xs font-semibold transition-all ${
+                          isCreative
+                            ? 'border-[#f59e0b] bg-[#f59e0b]/15 text-[#f59e0b]'
+                            : 'border-[#2e2e2e] bg-[#1c1c1c] text-[#8a8a8a] hover:text-[#ededed]'
+                        }`}
+                      >
+                        Creative Mode (/art#writing)
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+                  Peran di /art#writing
+                </label>
+                {(() => {
+                  const tagList = formData.tags
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+                  const isEdited = tagList.some(
+                    (t) =>
+                      t.toLowerCase() === 'edited' ||
+                      t.toLowerCase() === 'editor'
+                  );
+                  const setRole = (nextEdited: boolean) => {
+                    const cleaned = tagList.filter(
+                      (t) =>
+                        t.toLowerCase() !== 'edited' &&
+                        t.toLowerCase() !== 'editor'
+                    );
+                    if (nextEdited) cleaned.push('EDITED');
+                    setFormData({ ...formData, tags: cleaned.join(', ') });
+                  };
+                  return (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRole(false)}
+                        className={`cursor-pointer rounded-md border px-3 py-2 text-xs font-semibold transition-all ${
+                          !isEdited
+                            ? 'border-[#3ecf8e] bg-[#3ecf8e]/15 text-[#3ecf8e]'
+                            : 'border-[#2e2e2e] bg-[#1c1c1c] text-[#8a8a8a] hover:text-[#ededed]'
+                        }`}
+                      >
+                        Ditulis Sendiri (Written)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRole(true)}
+                        className={`cursor-pointer rounded-md border px-3 py-2 text-xs font-semibold transition-all ${
+                          isEdited
+                            ? 'border-[#f59e0b] bg-[#f59e0b]/15 text-[#f59e0b]'
+                            : 'border-[#2e2e2e] bg-[#1c1c1c] text-[#8a8a8a] hover:text-[#ededed]'
+                        }`}
+                      >
+                        Diedit / Disunting (Edited)
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">Tags (Comma separated)</label>
                 <input type="text" placeholder="e.g. FLUTTER, MOBILE, TECH" value={formData.tags} onChange={(e) => setFormData({...formData, tags: e.target.value})} className="w-full bg-[#1c1c1c] border border-[#2e2e2e] rounded-md px-3 py-2 text-[14px] text-[#ededed] focus:outline-none focus:border-[#3ecf8e]" />
               </div>

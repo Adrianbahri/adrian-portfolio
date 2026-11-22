@@ -3,7 +3,7 @@ import FeaturedWork from '@/components/FeaturedWork';
 import BentoTechStack from '@/components/BentoTechStack';
 
 const title = 'Creative Portfolio';
-const description = 'Visual storytelling by Adrian Bahri: digital design, editorial work, motion, video, and photography. Discover the creative side of DRI4N.';
+const description = 'Visual storytelling by Adrian: digital design, editorial work, motion, video, and photography. Discover the creative side of DRI4N.';
 export const metadata: Metadata = {
   title, description,
   alternates: { canonical: '/creative' },

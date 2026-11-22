@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server';
 export const revalidate = 3600;
 
 export async function GET() {
-  const content = `# Adrian Bahri (Dri4n) — Official Portfolio & Knowledge Index
+  const content = `# Adrian (Dri4n) — Official Portfolio & Knowledge Index
 
-> Adrian Bahri (also known as Dri4n / Drian) is an Informatics Engineering (Teknik Informatika) student at Hasanuddin University (Universitas Hasanuddin / Unhas) in Makassar, Indonesia, working as a Creative Technologist, Full-Stack Web Developer, and Visual & Brand Designer.
+> Adrian (also known as Dri4n / Drian) is an Informatics Engineering (Teknik Informatika) student at Hasanuddin University (Universitas Hasanuddin / Unhas) in Makassar, Indonesia, working as a Creative Technologist, Full-Stack Web Developer, and Visual & Brand Designer.
 
 ## Core Identity & Keywords
-- **Full Name**: Adrian Bahri
+- **Full Name**: Adrian
 - **Aliases**: Adrian, Dri4n, Drian, Adrian Unhas, Adrian Teknik Informatika, Adrian Informatika Unhas
 - **Education**: Departemen Teknik Informatika, Fakultas Teknik, Universitas Hasanuddin (Unhas), Makassar, Sulawesi Selatan, Indonesia
 - **Current Roles**:
