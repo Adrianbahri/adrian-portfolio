@@ -224,10 +224,21 @@ function formatShortDate(iso?: string): string {
     .replace(/\//g, '.');
 }
 
+interface CommunityActivityItem {
+  id: string;
+  kind: 'organization' | 'volunteering';
+  title: string;
+  company: string;
+  timeline: string;
+  location?: string;
+  description: string;
+}
+
 let devMemCache: {
   projects?: DevProject[];
   experiences?: ExperienceTicket[];
   achievements?: AchievementItem[];
+  activities?: CommunityActivityItem[];
   articles?: ArticleItem[];
   artSlides?: { id: string; label: string; image: string }[];
 } | null = null;
@@ -317,6 +328,12 @@ export default function DevPortfolioView({
   };
   // Active Timeline Role, Pinch-to-Zoom, Competition Accordion, Resume Book & Copy
   const [expandedExpId, setExpandedExpId] = useState<string | null>(null);
+  const [activityFilter, setActivityFilter] = useState<
+    'all' | 'organization' | 'volunteering'
+  >('all');
+  const [expandedActivityId, setExpandedActivityId] = useState<string | null>(
+    null
+  );
   const [timelineZoom, setTimelineZoom] = useState<number>(1);
   const [isPinchingTimeline, setIsPinchingTimeline] = useState(false);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
@@ -401,6 +418,9 @@ export default function DevPortfolioView({
   );
   const [achievements, setAchievements] = useState<AchievementItem[]>(
     () => devMemCache?.achievements || fallbackAchievements
+  );
+  const [activities, setActivities] = useState<CommunityActivityItem[]>(
+    () => devMemCache?.activities || []
   );
   const [articles, setArticles] = useState<ArticleItem[]>(
     () => devMemCache?.articles || fallbackArticles
@@ -623,30 +643,45 @@ export default function DevPortfolioView({
 
     async function loadDevData() {
       try {
-        const [projectsRes, articlesRes, expRes, achRes, galleryRes] =
-          await Promise.all([
-            supabase
-              .from('projects')
-              .select('*')
-              .order('created_at', { ascending: false }),
-            supabase
-              .from('articles')
-              .select('*')
-              .order('created_at', { ascending: false }),
-            supabase
-              .from('experiences')
-              .select('*')
-              .order('created_at', { ascending: false }),
-            supabase
-              .from('achievements')
-              .select('*')
-              .order('created_at', { ascending: false }),
-            supabase
-              .from('gallery')
-              .select('*')
-              .order('created_at', { ascending: false })
-              .limit(8),
-          ]);
+        const [
+          projectsRes,
+          articlesRes,
+          expRes,
+          achRes,
+          galleryRes,
+          orgsRes,
+          volsRes,
+        ] = await Promise.all([
+          supabase
+            .from('projects')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('articles')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('experiences')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('achievements')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('gallery')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(8),
+          supabase
+            .from('organizations')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('volunteers')
+            .select('*')
+            .order('created_at', { ascending: false }),
+        ]);
 
         const nextCache: NonNullable<typeof devMemCache> = {};
 
@@ -765,6 +800,56 @@ export default function DevPortfolioView({
           );
           setAchievements(sortedAch);
           nextCache.achievements = sortedAch;
+        }
+
+        const rawOrgs = Array.isArray(orgsRes.data) ? orgsRes.data : [];
+        const rawVols = Array.isArray(volsRes.data) ? volsRes.data : [];
+        if (rawOrgs.length > 0 || rawVols.length > 0) {
+          const dedupMap = new Map<string, CommunityActivityItem>();
+          const pushItem = (
+            row: any,
+            kind: 'organization' | 'volunteering'
+          ) => {
+            const title = String(row.title || '').trim();
+            const company = String(row.company || '').trim();
+            if (!title) return;
+            const normKey = `${kind}:${title.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+            const cleanDesc = String(row.description || '')
+              .replace(/<[^>]+>/g, '')
+              .replace(/<!--[\s\S]*?-->/g, '')
+              .trim();
+            const loc = String(row.location || '').trim();
+            const existing = dedupMap.get(normKey);
+            if (!existing) {
+              dedupMap.set(normKey, {
+                id: `${kind}-${row.id}`,
+                kind,
+                title,
+                company,
+                timeline: String(row.timeline || '2025').trim(),
+                location: loc || undefined,
+                description: cleanDesc,
+              });
+            } else if (!existing.location && loc) {
+              existing.location = loc;
+            }
+          };
+
+          rawOrgs.forEach((r: any) => pushItem(r, 'organization'));
+          rawVols.forEach((r: any) => pushItem(r, 'volunteering'));
+
+          const scoreTimeline = (t: string) => {
+            const up = t.toUpperCase();
+            if (up.includes('NOW') || up.includes('PRESENT')) return 9999;
+            const years = up.match(/20\d{2}/g);
+            return years ? Math.max(...years.map(Number)) : 2020;
+          };
+
+          const mergedActivities = Array.from(dedupMap.values()).sort(
+            (a, b) => scoreTimeline(b.timeline) - scoreTimeline(a.timeline)
+          );
+          setActivities(mergedActivities);
+          nextCache.activities = mergedActivities;
         }
 
         if (Object.keys(nextCache).length > 0) {
@@ -2901,6 +2986,210 @@ export default function DevPortfolioView({
                                   </div>
                                 </div>
                               </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* 1.5. ORGANIZATIONS & VOLUNTEERING (Interactive Filterable Bento Cards) */}
+                  {activities.length > 0 && (() => {
+                    const orgCount = activities.filter(
+                      (a) => a.kind === 'organization'
+                    ).length;
+                    const volCount = activities.filter(
+                      (a) => a.kind === 'volunteering'
+                    ).length;
+                    const visibleActivities =
+                      activityFilter === 'all'
+                        ? activities
+                        : activities.filter((a) => a.kind === activityFilter);
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <p
+                              className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                              style={{ color: 'var(--art-ink-muted)' }}
+                            >
+                              Organizations &amp; Volunteering (
+                              {visibleActivities.length})
+                            </p>
+                          </div>
+
+                          {/* Interactive Segmented Filter Pills */}
+                          <div
+                            role="tablist"
+                            aria-label="Filter activities"
+                            className="inline-flex items-center gap-1 rounded-full p-1"
+                            style={{
+                              backgroundColor: 'var(--art-tile)',
+                              border: '1px solid var(--art-line)',
+                            }}
+                          >
+                            {(
+                              [
+                                ['all', `All · ${activities.length}`],
+                                ['organization', `Org · ${orgCount}`],
+                                ['volunteering', `Volunteer · ${volCount}`],
+                              ] as const
+                            ).map(([key, label]) => {
+                              const active = activityFilter === key;
+                              return (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  role="tab"
+                                  aria-selected={active}
+                                  onClick={() => {
+                                    setActivityFilter(key);
+                                    setExpandedActivityId(null);
+                                  }}
+                                  className="rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] transition-all duration-200"
+                                  style={{
+                                    backgroundColor: active
+                                      ? 'var(--art-marker)'
+                                      : 'transparent',
+                                    color: active
+                                      ? '#ffffff'
+                                      : 'var(--art-ink-muted)',
+                                  }}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {visibleActivities.map((act) => {
+                            const isOpen = expandedActivityId === act.id;
+                            const isActiveNow = act.timeline
+                              .toUpperCase()
+                              .includes('NOW');
+                            const isVolunteer = act.kind === 'volunteering';
+
+                            return (
+                              <button
+                                key={act.id}
+                                type="button"
+                                onClick={() =>
+                                  setExpandedActivityId((cur) =>
+                                    cur === act.id ? null : act.id
+                                  )
+                                }
+                                aria-expanded={isOpen}
+                                className="group flex flex-col justify-between rounded-[12px] p-4 text-left transition-all duration-200 hover:-translate-y-[1px]"
+                                style={{
+                                  backgroundColor: 'var(--art-tile)',
+                                  border: isOpen
+                                    ? '1px solid var(--art-marker)'
+                                    : '1px solid var(--art-line)',
+                                }}
+                              >
+                                <div className="w-full space-y-2.5">
+                                  {/* Top Meta Row: Type Badge + Active/Timeline Pill */}
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span
+                                      className="inline-flex items-center gap-1.5 rounded-[5px] px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.1em]"
+                                      style={{
+                                        backgroundColor: isVolunteer
+                                          ? 'var(--art-marker-tint)'
+                                          : 'var(--art-ground)',
+                                        color: isVolunteer
+                                          ? 'var(--art-marker-text)'
+                                          : 'var(--art-ink-soft)',
+                                        border: isVolunteer
+                                          ? '1px solid var(--art-marker)'
+                                          : '1px solid var(--art-line)',
+                                      }}
+                                    >
+                                      {isVolunteer ? 'VOLUNTEER' : 'ORG'}
+                                    </span>
+
+                                    <span
+                                      className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.04em]"
+                                      style={{
+                                        color: isActiveNow
+                                          ? 'var(--art-marker-text)'
+                                          : 'var(--art-ink-muted)',
+                                      }}
+                                    >
+                                      {isActiveNow && (
+                                        <span
+                                          className="h-1.5 w-1.5 rounded-full animate-pulse"
+                                          style={{
+                                            backgroundColor: 'var(--art-marker)',
+                                          }}
+                                        />
+                                      )}
+                                      {act.timeline}
+                                    </span>
+                                  </div>
+
+                                  {/* Role & Organization Title + Expand Indicator */}
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <div className="min-w-0">
+                                      <h3
+                                        className="text-[14px] font-medium leading-[1.3]"
+                                        style={{ color: 'var(--art-ink)' }}
+                                      >
+                                        {act.title}
+                                      </h3>
+                                      <p
+                                        className="mt-0.5 text-[12.5px]"
+                                        style={{ color: 'var(--art-ink-muted)' }}
+                                      >
+                                        {act.company}
+                                        {act.location
+                                          ? ` · ${act.location}`
+                                          : ''}
+                                      </p>
+                                    </div>
+                                    <span
+                                      className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors"
+                                      style={{
+                                        backgroundColor: isOpen
+                                          ? 'var(--art-ink)'
+                                          : 'var(--art-ground)',
+                                        color: isOpen
+                                          ? 'var(--art-ground)'
+                                          : 'var(--art-ink-muted)',
+                                        border: '1px solid var(--art-line)',
+                                      }}
+                                    >
+                                      {isOpen ? (
+                                        <Minus size={11} />
+                                      ) : (
+                                        <Plus size={11} />
+                                      )}
+                                    </span>
+                                  </div>
+
+                                  {/* Smooth Expandable Impact Description */}
+                                  <div
+                                    className="dev-accordion"
+                                    data-open={isOpen ? 'true' : 'false'}
+                                  >
+                                    <div className="dev-accordion-inner">
+                                      {act.description && (
+                                        <p
+                                          className="mt-2 border-t pt-2.5 text-[13px] leading-[1.6]"
+                                          style={{
+                                            borderColor: 'var(--art-line)',
+                                            color: 'var(--art-ink-soft)',
+                                          }}
+                                        >
+                                          {act.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
                             );
                           })}
                         </div>
