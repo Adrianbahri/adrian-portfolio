@@ -1348,13 +1348,16 @@ export default function ArtSiteView({
               </a>
             </div>
 
-            {/* Bottom-Right Column: Branding Philosophy Statement (Constant across both orgs) */}
-            <div className="flex max-w-[340px] flex-col lg:col-span-4 lg:ml-auto lg:self-end lg:pb-12">
+            {/* Bottom-Right Column: Branding Philosophy Statement (Per-account or shared fallback) */}
+            <div
+              key={`org-right-${activeOrg}`}
+              className="flex max-w-[340px] flex-col animate-in fade-in duration-300 lg:col-span-4 lg:ml-auto lg:self-end lg:pb-12"
+            >
               <p
                 className="font-sans text-[15px] leading-[1.55] tracking-[-0.01em]"
                 style={{ color: palette.inkSoft }}
               >
-                {orgBranding.rightStatement}
+                {activeOrgData.rightStatement || orgBranding.rightStatement}
               </p>
             </div>
           </div>

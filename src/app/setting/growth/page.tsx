@@ -372,11 +372,46 @@ export default function AdminSocialGrowthPage() {
         </div>
       )}
 
+      {/* Quick Jump Bar for All /art Creative Rows */}
+      <nav
+        aria-label="Jump to Creative Mode sections"
+        className="flex flex-wrap items-center gap-2 rounded-[8px] border border-[#262626] bg-[#141414] p-2.5 font-mono text-[11px] uppercase tracking-wider"
+      >
+        <span className="px-2 text-[#737373]">Lompat ke:</span>
+        <a
+          href="#admin-baris-2"
+          className="rounded border border-[#2e2e2e] bg-[#1c1c1c] px-2.5 py-1 text-[#ededed] hover:border-[#f59e0b]"
+        >
+          Baris 2 · SulawesiPos
+        </a>
+        <a
+          href="#admin-baris-3"
+          className="rounded border border-[#2e2e2e] bg-[#1c1c1c] px-2.5 py-1 text-[#ededed] hover:border-[#f59e0b]"
+        >
+          Baris 3 · Arjuna &amp; KKNT
+        </a>
+        <a
+          href="#admin-baris-4"
+          className="rounded border border-[#2e2e2e] bg-[#1c1c1c] px-2.5 py-1 text-[#ededed] hover:border-[#f59e0b]"
+        >
+          Baris 4 · Identitas Unhas
+        </a>
+        <a
+          href="#admin-baris-5"
+          className="rounded border border-[#2e2e2e] bg-[#1c1c1c] px-2.5 py-1 text-[#ededed] hover:border-[#f59e0b]"
+        >
+          Baris 5 · Print &amp; Objects
+        </a>
+      </nav>
+
       {/* Baris 2 Showcase Editor (/art#media-production — YouTube & TikTok) */}
       {(() => {
         const active = showcase.platforms[activeTab];
         return (
-          <section className="rounded-[10px] border border-[#2a2a2a] bg-[#161616] p-5 space-y-5">
+          <section
+            id="admin-baris-2"
+            className="scroll-mt-6 rounded-[10px] border border-[#2a2a2a] bg-[#161616] p-5 space-y-5"
+          >
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#262626] pb-3.5">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#f59e0b]">
@@ -649,7 +684,10 @@ export default function AdminSocialGrowthPage() {
       {(() => {
         const activeOrg = orgBranding.accounts[activeOrgTab];
         return (
-          <section className="rounded-[10px] border border-[#2a2a2a] bg-[#161616] p-5 space-y-5">
+          <section
+            id="admin-baris-3"
+            className="scroll-mt-6 rounded-[10px] border border-[#2a2a2a] bg-[#161616] p-5 space-y-5"
+          >
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#262626] pb-3.5">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#f59e0b]">
@@ -707,6 +745,19 @@ export default function AdminSocialGrowthPage() {
                 >
                   Pilih dari Library
                 </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded bg-[#f59e0b] px-3.5 py-1.5 text-xs font-semibold text-[#111111] hover:bg-[#fbbf24] disabled:opacity-60"
+                >
+                  {saving ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Save size={13} />
+                  )}
+                  <span>{saving ? 'Menyimpan...' : 'Simpan Baris 3'}</span>
+                </button>
               </div>
             </div>
 
@@ -737,10 +788,27 @@ export default function AdminSocialGrowthPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-[#8a8a8a]">
-                      Handle / Nama Akun ({activeOrg.tabLabel})
+                      Nama Tab (Atas Foto)
+                    </label>
+                    <input
+                      type="text"
+                      value={activeOrg.tabLabel}
+                      onChange={(e) =>
+                        updateOrgAccount(activeOrgTab, {
+                          tabLabel: e.target.value,
+                        })
+                      }
+                      placeholder="Arjuna UH"
+                      className="w-full rounded border border-[#2a2a2a] bg-[#101010] px-3 py-2 text-xs text-[#ededed] focus:border-[#f59e0b] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-[#8a8a8a]">
+                      Nama / Handle Kiri
                     </label>
                     <input
                       type="text"
@@ -757,7 +825,7 @@ export default function AdminSocialGrowthPage() {
 
                   <div>
                     <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-[#8a8a8a]">
-                      Link Instagram Saat Kotak Diklik
+                      Link Tujuan Saat Foto Diklik
                     </label>
                     <input
                       type="url"
@@ -771,6 +839,23 @@ export default function AdminSocialGrowthPage() {
                       className="w-full rounded border border-[#2a2a2a] bg-[#101010] px-3 py-2 text-xs text-[#ededed] focus:border-[#f59e0b] focus:outline-none"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-[#8a8a8a]">
+                    URL Foto / Video ({activeOrg.tabLabel})
+                  </label>
+                  <input
+                    type="text"
+                    value={activeOrg.mediaUrl || ''}
+                    onChange={(e) =>
+                      updateOrgAccount(activeOrgTab, {
+                        mediaUrl: e.target.value,
+                      })
+                    }
+                    placeholder="/api/assets/growth/... atau https://..."
+                    className="w-full rounded border border-[#2a2a2a] bg-[#101010] px-3 py-2 font-mono text-[11px] text-[#a3a3a3] focus:border-[#f59e0b] focus:outline-none"
+                  />
                 </div>
 
                 <div>
@@ -791,16 +876,17 @@ export default function AdminSocialGrowthPage() {
 
                 <div>
                   <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-[#8a8a8a]">
-                    Statement Branding Kanan Bawah (Tetap untuk Semua Akun)
+                    Deskripsi Kanan Bawah ({activeOrg.tabLabel})
                   </label>
                   <textarea
                     rows={2}
-                    value={orgBranding.rightStatement}
+                    value={
+                      activeOrg.rightStatement ?? orgBranding.rightStatement
+                    }
                     onChange={(e) =>
-                      setOrgBranding((prev) => ({
-                        ...prev,
+                      updateOrgAccount(activeOrgTab, {
                         rightStatement: e.target.value,
-                      }))
+                      })
                     }
                     className="w-full rounded border border-[#2a2a2a] bg-[#101010] px-3 py-2 text-xs leading-relaxed text-[#ededed] focus:border-[#f59e0b] focus:outline-none"
                   />
@@ -812,10 +898,14 @@ export default function AdminSocialGrowthPage() {
       })()}
 
       {/* Baris 4 Showcase Editor (/art#identitas-unhas — Videos / Design 4:5 / Documenter) */}
-      <IdentitasAdminEditor />
+      <div id="admin-baris-4" className="scroll-mt-6">
+        <IdentitasAdminEditor />
+      </div>
 
       {/* Baris 5 Showcase Editor (/art#print-works — Magazine / Infographic / Product) */}
-      <PrintAdminEditor />
+      <div id="admin-baris-5" className="scroll-mt-6">
+        <PrintAdminEditor />
+      </div>
 
       <div className="space-y-4">
         {items.map((item, idx) => (

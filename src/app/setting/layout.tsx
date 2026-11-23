@@ -127,11 +127,11 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   ];
 
   const creativeLinks: AdminNavLink[] = [
+    { name: 'Photography (HQ)', href: '/setting/gallery', icon: ImageIcon },
+    { name: 'Creative Showcase (/art)', href: '/setting/growth', icon: TrendingUp },
     { name: 'Design Projects', href: '/setting/designs', icon: Palette },
     { name: 'Print & Infografis', href: '/setting/magazines', icon: BookOpen },
     { name: 'Video & Motion', href: '/setting/videos', icon: Video },
-    { name: 'Photography (HQ)', href: '/setting/gallery', icon: ImageIcon },
-    { name: 'Social Media Growth', href: '/setting/growth', icon: TrendingUp },
     { name: 'Creative Spotlight', href: '/setting/creative', icon: Sparkles },
   ];
 

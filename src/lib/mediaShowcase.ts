@@ -136,6 +136,7 @@ export interface OrgBrandingAccount {
   tabLabel: string;
   handle: string;
   leftDescription: string;
+  rightStatement?: string;
   mediaUrl: string;
   instagramUrl: string;
 }

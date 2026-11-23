@@ -1899,7 +1899,7 @@ export default function DevPortfolioView({
                       opacity:
                         isHoveringCut || isDraggingCut || isAutoCutting || cutProgress > 0
                           ? 1
-                          : 0.72,
+                          : 0,
                       transform: `translate(-50%, -50%) scale(${
                         isDraggingCut || isAutoCutting ? 1.15 : 1
                       }) rotate(${
@@ -4023,6 +4023,156 @@ export default function DevPortfolioView({
                       </p>
                     </div>
                   </div>
+
+                  {/* Selected Tech Stack Projects Inspector (Docked cleanly under Activity — zero grid distortion) */}
+                  {(() => {
+                    if (!selectedToolName) return null;
+                    const selectedTool = techStack.find(
+                      (t) => t.name === selectedToolName
+                    );
+                    if (!selectedTool) return null;
+                    const toolProjects = selectedTool.projects ?? [];
+                    const pct = selectedTool.usage ?? 75;
+                    return (
+                      <div
+                        key={selectedTool.name}
+                        className="mt-5 rounded-[12px] p-3.5 animate-in fade-in duration-200"
+                        style={{
+                          backgroundColor: 'var(--art-paper-raised)',
+                          border: '1px solid var(--art-marker)',
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className="flex h-7 w-7 shrink-0 items-center justify-center text-[17px]"
+                              style={{ color: 'var(--art-marker-text)' }}
+                            >
+                              <selectedTool.icon />
+                            </span>
+                            <div className="min-w-0">
+                              <p
+                                className="truncate text-[13px] font-medium leading-tight"
+                                style={{ color: 'var(--art-ink)' }}
+                              >
+                                {selectedTool.name}
+                              </p>
+                              <p
+                                className="mt-0.5 font-mono text-[10px] tabular-nums"
+                                style={{ color: 'var(--art-marker-text)' }}
+                              >
+                                {pct}% USAGE
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedToolName(null)}
+                            aria-label="Close tech stack projects"
+                            className="cursor-pointer rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] uppercase transition-opacity hover:opacity-80"
+                            style={{
+                              color: 'var(--art-ink-muted)',
+                              border: '1px solid var(--art-line)',
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        {selectedTool.role && (
+                          <p
+                            className="mt-2 text-[11px] leading-relaxed"
+                            style={{ color: 'var(--art-ink-muted)' }}
+                          >
+                            {selectedTool.role}
+                          </p>
+                        )}
+
+                        {toolProjects.length > 0 ? (
+                          <div
+                            className="mt-3 space-y-1.5 border-t border-dashed pt-2.5"
+                            style={{
+                              borderColor: 'var(--art-hairline-strong)',
+                            }}
+                          >
+                            <p
+                              className="font-mono text-[9px] uppercase tracking-[0.12em]"
+                              style={{ color: 'var(--art-ink-muted)' }}
+                            >
+                              USED IN ({toolProjects.length})
+                            </p>
+                            <ul className="space-y-1">
+                              {toolProjects.map((proj) => (
+                                <li key={proj.title}>
+                                  {proj.href ? (
+                                    <a
+                                      href={proj.href}
+                                      target={
+                                        proj.href.startsWith('http')
+                                          ? '_blank'
+                                          : undefined
+                                      }
+                                      rel={
+                                        proj.href.startsWith('http')
+                                          ? 'noopener noreferrer'
+                                          : undefined
+                                      }
+                                      className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1 text-[11px] transition-colors hover:bg-black/10"
+                                    >
+                                      <span
+                                        className="dev-hover-title truncate font-medium"
+                                        style={{ color: 'var(--art-ink)' }}
+                                      >
+                                        {proj.title}
+                                      </span>
+                                      <span
+                                        className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.08em]"
+                                        style={{
+                                          color: 'var(--art-marker-text)',
+                                        }}
+                                      >
+                                        {proj.tag} ↗
+                                      </span>
+                                    </a>
+                                  ) : (
+                                    <div className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1 text-[11px]">
+                                      <span
+                                        className="truncate"
+                                        style={{
+                                          color: 'var(--art-ink-soft)',
+                                        }}
+                                      >
+                                        {proj.title}
+                                      </span>
+                                      <span
+                                        className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.08em]"
+                                        style={{
+                                          color: 'var(--art-ink-muted)',
+                                        }}
+                                      >
+                                        {proj.tag}
+                                      </span>
+                                    </div>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <p
+                            className="mt-3 border-t border-dashed pt-2.5 font-mono text-[10px]"
+                            style={{
+                              borderColor: 'var(--art-hairline-strong)',
+                              color: 'var(--art-ink-muted)',
+                            }}
+                          >
+                            Core workflow tool across active projects.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </aside>
 
                 <div className="max-w-[720px] flex-1 space-y-10">
@@ -4268,99 +4418,6 @@ export default function DevPortfolioView({
                                       />
                                     </div>
                                   </button>
-
-                                  {/* Expandable Project List Drawer on Click */}
-                                  {toolProjects.length > 0 && (
-                                    <div
-                                      className="dev-accordion"
-                                      data-open={isOpen ? 'true' : 'false'}
-                                      aria-hidden={!isOpen}
-                                    >
-                                      <div className="dev-accordion-inner">
-                                        <div
-                                          className="mt-3 space-y-1.5 border-t border-dashed pt-2.5"
-                                          style={{
-                                            borderColor:
-                                              'var(--art-hairline-strong)',
-                                          }}
-                                        >
-                                          <p
-                                            className="font-mono text-[9px] uppercase tracking-[0.12em]"
-                                            style={{
-                                              color: 'var(--art-ink-muted)',
-                                            }}
-                                          >
-                                            USED IN ({toolProjects.length})
-                                          </p>
-                                          <ul className="space-y-1">
-                                            {toolProjects.map((proj) => (
-                                              <li key={proj.title}>
-                                                {proj.href ? (
-                                                  <a
-                                                    href={proj.href}
-                                                    target={
-                                                      proj.href.startsWith(
-                                                        'http'
-                                                      )
-                                                        ? '_blank'
-                                                        : undefined
-                                                    }
-                                                    rel={
-                                                      proj.href.startsWith(
-                                                        'http'
-                                                      )
-                                                        ? 'noopener noreferrer'
-                                                        : undefined
-                                                    }
-                                                    className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1 text-[11px] transition-colors hover:bg-black/10"
-                                                  >
-                                                    <span
-                                                      className="dev-hover-title truncate font-medium"
-                                                      style={{
-                                                        color: 'var(--art-ink)',
-                                                      }}
-                                                    >
-                                                      {proj.title}
-                                                    </span>
-                                                    <span
-                                                      className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.08em]"
-                                                      style={{
-                                                        color:
-                                                          'var(--art-marker-text)',
-                                                      }}
-                                                    >
-                                                      {proj.tag} ↗
-                                                    </span>
-                                                  </a>
-                                                ) : (
-                                                  <div className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1 text-[11px]">
-                                                    <span
-                                                      className="truncate"
-                                                      style={{
-                                                        color:
-                                                          'var(--art-ink-soft)',
-                                                      }}
-                                                    >
-                                                      {proj.title}
-                                                    </span>
-                                                    <span
-                                                      className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.08em]"
-                                                      style={{
-                                                        color:
-                                                          'var(--art-ink-muted)',
-                                                      }}
-                                                    >
-                                                      {proj.tag}
-                                                    </span>
-                                                  </div>
-                                                )}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
                                 </div>
                               );
                             })}
