@@ -11,33 +11,12 @@ import {
   subscribeThemeStorage,
 } from '@/lib/themeTransition';
 import { navigateWithCirclePortal } from '@/lib/portalTransition';
+import {
+  parseArtAboutConfig,
+  type ArtAboutExperienceItem,
+} from '@/lib/artAbout';
 
-export interface ArtAboutExperience {
-  id: string;
-  company: string;
-  role: string;
-  period: string;
-  description?: string | null;
-}
-
-const FALLBACK_EXPERIENCES: ArtAboutExperience[] = [
-  {
-    id: 'exp-sp',
-    company: 'SULAWESIPOS.COM (JAWA POS GROUP)',
-    role: 'MEDIA PRODUCTION & CONTENT PRODUCER',
-    period: '2026 - NOW',
-    description:
-      'DAILY DIGITAL VIDEO PRODUCTION, SHORT-FORM NEWS PACKAGING, AND AUDIENCE GROWTH ACROSS TIKTOK AND YOUTUBE.',
-  },
-  {
-    id: 'exp-id',
-    company: 'PK IDENTITAS UNHAS',
-    role: 'RESEARCH, DATA & VISUAL EDITORIAL',
-    period: '2025 - NOW',
-    description:
-      'DATA JOURNALISM INFOGRAPHICS, PRINT MAGAZINE LAYOUTS, CAMPUS DOCUMENTARIES, AND DIGITAL PUBLISHING SYSTEMS.',
-  },
-];
+export type ArtAboutExperience = ArtAboutExperienceItem;
 
 export default function ArtAboutView({
   initialSettings,
@@ -51,8 +30,12 @@ export default function ArtAboutView({
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const experiences =
-    initialExperiences.length > 0 ? initialExperiences : FALLBACK_EXPERIENCES;
+  const aboutConfig = parseArtAboutConfig(
+    settings.art_about_config,
+    settings,
+    initialExperiences
+  );
+  const experiences = aboutConfig.experiences;
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
@@ -76,7 +59,8 @@ export default function ArtAboutView({
     }, e);
   };
 
-  const emailAddress = settings.email_address || 'adrianbahri87@gmail.com';
+  const emailAddress =
+    aboutConfig.email || settings.email_address || 'adrianbahri87@gmail.com';
   const handleCopyEmail = async () => {
     try {
       await navigator.clipboard.writeText(emailAddress);
@@ -225,17 +209,15 @@ export default function ArtAboutView({
             WHO AM I
           </div>
           <div className="max-w-[475px] space-y-4">
-            <p>
-              I&apos;M ADRIAN (DRI4N), A CREATIVE TECHNOLOGIST &amp;
-              VISUAL DESIGNER BASED IN MAKASSAR, INDONESIA. MY WORK IS ROOTED IN
-              BRANDING, EDITORIAL LAYOUTS, MOTION DIRECTION, AND DIGITAL SYSTEMS
-              WITH A FOCUS ON TRANSLATING IDEAS INTO CLEAR FORM.
-            </p>
-            <p style={{ color: palette.inkSoft }}>
-              ALONGSIDE ENGINEERING FULL-STACK PLATFORMS, I MAINTAIN AN
-              INDEPENDENT VISUAL PRACTICE DRIVEN BY CURIOSITY: EXPLORING PRINT,
-              FILM, PHOTOGRAPHY, SOCIAL GROWTH, AND GRAPHIC IDENTITY.
-            </p>
+            <p className="whitespace-pre-line">{aboutConfig.bioPrimary}</p>
+            {aboutConfig.bioSecondary && (
+              <p
+                className="whitespace-pre-line"
+                style={{ color: palette.inkSoft }}
+              >
+                {aboutConfig.bioSecondary}
+              </p>
+            )}
           </div>
         </div>
 
@@ -288,17 +270,17 @@ export default function ArtAboutView({
           </div>
           <div className="max-w-[475px] space-y-6">
             <div className="space-y-1">
-              <p>CREATIVE DIRECTION</p>
-              <p>BRAND &amp; VISUAL IDENTITY</p>
-              <p>EDITORIAL, PRINT &amp; INFOGRAPHIC DESIGN</p>
-              <p>MOTION &amp; VIDEO EDITING</p>
-              <p>PHOTOGRAPHY &amp; COLOR GRADING</p>
-              <p>SOCIAL MEDIA GROWTH &amp; CONTENT SYSTEMS</p>
+              {aboutConfig.skills.map((skill, idx) => (
+                <p key={`skill-${idx}`}>{skill}</p>
+              ))}
             </div>
-            <div className="space-y-1" style={{ color: palette.inkMuted }}>
-              <p>FIGMA · PHOTOSHOP · ILLUSTRATOR · INDESIGN</p>
-              <p>PREMIERE PRO · AFTER EFFECTS · DAVINCI RESOLVE · LIGHTROOM</p>
-            </div>
+            {aboutConfig.tools.length > 0 && (
+              <div className="space-y-1" style={{ color: palette.inkMuted }}>
+                {aboutConfig.tools.map((tool, idx) => (
+                  <p key={`tool-${idx}`}>{tool}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -327,45 +309,21 @@ export default function ArtAboutView({
               </button>{' '}
               <span style={{ color: palette.inkMuted }}>| MAIL</span>
             </div>
-            <div>
-              <a
-                href={
-                  settings.instagram_url ||
-                  'https://www.instagram.com/adrianbahri'
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-[2px] hover:underline"
-              >
-                @ADRIANBAHRI
-              </a>{' '}
-              <span style={{ color: palette.inkMuted }}>| INSTAGRAM</span>
-            </div>
-            <div>
-              <a
-                href={
-                  settings.linkedin_url ||
-                  'https://www.linkedin.com/in/adrianbahri'
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-[2px] hover:underline"
-              >
-                ADRIAN
-              </a>{' '}
-              <span style={{ color: palette.inkMuted }}>| LINKEDIN</span>
-            </div>
-            <div>
-              <a
-                href={settings.github_url || 'https://github.com/Adrianbahri'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-[2px] hover:underline"
-              >
-                ADRIANBAHRI
-              </a>{' '}
-              <span style={{ color: palette.inkMuted }}>| GITHUB</span>
-            </div>
+            {aboutConfig.links.map((item) => (
+              <div key={item.id}>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline-offset-[2px] hover:underline"
+                >
+                  {item.label}
+                </a>{' '}
+                <span style={{ color: palette.inkMuted }}>
+                  | {item.platform}
+                </span>
+              </div>
+            ))}
             <div>
               <button
                 type="button"
@@ -388,7 +346,7 @@ export default function ArtAboutView({
           }}
         >
           <span>© {new Date().getFullYear()} ADRIAN (DRI4N)</span>
-          <span>MAKASSAR, ID · CREATIVE ARCHIVE</span>
+          <span>{aboutConfig.footerLocation}</span>
         </footer>
       </main>
     </div>

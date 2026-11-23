@@ -1,5 +1,11 @@
 import { fetchPublicTable } from '@/lib/supabase';
 import { parseGalleryMeta } from '@/lib/galleryMeta';
+import {
+  mapDesignThemesToIdentitasDesigns,
+  mapVideoWorksToIdentitasDocs,
+  type IdentitasDesignItem,
+  type IdentitasDocItem,
+} from '@/lib/identitasShowcase';
 import ArtSiteView, {
   type ArtWritingItem,
   type IndustrialPhotoItem,
@@ -11,9 +17,17 @@ export default async function ArtHomePage() {
   let initialSettings: Record<string, string> = {};
   let initialPhotos: IndustrialPhotoItem[] = [];
   let initialArticles: ArtWritingItem[] = [];
+  let initialIdentitasDesigns: IdentitasDesignItem[] = [];
+  let initialIdentitasDocs: IdentitasDocItem[] = [];
 
   try {
-    const [settingsRows, galleryRows, articleRows] = await Promise.all([
+    const [
+      settingsRows,
+      galleryRows,
+      articleRows,
+      designThemeRows,
+      videoWorkRows,
+    ] = await Promise.all([
       fetchPublicTable<{ key: string; value: string }>(
         'site_settings',
         'select=key,value'
@@ -40,7 +54,27 @@ export default async function ArtHomePage() {
         image_url?: string | null;
         created_at?: string | null;
       }>('articles', 'select=*&order=created_at.desc'),
+      fetchPublicTable<{
+        id: string | number;
+        title?: string | null;
+        description?: string | null;
+        images?: string[] | null;
+      }>('design_themes', 'select=*&order=created_at.desc'),
+      fetchPublicTable<{
+        id: string | number;
+        title?: string | null;
+        video_url?: string | null;
+      }>('video_works', 'select=*&order=created_at.desc'),
     ]);
+
+    if (designThemeRows.length > 0) {
+      initialIdentitasDesigns =
+        mapDesignThemesToIdentitasDesigns(designThemeRows);
+    }
+
+    if (videoWorkRows.length > 0) {
+      initialIdentitasDocs = mapVideoWorksToIdentitasDocs(videoWorkRows);
+    }
 
     if (settingsRows.length > 0) {
       initialSettings = settingsRows.reduce(
@@ -131,6 +165,8 @@ export default async function ArtHomePage() {
         initialSettings={initialSettings}
         initialPhotos={initialPhotos}
         initialArticles={initialArticles}
+        initialIdentitasDesigns={initialIdentitasDesigns}
+        initialIdentitasDocs={initialIdentitasDocs}
       />
 
       <section

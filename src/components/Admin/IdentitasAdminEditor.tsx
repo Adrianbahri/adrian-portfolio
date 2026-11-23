@@ -5,11 +5,13 @@ import { supabase } from '@/lib/supabase';
 import { purgeSystemCache } from '@/lib/utils';
 import {
   DEFAULT_IDENTITAS_SHOWCASE,
+  mapDesignThemesToIdentitasDesigns,
+  mapVideoWorksToIdentitasDocs,
   parseIdentitasShowcase,
   type IdentitasModeKey,
   type IdentitasShowcaseConfig,
 } from '@/lib/identitasShowcase';
-import { Loader2, Plus, Save, Trash2, Upload } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Save, Trash2, Upload } from 'lucide-react';
 
 export function IdentitasAdminEditor() {
   const [config, setConfig] = useState<IdentitasShowcaseConfig>(
@@ -19,6 +21,59 @@ export function IdentitasAdminEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const [importingThemes, setImportingThemes] = useState(false);
+  const [importingDocs, setImportingDocs] = useState(false);
+
+  const importFromLegacyDesignThemes = async (silent = false) => {
+    setImportingThemes(true);
+    try {
+      const { data } = await supabase
+        .from('design_themes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped = mapDesignThemesToIdentitasDesigns(data as any[]);
+        if (mapped.length > 0) {
+          setConfig((prev) => ({ ...prev, designs: mapped }));
+          if (!silent) {
+            setNotice(
+              `Berhasil memindahkan ${mapped.length} tema design dari Design Projects. Klik "Simpan Baris 4" untuk menyimpan permanen.`
+            );
+          }
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setImportingThemes(false);
+    }
+  };
+
+  const importFromLegacyVideoWorks = async (silent = false) => {
+    setImportingDocs(true);
+    try {
+      const { data } = await supabase
+        .from('video_works')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped = mapVideoWorksToIdentitasDocs(data as any[]);
+        if (mapped.length > 0) {
+          setConfig((prev) => ({ ...prev, documenters: mapped }));
+          if (!silent) {
+            setNotice(
+              `Berhasil memindahkan ${mapped.length} video dari Video & Motion ke Documenter. Klik "Simpan Baris 4" untuk menyimpan permanen.`
+            );
+          }
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setImportingDocs(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -30,6 +85,12 @@ export function IdentitasAdminEditor() {
           .maybeSingle();
         if (data?.value) {
           setConfig(parseIdentitasShowcase(data.value));
+        } else {
+          // Automatically hydrate Design 4:5 and Documenter from legacy tables
+          await Promise.all([
+            importFromLegacyDesignThemes(true),
+            importFromLegacyVideoWorks(true),
+          ]);
         }
       } catch {
         // Keep defaults
@@ -272,29 +333,47 @@ export function IdentitasAdminEditor() {
               Grid Design 4:5 ({config.designs.length} karya — klik di /art
               untuk detail)
             </p>
-            <button
-              type="button"
-              onClick={() =>
-                setConfig((prev) => ({
-                  ...prev,
-                  designs: [
-                    ...prev.designs,
-                    {
-                      id: `id-des-${Date.now()}`,
-                      title: 'Karya Design Baru',
-                      tags: ['EDITORIAL', 'DESIGN'],
-                      narrative: '',
-                      image: '',
-                      extraImages: [],
-                    },
-                  ],
-                }))
-              }
-              className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1 text-xs text-[#ededed] hover:bg-[#252525]"
-            >
-              <Plus size={12} />
-              <span>Tambah Design</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => importFromLegacyDesignThemes(false)}
+                disabled={importingThemes}
+                className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1 text-xs text-[#f59e0b] hover:bg-[#252525] disabled:opacity-60"
+              >
+                <RefreshCw
+                  size={12}
+                  className={importingThemes ? 'animate-spin' : ''}
+                />
+                <span>
+                  {importingThemes
+                    ? 'Memindahkan...'
+                    : 'Import dari Design Lama'}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    designs: [
+                      ...prev.designs,
+                      {
+                        id: `id-des-${Date.now()}`,
+                        title: 'Karya Design Baru',
+                        tags: ['EDITORIAL', 'DESIGN'],
+                        narrative: '',
+                        image: '',
+                        extraImages: [],
+                      },
+                    ],
+                  }))
+                }
+                className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1 text-xs text-[#ededed] hover:bg-[#252525]"
+              >
+                <Plus size={12} />
+                <span>Tambah Design</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -494,31 +573,46 @@ export function IdentitasAdminEditor() {
       {/* TAB 3: DOCUMENTER (YOUTUBE 16:9) */}
       {tab === 'documenter' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-mono text-[10.5px] uppercase tracking-wider text-[#8a8a8a]">
               Daftar Karya Dokumenter YouTube 16:9 ({config.documenters.length}{' '}
               karya)
             </p>
-            <button
-              type="button"
-              onClick={() =>
-                setConfig((prev) => ({
-                  ...prev,
-                  documenters: [
-                    ...prev.documenters,
-                    {
-                      id: `id-doc-${Date.now()}`,
-                      title: 'Dokumenter Baru',
-                      youtubeUrl: '',
-                    },
-                  ],
-                }))
-              }
-              className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1 text-xs text-[#ededed] hover:bg-[#252525]"
-            >
-              <Plus size={12} />
-              <span>Tambah Dokumenter</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => importFromLegacyVideoWorks(false)}
+                disabled={importingDocs}
+                className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-2.5 py-1 text-xs text-[#fbbf24] hover:bg-[#f59e0b]/20 disabled:opacity-60"
+              >
+                {importingDocs ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={12} />
+                )}
+                <span>Import dari Video Lama</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    documenters: [
+                      ...prev.documenters,
+                      {
+                        id: `id-doc-${Date.now()}`,
+                        title: 'Dokumenter Baru',
+                        youtubeUrl: '',
+                      },
+                    ],
+                  }))
+                }
+                className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1 text-xs text-[#ededed] hover:bg-[#252525]"
+              >
+                <Plus size={12} />
+                <span>Tambah Dokumenter</span>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2.5">

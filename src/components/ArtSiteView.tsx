@@ -22,6 +22,8 @@ import {
 import {
   parseIdentitasShowcase,
   toYouTubeEmbedUrl,
+  type IdentitasDesignItem,
+  type IdentitasDocItem,
   type IdentitasModeKey,
 } from '@/lib/identitasShowcase';
 import {
@@ -166,10 +168,14 @@ export default function ArtSiteView({
   initialSettings,
   initialPhotos = [],
   initialArticles = [],
+  initialIdentitasDesigns = [],
+  initialIdentitasDocs = [],
 }: {
   initialSettings?: Record<string, string>;
   initialPhotos?: IndustrialPhotoItem[];
   initialArticles?: ArtWritingItem[];
+  initialIdentitasDesigns?: IdentitasDesignItem[];
+  initialIdentitasDocs?: IdentitasDocItem[];
 }) {
   const router = useRouter();
   const { settings } = useSiteSettings(initialSettings);
@@ -311,8 +317,14 @@ export default function ArtSiteView({
 
   const identitasShowcase = parseIdentitasShowcase(settings.identitas_showcase);
   const identitasVideos = identitasShowcase.videos;
-  const identitasDesigns = identitasShowcase.designs;
-  const identitasDocs = identitasShowcase.documenters;
+  const identitasDesigns =
+    !settings.identitas_showcase && initialIdentitasDesigns.length > 0
+      ? initialIdentitasDesigns
+      : identitasShowcase.designs;
+  const identitasDocs =
+    !settings.identitas_showcase && initialIdentitasDocs.length > 0
+      ? initialIdentitasDocs
+      : identitasShowcase.documenters;
 
   const getNextQueuedIndex = useCallback(
     (currentSlots: [number, number], slotToAdvance: 0 | 1, total: number) => {

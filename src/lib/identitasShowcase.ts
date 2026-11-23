@@ -179,6 +179,50 @@ export const DEFAULT_IDENTITAS_SHOWCASE: IdentitasShowcaseConfig = {
   ],
 };
 
+export function mapDesignThemesToIdentitasDesigns(
+  rows: Array<{
+    id?: string | number;
+    title?: string | null;
+    description?: string | null;
+    images?: string[] | null;
+  }>
+): IdentitasDesignItem[] {
+  return rows
+    .filter((r) => Boolean(r.title) && Array.isArray(r.images) && r.images.length > 0)
+    .map((r, idx) => {
+      const imgs = (r.images || []).filter(Boolean);
+      const cleanNarrative = String(r.description || '')
+        .replace(/\[PDF:\s*.*?\]/g, '')
+        .trim();
+      return {
+        id: `dt-${r.id || idx}`,
+        title: String(r.title || `Design ${idx + 1}`).trim(),
+        tags: ['DESIGN', 'IDENTITAS UNHAS'],
+        narrative:
+          cleanNarrative ||
+          'Editorial visual design and carousel series produced for PK Identitas Universitas Hasanuddin.',
+        image: imgs[0],
+        extraImages: imgs.slice(1),
+      };
+    });
+}
+
+export function mapVideoWorksToIdentitasDocs(
+  rows: Array<{
+    id?: string | number;
+    title?: string | null;
+    video_url?: string | null;
+  }>
+): IdentitasDocItem[] {
+  return rows
+    .filter((r) => Boolean(r.title) && Boolean(r.video_url))
+    .map((r, idx) => ({
+      id: `vw-${r.id || idx}`,
+      title: String(r.title || `Dokumenter ${idx + 1}`).trim(),
+      youtubeUrl: String(r.video_url || '').trim(),
+    }));
+}
+
 export function parseIdentitasShowcase(
   rawJson: string | undefined | null
 ): IdentitasShowcaseConfig {

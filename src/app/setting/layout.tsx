@@ -96,7 +96,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       // ignore
     }
     if (nextMode === 'creative') {
-      router.push('/setting/designs');
+      router.push('/setting/growth');
     } else {
       router.push('/setting');
     }
@@ -129,10 +129,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const creativeLinks: AdminNavLink[] = [
     { name: 'Photography (HQ)', href: '/setting/gallery', icon: ImageIcon },
     { name: 'Creative Showcase (/art)', href: '/setting/growth', icon: TrendingUp },
-    { name: 'Design Projects', href: '/setting/designs', icon: Palette },
     { name: 'Print & Infografis', href: '/setting/magazines', icon: BookOpen },
-    { name: 'Video & Motion', href: '/setting/videos', icon: Video },
-    { name: 'Creative Spotlight', href: '/setting/creative', icon: Sparkles },
+    { name: 'About Page (/art/about)', href: '/setting/creative', icon: User },
   ];
 
   const activeLinks = mode === 'creative' ? creativeLinks : devLinks;
