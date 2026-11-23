@@ -223,6 +223,33 @@ export function mapVideoWorksToIdentitasDocs(
     }));
 }
 
+const DEFAULT_DESIGN_IDS = new Set(
+  DEFAULT_IDENTITAS_SHOWCASE.designs.map((d) => d.id)
+);
+const DEFAULT_DOC_IDS = new Set(
+  DEFAULT_IDENTITAS_SHOWCASE.documenters.map((d) => d.id)
+);
+
+export function isDefaultMockDesigns(items: IdentitasDesignItem[]): boolean {
+  if (!Array.isArray(items) || items.length === 0) return true;
+  return items.every(
+    (item) =>
+      DEFAULT_DESIGN_IDS.has(item.id) &&
+      String(item.image || '').includes('images.unsplash.com')
+  );
+}
+
+export function isDefaultMockDocs(items: IdentitasDocItem[]): boolean {
+  if (!Array.isArray(items) || items.length === 0) return true;
+  return items.every(
+    (item) =>
+      DEFAULT_DOC_IDS.has(item.id) &&
+      DEFAULT_IDENTITAS_SHOWCASE.documenters.some(
+        (def) => def.id === item.id && def.youtubeUrl === item.youtubeUrl
+      )
+  );
+}
+
 export function parseIdentitasShowcase(
   rawJson: string | undefined | null
 ): IdentitasShowcaseConfig {

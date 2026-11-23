@@ -20,6 +20,10 @@ import {
   type OrgBrandingKey,
 } from '@/lib/mediaShowcase';
 import {
+  isDefaultMockDesigns,
+  isDefaultMockDocs,
+  mapDesignThemesToIdentitasDesigns,
+  mapVideoWorksToIdentitasDocs,
   parseIdentitasShowcase,
   toYouTubeEmbedUrl,
   type IdentitasDesignItem,
@@ -315,15 +319,59 @@ export default function ArtSiteView({
     return () => window.clearInterval(timer);
   }, [orgPaused, lightboxIdx, designLightboxIdx, activeOrg]);
 
+  const [legacyIdentitasDesigns, setLegacyIdentitasDesigns] = useState<
+    IdentitasDesignItem[]
+  >(initialIdentitasDesigns);
+  const [legacyIdentitasDocs, setLegacyIdentitasDocs] = useState<
+    IdentitasDocItem[]
+  >(initialIdentitasDocs);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (legacyIdentitasDesigns.length === 0) {
+          const { data } = await supabase
+            .from('design_themes')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (mounted && data && data.length > 0) {
+            const mapped = mapDesignThemesToIdentitasDesigns(data as any[]);
+            if (mapped.length > 0) setLegacyIdentitasDesigns(mapped);
+          }
+        }
+        if (legacyIdentitasDocs.length === 0) {
+          const { data } = await supabase
+            .from('video_works')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (mounted && data && data.length > 0) {
+            const mapped = mapVideoWorksToIdentitasDocs(data as any[]);
+            if (mapped.length > 0) setLegacyIdentitasDocs(mapped);
+          }
+        }
+      } catch {
+        // ignore client fallback errors
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [legacyIdentitasDesigns.length, legacyIdentitasDocs.length]);
+
   const identitasShowcase = parseIdentitasShowcase(settings.identitas_showcase);
   const identitasVideos = identitasShowcase.videos;
   const identitasDesigns =
-    !settings.identitas_showcase && initialIdentitasDesigns.length > 0
-      ? initialIdentitasDesigns
+    (!settings.identitas_showcase ||
+      isDefaultMockDesigns(identitasShowcase.designs)) &&
+    legacyIdentitasDesigns.length > 0
+      ? legacyIdentitasDesigns
       : identitasShowcase.designs;
   const identitasDocs =
-    !settings.identitas_showcase && initialIdentitasDocs.length > 0
-      ? initialIdentitasDocs
+    (!settings.identitas_showcase ||
+      isDefaultMockDocs(identitasShowcase.documenters)) &&
+    legacyIdentitasDocs.length > 0
+      ? legacyIdentitasDocs
       : identitasShowcase.documenters;
 
   const getNextQueuedIndex = useCallback(

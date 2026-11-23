@@ -5,13 +5,30 @@ import { supabase } from '@/lib/supabase';
 import { purgeSystemCache } from '@/lib/utils';
 import {
   DEFAULT_IDENTITAS_SHOWCASE,
+  isDefaultMockDesigns,
+  isDefaultMockDocs,
   mapDesignThemesToIdentitasDesigns,
   mapVideoWorksToIdentitasDocs,
   parseIdentitasShowcase,
   type IdentitasModeKey,
   type IdentitasShowcaseConfig,
 } from '@/lib/identitasShowcase';
-import { Loader2, Plus, RefreshCw, Save, Trash2, Upload } from 'lucide-react';
+import {
+  Image as ImageIcon,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Save,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import MediaLibraryModal from '@/components/Admin/MediaLibraryModal';
+
+type LibraryTarget =
+  | { kind: 'video'; idx: number }
+  | { kind: 'design-cover'; idx: number }
+  | { kind: 'design-slide'; idx: number }
+  | null;
 
 export function IdentitasAdminEditor() {
   const [config, setConfig] = useState<IdentitasShowcaseConfig>(
@@ -24,6 +41,43 @@ export function IdentitasAdminEditor() {
 
   const [importingThemes, setImportingThemes] = useState(false);
   const [importingDocs, setImportingDocs] = useState(false);
+  const [libraryTarget, setLibraryTarget] = useState<LibraryTarget>(null);
+
+  const handleLibrarySelect = (url: string) => {
+    if (!libraryTarget) return;
+    if (libraryTarget.kind === 'video') {
+      setConfig((prev) => {
+        const next = [...prev.videos];
+        if (next[libraryTarget.idx]) {
+          next[libraryTarget.idx] = {
+            ...next[libraryTarget.idx],
+            mediaUrl: url,
+          };
+        }
+        return { ...prev, videos: next };
+      });
+    } else if (libraryTarget.kind === 'design-cover') {
+      setConfig((prev) => {
+        const next = [...prev.designs];
+        if (next[libraryTarget.idx]) {
+          next[libraryTarget.idx] = { ...next[libraryTarget.idx], image: url };
+        }
+        return { ...prev, designs: next };
+      });
+    } else if (libraryTarget.kind === 'design-slide') {
+      setConfig((prev) => {
+        const next = [...prev.designs];
+        if (next[libraryTarget.idx]) {
+          next[libraryTarget.idx] = {
+            ...next[libraryTarget.idx],
+            extraImages: [...(next[libraryTarget.idx].extraImages || []), url],
+          };
+        }
+        return { ...prev, designs: next };
+      });
+    }
+    setLibraryTarget(null);
+  };
 
   const importFromLegacyDesignThemes = async (silent = false) => {
     setImportingThemes(true);
@@ -84,7 +138,18 @@ export function IdentitasAdminEditor() {
           .eq('key', 'identitas_showcase')
           .maybeSingle();
         if (data?.value) {
-          setConfig(parseIdentitasShowcase(data.value));
+          const parsed = parseIdentitasShowcase(data.value);
+          setConfig(parsed);
+          const hydrations: Promise<void>[] = [];
+          if (isDefaultMockDesigns(parsed.designs)) {
+            hydrations.push(importFromLegacyDesignThemes(true));
+          }
+          if (isDefaultMockDocs(parsed.documenters)) {
+            hydrations.push(importFromLegacyVideoWorks(true));
+          }
+          if (hydrations.length > 0) {
+            await Promise.all(hydrations);
+          }
         } else {
           // Automatically hydrate Design 4:5 and Documenter from legacy tables
           await Promise.all([
@@ -308,6 +373,14 @@ export function IdentitasAdminEditor() {
                   </label>
                   <button
                     type="button"
+                    onClick={() => setLibraryTarget({ kind: 'video', idx })}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-2 py-1.5 text-[11px] text-[#fbbf24] hover:bg-[#f59e0b]/20"
+                  >
+                    <ImageIcon size={12} />
+                    <span>Library</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() =>
                       setConfig((prev) => ({
                         ...prev,
@@ -421,6 +494,16 @@ export function IdentitasAdminEditor() {
                       }}
                     />
                   </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLibraryTarget({ kind: 'design-cover', idx })
+                    }
+                    className="inline-flex cursor-pointer items-center justify-center gap-1 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/10 py-1 text-[10.5px] text-[#fbbf24] hover:bg-[#f59e0b]/20"
+                  >
+                    <ImageIcon size={10} />
+                    <span>Library</span>
+                  </button>
                 </div>
 
                 <div className="min-w-0 flex-1 space-y-2">
@@ -480,11 +563,22 @@ export function IdentitasAdminEditor() {
 
                   {/* Multi-Slide Carousel Upload (Slide 2..N for 4+1/4 peek & detail scroll) */}
                   <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <span className="font-mono text-[10px] uppercase text-[#737373]">
                         Total {1 + (d.extraImages?.length || 0)} Slide
                       </span>
-                      <label className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#262626] px-2 py-0.5 text-[10.5px] text-[#ededed] hover:bg-[#333]">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setLibraryTarget({ kind: 'design-slide', idx })
+                          }
+                          className="inline-flex cursor-pointer items-center gap-1 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-2 py-0.5 text-[10.5px] text-[#fbbf24] hover:bg-[#f59e0b]/20"
+                        >
+                          <ImageIcon size={10} />
+                          <span>Library</span>
+                        </button>
+                        <label className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#262626] px-2 py-0.5 text-[10.5px] text-[#ededed] hover:bg-[#333]">
                         {uploadingKey === `${d.id}-extra` ? (
                           <Loader2 size={10} className="animate-spin" />
                         ) : (
@@ -524,6 +618,7 @@ export function IdentitasAdminEditor() {
                           }}
                         />
                       </label>
+                      </div>
                     </div>
 
                     {d.extraImages && d.extraImages.length > 0 && (
@@ -663,6 +758,19 @@ export function IdentitasAdminEditor() {
           </div>
         </div>
       )}
+
+      <MediaLibraryModal
+        isOpen={libraryTarget !== null}
+        onClose={() => setLibraryTarget(null)}
+        onSelect={handleLibrarySelect}
+        title={
+          libraryTarget?.kind === 'design-cover'
+            ? 'Pilih Cover Design dari Media Library'
+            : libraryTarget?.kind === 'design-slide'
+            ? 'Tambah Slide Design dari Media Library'
+            : 'Pilih Media dari Media Library'
+        }
+      />
     </section>
   );
 }
